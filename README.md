@@ -1,49 +1,39 @@
 # Companion
 
-Companion é uma plataforma web acadêmica voltada para estudantes de Ciência da Computação da Universidade de Fortaleza (Unifor).
+Companion é uma plataforma web acadêmica voltada para estudantes de Ciência da Computação da Universidade de Fortaleza (Unifor), criada para facilitar interação, compartilhamento de conhecimento e colaboração entre estudantes.
 
-## Tecnologias
+## Funcionalidades planejadas
 
-### Frontend
-- React
-- Vite
-- Tailwind CSS
-- React Router
-- Axios
+- Autenticação e perfis de estudantes
+- Publicação de posts, perguntas, respostas e comentários
+- Busca e organização de conteúdo acadêmico
+- Suporte aos estudantes e área administrativa
 
-### Backend
-- Java 21
-- Spring Boot
-- Spring Data JPA
-- Spring Security
-- JWT
-- Gradle
+## Stack
 
-### Banco de Dados
-- MySQL 8.4
-
-### Infra
-- Docker
-- Docker Compose
-- Git
+- Frontend: React, Vite e Tailwind CSS
+- Backend: Java 21, Spring Boot e Gradle
+- Persistência: Spring Data JPA / Hibernate
+- Banco de dados: MySQL
+- Infraestrutura: Docker e Docker Compose
 
 ## Arquitetura
 
-O projeto utiliza uma arquitetura monolítica em camadas no backend, expondo uma API REST consumida pelo front.
+O backend utiliza uma arquitetura monolítica em camadas:
 
 ```text
-React
-  ↓
-Axios
-  ↓
-REST API
-  ↓
-Controller
-  ↓
-Service
-  ↓
-Repository
-  ↓
-JPA / Hibernate
-  ↓
-MySQL
+React → API REST → Controller → Service → Repository → Entity → MySQL
+```
+
+O frontend está em `frontend/` e o backend em `backend/`. As orientações para desenvolvimento estão em [`docs/GUIA_DESENVOLVIMENTO.md`](docs/GUIA_DESENVOLVIMENTO.md).
+
+## Status
+
+Em desenvolvimento.
+
+## Como clonar
+
+```bash
+git clone <URL_DO_REPOSITORIO>
+cd companion
+```
