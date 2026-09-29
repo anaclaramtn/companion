@@ -34,6 +34,6 @@ Em desenvolvimento.
 ## Como clonar
 
 ```bash
-git clone <URL_DO_REPOSITORIO>
+git clone <https://github.com/anaclaramtn/companion>
 cd companion
 ```
