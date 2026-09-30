@@ -1,16 +1,58 @@
-# React + Vite
+# Frontend do Companion
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Interface web do Companion, desenvolvida com React, Vite e JavaScript.
 
-Currently, two official plugins are available:
+## Tecnologias definidas
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- React
+- Vite
+- JavaScript
+- Tailwind CSS
+- React Router
+- Axios
 
-## React Compiler
+Bootstrap e TypeScript não fazem parte da arquitetura atual.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Funcionalidades previstas
 
-## Expanding the Oxlint configuration
+- Autenticação e recuperação de senha
+- Onboarding opcional
+- Feed cronológico com carregamento incremental
+- Criação, edição e exclusão de posts de dúvida
+- Respostas, curtidas e indicação de conteúdo editado
+- Destaque da resposta mais curtida e do respondente mais proficiente
+- Perfis, matérias, proficiência e atividade
+- Busca de posts e estudantes
+- Seguidores
+- FAQ
+- Administração de usuários e conteúdo
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+## Estrutura esperada
+
+```text
+src/
+├── api/
+├── components/
+├── contexts/
+├── hooks/
+├── layouts/
+├── pages/
+├── routes/
+├── services/
+├── styles/
+├── App.jsx
+└── main.jsx
+```
+
+O conteúdo atual de `App.jsx` ainda é o template inicial do Vite e deve ser substituído quando a implementação das telas começar.
+
+## Execução
+
+```bash
+npm install
+npm run dev
+```
+
+O ambiente oficialmente suportado nesta versão é o Google Chrome no Windows 10 e 11. Responsividade e suporte oficial a dispositivos móveis ficam como melhorias futuras.
+
+As regras completas de arquitetura e domínio estão em [`../docs/GUIA_DESENVOLVIMENTO.md`](../docs/GUIA_DESENVOLVIMENTO.md).
