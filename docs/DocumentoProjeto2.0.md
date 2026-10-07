@@ -71,6 +71,10 @@ Veja uma breve descrição de alguns dos serviços oferecidos pelo Companion:
 
 - Informações do perfil: O perfil apresentará foto, biografia, matérias dominadas ou desejadas, proficiência autodeclarada, seguidores, pessoas seguidas, posts publicados e atividade de respostas.
 
+- Criação de perfil no primeiro acesso (HU004): Após o cadastro, o usuário definirá nome e username e poderá informar foto, biografia, curso, faculdade, disciplinas, trabalho, instituição de trabalho e redes sociais. Os campos opcionais poderão ser preenchidos posteriormente.
+
+- Comentários e respostas (HU006): O usuário poderá comentar em publicações, responder a comentários e respostas em threads, navegar pelas discussões, curtir comentários e respostas, excluir os próprios comentários e denunciar conteúdo de outros usuários.
+
 ## 2.3 Classes de Usuários e Características
 
 O sistema contará principalmente com a classe **Usuário**, responsável pelo uso geral da plataforma, como criação de dúvidas, respostas, comentários e interação com outros estudantes e a classe **Administrador**, composta pelos responsáveis pelo desenvolvimento e gerenciamento do sistema, terá acesso a funções administrativas e de manutenção da plataforma.
@@ -132,6 +136,11 @@ A configuração mínima para executar o Companion é um computador com Windows 
 | **RF19** | ONBOARDING    | CONSULTAR TUTORIAL       | Oferecer tutorial opcional, ignorável e acessível novamente pelo menu.                      |
 | **RF20** | ADMINISTRAÇÃO | GERENCIAR USUÁRIOS       | Visualizar, suspender, reativar ou excluir contas.                                          |
 | **RF21** | ADMINISTRAÇÃO | GERENCIAR CONTEÚDO E FAQ | Moderar posts e respostas e manter as perguntas frequentes.                                 |
+| **RF22** | PERFIL        | CRIAR PERFIL             | No primeiro acesso, solicitar nome e username, permitir dados opcionais e concluir a criação do perfil antes do acesso ao feed (HU004). |
+| **RF23** | COMENTÁRIOS   | RESPONDER COMENTÁRIO     | Permitir respostas a comentários e a outras respostas, organizadas em threads (HU006.2).    |
+| **RF24** | COMENTÁRIOS   | NAVEGAR NA DISCUSSÃO     | Permitir expandir, recolher e acessar comentários e respostas em foco (HU006.3).              |
+| **RF25** | COMENTÁRIOS   | CURTIR COMENTÁRIO        | Permitir curtir comentários e respostas conforme as regras de interação (HU006).              |
+| **RF26** | COMENTÁRIOS   | DENUNCIAR CONTEÚDO       | Permitir denunciar comentários e respostas de outros usuários (HU006.4).                      |
 
 ## Requisitos Não Funcionais
 
@@ -166,6 +175,7 @@ A configuração mínima para executar o Companion é um computador com Windows 
 | **RN13** | CONTA      | SUSPENSÃO E EXCLUSÃO     | Conta suspensa perde acesso; conta excluída é anonimizada e tem o conteúdo preservado.       |
 | **RN14** | CONTEÚDO   | FINALIDADE ACADÊMICA     | As publicações devem tratar de conteúdos de Ciência da Computação.                           |
 | **RN15** | CONTADORES | VALORES CALCULADOS       | Contadores de atividade e relacionamento são calculados por consulta.                        |
+| **RN16** | PERFIL     | PERFIL NO PRIMEIRO ACESSO | Nome e username devem ser definidos antes do acesso ao feed; os demais campos de HU004 são opcionais. |
 
 # Casos de Uso
 
@@ -200,6 +210,11 @@ A configuração mínima para executar o Companion é um computador com Windows 
 | **UC18** | ADMINISTRADOR | Gerenciar usuários                                    |
 | **UC19** | ADMINISTRADOR | Moderar posts e respostas                             |
 | **UC20** | ADMINISTRADOR | Gerenciar perguntas frequentes                        |
+| **UC21** | USUÁRIO       | Criar perfil no primeiro acesso (HU004)                |
+| **UC22** | USUÁRIO       | Responder a comentários e respostas em threads (HU006.2) |
+| **UC23** | USUÁRIO       | Navegar por comentários e respostas (HU006.3)          |
+| **UC24** | USUÁRIO       | Curtir comentários e respostas (HU006)                 |
+| **UC25** | USUÁRIO       | Denunciar comentários e respostas (HU006.4)            |
 
 
 # Melhorias futuras
@@ -210,9 +225,11 @@ A configuração mínima para executar o Companion é um computador com Windows 
 
 - Moderador como classe de usuário com permissões limitadas
 
-- Chat em tempo real e mensagens diretas com WebSocket
+- Central de notificações (HU008), incluindo interações, novos seguidores e retornos de denúncias
 
-- Central de notificações
+- Mensagens diretas e chat (HU009 e HU009.1); fora da versão 1.0
+
+- Bloqueio de outro usuário (HU011.2); fora da versão 1.0
 
 - Algoritmo avançado de recomendação do feed
 
