@@ -2,14 +2,10 @@
 
 Interface web do Companion, desenvolvida com React, Vite e JavaScript.
 
-## Tecnologias definidas
+## Tecnologias
 
-- React
-- Vite
-- JavaScript
-- Tailwind CSS
-- React Router
-- Axios
+- Base atual: React, Vite e JavaScript.
+- Previstas para as funcionalidades: Tailwind CSS, React Router e Axios.
 
 Bootstrap e TypeScript não fazem parte da arquitetura atual.
 
@@ -37,14 +33,17 @@ src/
 ├── hooks/
 ├── layouts/
 ├── pages/
+│   └── auth/
 ├── routes/
 ├── services/
 ├── styles/
+│   ├── app.css
+│   └── global.css
 ├── App.jsx
 └── main.jsx
 ```
 
-O conteúdo atual de `App.jsx` ainda é o template inicial do Vite e deve ser substituído quando a implementação das telas começar.
+Os diretórios estão preparados para receber as funcionalidades. `App.jsx` mostra apenas uma identificação temporária do projeto; a página de login, a navegação e a integração com a API serão implementadas posteriormente.
 
 ## Execução
 
