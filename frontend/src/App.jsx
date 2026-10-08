@@ -1,11 +1,7 @@
-import './styles/app.css'
+import LoginPage from './pages/auth/LoginPage.jsx'
 
 function App() {
-  return (
-    <main className="app-shell">
-      <h1>Companion</h1>
-    </main>
-  )
+  return <LoginPage />
 }
 
 export default App

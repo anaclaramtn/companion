@@ -43,7 +43,7 @@ src/
 └── main.jsx
 ```
 
-Os diretórios estão preparados para receber as funcionalidades. `App.jsx` mostra apenas uma identificação temporária do projeto; a página de login, a navegação e a integração com a API serão implementadas posteriormente.
+Os diretórios estão preparados para receber as funcionalidades. A primeira versão visual da página de login está em `src/pages/auth/LoginPage.jsx`, com estilos em `src/styles/app.css`. As ações exibem um aviso local; autenticação, cadastro, recuperação de senha e acesso com Google ainda precisam de integração.
 
 ## Execução
 
