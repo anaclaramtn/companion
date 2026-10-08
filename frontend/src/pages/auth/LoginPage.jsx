@@ -79,7 +79,7 @@ function LoginPage() {
                     name="password"
                     type="password"
                     autoComplete="current-password"
-                    placeholder="password"
+                    placeholder="********"
                     value={password}
                     onChange={(event) => { setPassword(event.target.value); setNotice('') }}
                   />
