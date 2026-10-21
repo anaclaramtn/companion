@@ -1,0 +1,217 @@
+@startuml
+title Companion — Modelo de entidades (versão 1.0 recomendada)
+
+hide methods
+hide stereotypes
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+enum UserRole {
+  USER
+  MODERATOR
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum SubjectInterestType {
+  DOMINA
+  QUER_APRENDER
+}
+
+enum Proficiency {
+  INICIANTE
+  INTERMEDIARIO
+  AVANCADO
+}
+
+enum ReportReason {
+  SPAM
+  FORA_DO_TEMA
+  CONTEUDO_INADEQUADO
+  OUTRO
+}
+
+enum ReportStatus {
+  PENDING
+  RESOLVED
+  DISMISSED
+}
+
+entity "users" as User {
+  * id : BIGINT <<PK>>
+  --
+  * email : VARCHAR(150) <<UQ>>
+  * password_hash : VARCHAR(100)
+  name : VARCHAR(120)
+  username : VARCHAR(30) <<UQ>>
+  avatar_url : VARCHAR(500)
+  bio : VARCHAR(500)
+  registration_number : VARCHAR(30) <<UQ>>
+  course : VARCHAR(120)
+  semester : SMALLINT
+  * role : UserRole
+  * status : UserStatus
+  onboarding_completed_at : DATETIME
+  * created_at : DATETIME
+  * updated_at : DATETIME
+  deleted_at : DATETIME
+}
+
+entity "subjects" as Subject {
+  * id : BIGINT <<PK>>
+  --
+  * name : VARCHAR(120) <<UQ>>
+}
+
+entity "user_subjects" as UserSubject {
+  * id : BIGINT <<PK>>
+  --
+  * user_id : BIGINT <<FK>>
+  * subject_id : BIGINT <<FK>>
+  * interest_type : SubjectInterestType
+  * proficiency : Proficiency
+  --
+  UQ(user_id, subject_id)
+}
+
+entity "posts" as Post {
+  * id : BIGINT <<PK>>
+  --
+  * author_id : BIGINT <<FK>>
+  * subject_id : BIGINT <<FK>>
+  * title : VARCHAR(160)
+  * content : TEXT
+  * created_at : DATETIME
+  deleted_at : DATETIME
+}
+
+entity "post_comments" as PostComment {
+  * id : BIGINT <<PK>>
+  --
+  * post_id : BIGINT <<FK>>
+  * author_id : BIGINT <<FK>>
+  * content : TEXT
+  * created_at : DATETIME
+  deleted_at : DATETIME
+}
+
+entity "post_likes" as PostLike {
+  * id : BIGINT <<PK>>
+  --
+  * user_id : BIGINT <<FK>>
+  * post_id : BIGINT <<FK>>
+  * created_at : DATETIME
+  --
+  UQ(user_id, post_id)
+}
+
+entity "follows" as Follow {
+  * id : BIGINT <<PK>>
+  --
+  * follower_id : BIGINT <<FK>>
+  * followed_id : BIGINT <<FK>>
+  * created_at : DATETIME
+  --
+  UQ(follower_id, followed_id)
+}
+
+entity "reports" as Report {
+  * id : BIGINT <<PK>>
+  --
+  * reporter_id : BIGINT <<FK>>
+  reviewed_by_id : BIGINT <<FK, nullable>>
+  post_id : BIGINT <<FK, nullable>>
+  post_comment_id : BIGINT <<FK, nullable>>
+  * reason : ReportReason
+  details : VARCHAR(500)
+  * status : ReportStatus
+  * created_at : DATETIME
+  reviewed_at : DATETIME
+  --
+  UQ(reporter_id, post_id)
+  UQ(reporter_id, post_comment_id)
+}
+
+entity "faqs" as Faq {
+  * id : BIGINT <<PK>>
+  --
+  * question : VARCHAR(255)
+  * answer : TEXT
+  * display_order : INT
+  * active : BOOLEAN
+  * created_at : DATETIME
+  * updated_at : DATETIME
+}
+
+entity "password_reset_tokens" as PasswordResetToken {
+  * id : BIGINT <<PK>>
+  --
+  * user_id : BIGINT <<FK>>
+  * token_hash : CHAR(64) <<UQ>>
+  * expires_at : DATETIME
+  used_at : DATETIME
+  * created_at : DATETIME
+}
+
+UserRole ||..o{ User : role
+UserStatus ||..o{ User : status
+SubjectInterestType ||..o{ UserSubject : tipo
+Proficiency ||..o{ UserSubject : proficiência
+ReportReason ||..o{ Report : motivo
+ReportStatus ||..o{ Report : estado
+
+User ||--o{ Post : publica
+Subject ||--o{ Post : classifica
+User ||--o{ UserSubject : declara
+Subject ||--o{ UserSubject : aparece em
+User ||--o{ PostComment : escreve
+Post ||--o{ PostComment : recebe
+User ||--o{ PostLike : realiza
+Post ||--o{ PostLike : recebe
+User ||--o{ PasswordResetToken : solicita
+User ||--o{ Follow : follower
+User ||--o{ Follow : followed
+User ||--o{ Report : denuncia
+User |o--o{ Report : revisa
+Post |o--o{ Report : alvo post
+PostComment |o--o{ Report : alvo resposta
+
+note right of User
+  name e username podem ficar nulos apenas
+  entre cadastro e conclusão do perfil.
+  Conta excluída é anonimizada.
+end note
+
+note right of PostComment
+  Toda resposta pertence diretamente ao post.
+  Não há respostas a respostas nem edição
+  no protótipo inicial.
+end note
+
+note right of Report
+  Exatamente um alvo deve ser preenchido:
+  post_id XOR post_comment_id.
+  Denunciar não remove o conteúdo.
+end note
+
+note bottom of PostLike
+  Uma curtida por usuário e post.
+  Respostas não recebem curtidas.
+end note
+
+note bottom of Follow
+  follower_id deve ser diferente de followed_id.
+end note
+
+note bottom of Post
+  Quantidades de curtidas e respostas
+  são calculadas, não colunas.
+  Conteúdo longo é expandido com Ver mais.
+end note
+
+@enduml
