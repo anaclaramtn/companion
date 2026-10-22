@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import './GraphBackground.css'
 
 const COLORS = { orange: '246, 127, 0', muted: '105, 120, 138' }
 const SPAWN_INTERVAL = 160
@@ -76,7 +77,6 @@ function GraphBackground() {
         if (distant.length > 2) connections.push(distant[Math.floor(distant.length / 2)])
 
         for (const { second, dx, dy, distance, index } of connections) {
-
           const connectionAge = now - Math.max(first.bornAt, second.bornAt)
           const progress = Math.min(1, Math.max(0, connectionAge / 650))
           const strength = (1 - distance / reach) * firstOpacity * nodeOpacity(second, index, now)
