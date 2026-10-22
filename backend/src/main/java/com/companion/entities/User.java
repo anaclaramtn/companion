@@ -11,7 +11,12 @@ import java.time.LocalDateTime;
         name = "users",
         uniqueConstraints = {
                 @UniqueConstraint(name = "uk_users_email", columnNames = "email"),
+                @UniqueConstraint(name = "uk_users_username", columnNames = "username"),
                 @UniqueConstraint(name = "uk_users_registration_number", columnNames = "registration_number")
+        },
+        indexes = {
+                @Index(name = "idx_users_status", columnList = "status"),
+                @Index(name = "idx_users_name", columnList = "name")
         }
 )
 public class User {
@@ -20,34 +25,42 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 120)
-    private String name;
-
     @Column(nullable = false, length = 150)
     private String email;
 
     @Column(name = "password_hash", nullable = false, length = 100)
     private String passwordHash;
 
-    @Column(name = "registration_number", nullable = false, length = 30)
-    private String registrationNumber;
+    @Column(length = 120)
+    private String name;
 
-    @Column(nullable = false, length = 120)
-    private String course;
+    @Column(length = 30)
+    private String username;
 
-    @Column(nullable = false)
-    private Integer semester;
+    @Column(name = "avatar_url", length = 500)
+    private String avatarUrl;
 
     @Column(length = 500)
     private String bio;
+
+    @Column(name = "registration_number", length = 30)
+    private String registrationNumber;
+
+    @Column(length = 120)
+    private String course;
+
+    private Integer semester;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private UserRole role;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private UserStatus status;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private UserRole role;
+    @Column(name = "onboarding_completed_at")
+    private LocalDateTime onboardingCompletedAt;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -55,20 +68,17 @@ public class User {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
     protected User() {
     }
 
-    public User(String name, String email, String passwordHash, String registrationNumber,
-                String course, Integer semester, String bio) {
-        this.name = name;
+    public User(String email, String passwordHash) {
         this.email = email;
         this.passwordHash = passwordHash;
-        this.registrationNumber = registrationNumber;
-        this.course = course;
-        this.semester = semester;
-        this.bio = bio;
-        this.status = UserStatus.ACTIVE;
         this.role = UserRole.USER;
+        this.status = UserStatus.ACTIVE;
     }
 
     @PrePersist
@@ -83,73 +93,69 @@ public class User {
         updatedAt = LocalDateTime.now();
     }
 
-    public void updateProfile(String name, String email, String registrationNumber,
-                              String course, Integer semester, String bio) {
+    public void updateProfile(String name, String username, String avatarUrl, String bio,
+                              String registrationNumber, String course, Integer semester) {
         this.name = name;
-        this.email = email;
+        this.username = username;
+        this.avatarUrl = avatarUrl;
+        this.bio = bio;
         this.registrationNumber = registrationNumber;
         this.course = course;
         this.semester = semester;
-        this.bio = bio;
     }
 
-    public void anonymize(String anonymousEmail, String anonymousRegistrationNumber,
-                          String unusablePasswordHash) {
+    public void completeOnboarding() {
+        if (onboardingCompletedAt == null) {
+            onboardingCompletedAt = LocalDateTime.now();
+        }
+    }
+
+    public void changeRole(UserRole role) {
+        this.role = role;
+    }
+
+    public void changeStatus(UserStatus status) {
+        this.status = status;
+    }
+
+    public void updatePassword(String passwordHash) {
+        this.passwordHash = passwordHash;
+    }
+
+    public void anonymize(String anonymousEmail, String anonymousUsername, String unusablePasswordHash) {
         name = "Usuário excluído";
         email = anonymousEmail;
-        registrationNumber = anonymousRegistrationNumber;
+        username = anonymousUsername;
         passwordHash = unusablePasswordHash;
-        course = "Não informado";
-        semester = 1;
+        avatarUrl = null;
         bio = null;
+        registrationNumber = null;
+        course = null;
+        semester = null;
+        onboardingCompletedAt = null;
+        role = UserRole.USER;
         status = UserStatus.DELETED;
+        deletedAt = LocalDateTime.now();
     }
 
-    public Long getId() {
-        return id;
+    public boolean isProfileComplete() {
+        return name != null && !name.isBlank() && username != null && !username.isBlank();
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public String getPasswordHash() {
-        return passwordHash;
-    }
-
-    public String getRegistrationNumber() {
-        return registrationNumber;
-    }
-
-    public String getCourse() {
-        return course;
-    }
-
-    public Integer getSemester() {
-        return semester;
-    }
-
-    public String getBio() {
-        return bio;
-    }
-
-    public UserStatus getStatus() {
-        return status;
-    }
-
-    public UserRole getRole() {
-        return role;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
+    public Long getId() { return id; }
+    public String getEmail() { return email; }
+    public String getPasswordHash() { return passwordHash; }
+    public String getName() { return name; }
+    public String getUsername() { return username; }
+    public String getAvatarUrl() { return avatarUrl; }
+    public String getBio() { return bio; }
+    public String getRegistrationNumber() { return registrationNumber; }
+    public String getCourse() { return course; }
+    public Integer getSemester() { return semester; }
+    public UserRole getRole() { return role; }
+    public UserStatus getStatus() { return status; }
+    public LocalDateTime getOnboardingCompletedAt() { return onboardingCompletedAt; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public LocalDateTime getDeletedAt() { return deletedAt; }
 }

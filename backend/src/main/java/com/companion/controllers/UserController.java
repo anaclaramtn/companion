@@ -1,23 +1,18 @@
 package com.companion.controllers;
 
-import com.companion.dtos.user.UserRequestDTO;
-import com.companion.dtos.user.UserResponseDTO;
-import com.companion.dtos.user.UserUpdateRequestDTO;
+import com.companion.dtos.common.PageResponse;
+import com.companion.dtos.user.UserAccountResponseDTO;
+import com.companion.dtos.user.UserProfileUpdateRequestDTO;
+import com.companion.dtos.user.UserPublicResponseDTO;
 import com.companion.services.UserService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 
-import java.net.URI;
-import java.util.List;
-
+@Validated
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
@@ -28,33 +23,38 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping
-    public ResponseEntity<UserResponseDTO> create(@Valid @RequestBody UserRequestDTO request) {
-        UserResponseDTO response = userService.create(request);
-        return ResponseEntity.created(URI.create("/api/users/" + response.id())).body(response);
+    @GetMapping("/me")
+    public UserAccountResponseDTO me() {
+        return userService.getCurrentAccount();
     }
 
-    @GetMapping
-    public ResponseEntity<List<UserResponseDTO>> findAll() {
-        return ResponseEntity.ok(userService.findAll());
+    @PutMapping("/me/profile")
+    public UserAccountResponseDTO updateMyProfile(@Valid @RequestBody UserProfileUpdateRequestDTO request) {
+        return userService.updateOwnProfile(request);
+    }
+
+    @PostMapping("/me/onboarding/complete")
+    public UserAccountResponseDTO completeOnboarding() {
+        return userService.completeOnboarding();
+    }
+
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> deleteMyAccount() {
+        userService.deleteOwnAccount();
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserResponseDTO> findById(@PathVariable Long id) {
-        return ResponseEntity.ok(userService.findById(id));
+    public UserPublicResponseDTO profile(@PathVariable Long id) {
+        return userService.getPublicProfile(id);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<UserResponseDTO> update(
-            @PathVariable Long id,
-            @Valid @RequestBody UserUpdateRequestDTO request
+    @GetMapping
+    public PageResponse<UserPublicResponseDTO> search(
+            @RequestParam(required = false) String query,
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "10") @Min(1) @Max(50) int size
     ) {
-        return ResponseEntity.ok(userService.update(id, request));
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        userService.delete(id);
-        return ResponseEntity.noContent().build();
+        return userService.search(query, page, size);
     }
 }

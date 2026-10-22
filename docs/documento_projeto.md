@@ -1,4 +1,15 @@
 # Especificação de Requisitos de Software Companion
+
+ESCOPO NORMATIVO DA VERSÃO 1.0: consulte [`escopo_v1.md`](escopo_v1.md),
+[`guia_desenvolvimento.md`](guia_desenvolvimento.md) e
+[`modelo-entidades.puml`](modelo-entidades.puml). Este documento mantém o
+contexto e os requisitos históricos. Requisitos RF/ RN ou casos de uso antigos
+que proponham recursos excluídos pelo escopo consolidado estão obsoletos e não
+autorizam implementação; atualizar este documento sempre que o escopo mudar.
+Decisões confirmadas: matrícula é opcional, só é mantida se informada e deve
+ser única; curso é opcional; semestre é exigido somente quando a pessoa optar por informá-lo no
+perfil; posts e respostas aceitam até 300 caracteres; matéria com qualquer
+associação a usuário ou post não pode ser excluída.
 Esse documento é a versão 2 do primeiro documento do projeto, que foi o rascunho inicial da aplicação. No documento atual, a equipe tomou mais decisões importantes de arquitetura, que afetaram a estrutura do monolíto.
 
 
@@ -35,7 +46,7 @@ De acordo com a pesquisa feita por Höhne & Zander em 2019, com 449 alunos de co
 
 Além disso, de acordo com o artigo de Dekhane, Park, Jonassen & Jin (2024), “Virtual Peer Mentoring to Develop a Sense of Belonging During COVID-19 – A Pilot Study”, que foi feito em uma instituição pública de acesso aberto nos Estados Unidos, a prática das mentorias (nesse caso, realizadas de forma online) tem capacidade de ampliar o sentimento de pertencimento dos alunos. Os mentores, que eram estudantes de nível mais avançado, entraram em contato com alunos calouros/no início da universidade semanalmente, por 14 semanas, conversando não apenas sobre os conteúdos da universidade, mas também sobre assuntos mais particulares, como crescimento pessoal, orientação e suporte acadêmico, resolução de problemas pessoais, autoeficácia, etc... O resultado dessas 14 semanas foi um aumento da sensação de pertencimento desses alunos ao curso, além de aumentar a retenção desses alunos na instituição.
 
-O Companion organiza a colaboração acadêmica em posts de dúvida. Cada post pertence a uma matéria e pode receber respostas de outros estudantes. A resposta com mais curtidas é apresentada como aceita, enquanto a resposta do usuário com maior proficiência na matéria recebe um destaque próprio. O sistema combina perfis, seguidores, busca e troca de conhecimento em um ambiente voltado aos estudantes de Ciência da Computação da Universidade de Fortaleza.
+O Companion organiza a colaboração acadêmica em posts de dúvida, cada qual associado a uma matéria e aberto a respostas diretas de outros estudantes. Posts e respostas não são editáveis após a publicação; podem ser excluídos logicamente pelo autor ou moderados. Curtidas existem somente para posts. O sistema combina perfis, matérias, seguidores, busca e troca de conhecimento em um ambiente voltado aos estudantes de Ciência da Computação da Universidade de Fortaleza. O catálogo completo da versão 1.0 está em `escopo_v1.md`.
 
 ## Referências
 
@@ -55,25 +66,7 @@ O “Companion” será uma aplicação Web nova e autossuficiente, desenvolvida
 
 ## 2.2 Funções do Produto
 
-Veja uma breve descrição de alguns dos serviços oferecidos pelo Companion:
-
-- Criação de post de dúvida: O usuário poderá criar um post associado a uma matéria para solicitar ajuda sobre um conteúdo do curso.
-
-- Resposta ao post: Outros usuários poderão responder ao post por meio de comentários, compartilhando explicações e possíveis soluções.
-
-- Editar e excluir conteúdo: O autor poderá editar ou excluir logicamente o próprio post ou resposta. Conteúdo alterado exibirá a indicação “Editado”, e o administrador poderá removê-lo por moderação.
-
-- Curtidas e destaques: Usuários poderão curtir respostas. A resposta com mais curtidas será aceita automaticamente, e o respondente com maior proficiência na matéria receberá um destaque adicional.
-
-- Seguir outros usuários: A partir das dúvidas publicadas, o usuário poderá seguir outros alunos que considere interessantes ou que possam contribuir para seus estudos.
-
-- Ver dúvidas de um usuário: No perfil de cada usuário, será possível visualizar outras dúvidas que ele já publicou na plataforma.
-
-- Informações do perfil: O perfil apresentará foto, biografia, matérias dominadas ou desejadas, proficiência autodeclarada, seguidores, pessoas seguidas, posts publicados e atividade de respostas.
-
-- Criação de perfil no primeiro acesso (HU004): Após o cadastro, o usuário definirá nome e username e poderá informar foto, biografia, curso, faculdade, disciplinas, trabalho, instituição de trabalho e redes sociais. Os campos opcionais poderão ser preenchidos posteriormente.
-
-- Comentários e respostas (HU006): O usuário poderá comentar em publicações, responder a comentários e respostas em threads, navegar pelas discussões, curtir comentários e respostas, excluir os próprios comentários e denunciar conteúdo de outros usuários.
+As funcionalidades vigentes estão organizadas por tela em `escopo_v1.md`. Em resumo: cadastro e autenticação; conclusão de perfil e onboarding opcional; feed e detalhes de posts; respostas diretas; curtidas em posts; perfis públicos e seguimento; busca de posts e estudantes; denúncias e moderação; FAQ; administração de usuários e matérias; e recuperação de senha. A versão 1.0 não permite editar posts/respostas, criar threads, curtir respostas ou marcar resposta aceita. Trabalho, redes sociais e faculdade como campo separado não integram o modelo vigente.
 
 ## 2.3 Classes de Usuários e Características
 
@@ -112,6 +105,11 @@ A configuração mínima para executar o Companion é um computador com Windows 
 # Requisitos do Sistema
 
 ## Requisitos Funcionais
+
+Nota de atualização: os IDs RF08, RF11, RF12, RF13, RF23, RF24 e RF25 abaixo
+foram retirados do escopo vigente e são mantidos apenas por histórico. A
+relação normativa e atualizada dos requisitos está em `escopo_v1.md`. RF26
+deve ser interpretado como denúncia de post ou resposta direta, não de thread.
 
 | **ID**   | **ÁREA**      | **REQUISITO**            | **DESCRIÇÃO**                                                                               |
 |----------|---------------|--------------------------|---------------------------------------------------------------------------------------------|
@@ -158,6 +156,10 @@ A configuração mínima para executar o Companion é um computador com Windows 
 
 ## Regras de Negócio
 
+Nota de atualização: RN07, RN08, RN09, RN10 e RN11 abaixo são regras antigas
+de resposta aceita, curtida em resposta, destaque de proficiência e edição; não
+se aplicam à versão 1.0. O catálogo normativo está em `escopo_v1.md`.
+
 | **ID**   | **ÁREA**   | **REQUISITO**            | **DESCRIÇÃO**                                                                                |
 |----------|------------|--------------------------|----------------------------------------------------------------------------------------------|
 | **RN01** | CONTA      | CONTA INDIVIDUAL         | Cada usuário possui uma conta própria.                                                       |
@@ -187,6 +189,9 @@ A configuração mínima para executar o Companion é um computador com Windows 
 | **AT02** | ADMINISTRADOR | Responsável pelo gerenciamento e manutenção da plataforma, possuindo acesso às funções administrativas do sistema.                                                           |
 
 ## Casos de Uso
+
+Os casos de uso que dependam de itens excluídos da versão 1.0 são referências
+históricas, não funcionalidades implementáveis. Consulte `escopo_v1.md`.
 
 | **ID**   | **ATOR**      | **CASO DE USO**                                       |
 |----------|---------------|-------------------------------------------------------|

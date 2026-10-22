@@ -1,3 +1,18 @@
+# HISTÓRIAS DE USUÁRIO — REFERÊNCIA DE INTERFACE
+
+O catálogo vigente de funcionalidades da versão 1.0 está em
+[`escopo_v1.md`](escopo_v1.md), com regras em `guia_desenvolvimento.md` e
+modelo em `modelo-entidades.puml`. Este arquivo contém histórias acumuladas de
+versões anteriores. Use critérios e detalhes de tela somente quando forem
+compatíveis com esses documentos. Menções a edição de posts/respostas, threads,
+respostas a respostas, curtidas em respostas, resposta aceita, selo automático,
+Google OAuth, itens salvos, bloqueio, notificações, chat, compartilhamento
+persistido, verificação acadêmica, trabalho ou redes sociais não pertencem ao
+escopo da versão 1.0. Posts e respostas têm limite de 300 caracteres; matrícula
+e curso são opcionais, matrícula informada é única, semestre é exigido se a pessoa decidir informá-lo, e
+matérias associadas a usuários ou posts não podem ser excluídas. Não implementar
+itens fora de escopo nem regras antigas que contrariem essas decisões.
+
 # HU001 - Tela inicial de acesso do sistema (Login)
 
 Como: Usuário ou administrador

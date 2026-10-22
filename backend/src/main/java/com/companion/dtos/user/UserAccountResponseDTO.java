@@ -5,16 +5,20 @@ import com.companion.enums.UserStatus;
 
 import java.time.LocalDateTime;
 
-public record UserResponseDTO(
+public record UserAccountResponseDTO(
         Long id,
-        String name,
         String email,
+        String name,
+        String username,
+        String avatarUrl,
+        String bio,
         String registrationNumber,
         String course,
         Integer semester,
-        String bio,
-        UserStatus status,
         UserRole role,
+        UserStatus status,
+        boolean profileComplete,
+        LocalDateTime onboardingCompletedAt,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {

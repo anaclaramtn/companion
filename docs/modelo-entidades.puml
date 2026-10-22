@@ -1,5 +1,5 @@
 @startuml
-title Companion — Modelo de entidades (versão 1.0 recomendada)
+title Companion — Modelo de entidades (versão 1.0 vigente)
 
 hide methods
 hide stereotypes
@@ -51,7 +51,7 @@ entity "users" as User {
   username : VARCHAR(30) <<UQ>>
   avatar_url : VARCHAR(500)
   bio : VARCHAR(500)
-  registration_number : VARCHAR(30) <<UQ>>
+  registration_number : VARCHAR(30) <<UQ, nullable>>
   course : VARCHAR(120)
   semester : SMALLINT
   * role : UserRole
@@ -184,13 +184,28 @@ PostComment |o--o{ Report : alvo resposta
 note right of User
   name e username podem ficar nulos apenas
   entre cadastro e conclusão do perfil.
+  username é único sem diferenciar caixa e
+  armazenado em minúsculas, sem @.
+  Matrícula e curso são opcionais; matrícula
+  só é mantida quando informada. Semestre é
+  opcional, mas condicionalmente obrigatório
+  se a pessoa decidir exibi-lo no perfil.
+  vínculo acadêmico é declaratório.
   Conta excluída é anonimizada.
+end note
+
+note right of Subject
+  O nome é único sem diferenciar maiúsculas
+  de minúsculas. Matéria com associação a
+  usuário ou post não pode ser excluída.
+  Não apagar posts nem históricos em cascata.
 end note
 
 note right of PostComment
   Toda resposta pertence diretamente ao post.
   Não há respostas a respostas nem edição
-  no protótipo inicial.
+  no protótipo inicial. Conteúdo limitado a
+  300 caracteres, embora a coluna seja TEXT.
 end note
 
 note right of Report
@@ -211,7 +226,8 @@ end note
 note bottom of Post
   Quantidades de curtidas e respostas
   são calculadas, não colunas.
-  Conteúdo longo é expandido com Ver mais.
+  Conteúdo limitado a 300 caracteres; a
+  coluna é TEXT. Ver mais é comportamento visual.
 end note
 
 @enduml

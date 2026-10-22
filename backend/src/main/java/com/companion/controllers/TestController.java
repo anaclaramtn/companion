@@ -15,7 +15,7 @@ public class TestController {
         return Map.of(
                 "application", "Companion",
                 "status", "online",
-                "message", "Backend funcionando!"
+                "message", "Online"
         );
     }
 }
