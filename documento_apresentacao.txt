@@ -1,0 +1,419 @@
+COMPANION — GUIA DE ARQUITETURA E APRESENTAÇÃO DO BACKEND
+Versão do escopo: 1.0
+Finalidade: apoiar a apresentação técnica e os testes da API pelo Postman.
+
+======================================================================
+1. O QUE O BACKEND FAZ
+======================================================================
+
+O Companion é um monólito modular em camadas. O backend expõe uma API REST
+JSON para cadastro e autenticação, perfis, matérias, posts, respostas,
+curtidas, seguidores, denúncias, moderação, FAQ e recuperação de senha.
+
+O frontend ainda não consome estes endpoints. Para a demonstração atual,
+use Postman ou outro cliente HTTP. O contrato funcional vigente está em
+docs/escopo_v1.md; arquitetura e regras complementares estão em
+docs/guia_desenvolvimento.md; o modelo persistente está em
+docs/modelo-entidades.puml.
+
+O caminho de uma requisição é:
+
+Cliente HTTP (Postman)
+    -> Controller
+    -> Service
+    -> Repository
+    -> Entity / Hibernate
+    -> MySQL
+
+Para uma resposta, o caminho volta do banco ao Repository, Service e
+Controller. O Service converte os dados persistidos em DTOs. Entities nunca
+são devolvidas diretamente como JSON.
+
+======================================================================
+2. ARQUITETURA E PADRÃO ADOTADO
+======================================================================
+
+O padrão é arquitetura em camadas dentro de um monólito modular. Cada
+funcionalidade pertence a um domínio e tem responsabilidades separadas.
+Isso reduz acoplamento, torna as regras testáveis sem HTTP e permite que o
+projeto evolua sem introduzir a complexidade operacional de microserviços.
+
+controllers/
+Recebe HTTP, declara rotas e verbos REST, valida os DTOs com @Valid, escolhe
+os códigos de resposta e delega o caso de uso ao Service. Não contém regra
+de negócio e não acessa Repository diretamente.
+
+services/
+Implementa os casos de uso: valida estado do domínio, aplica autorização,
+normaliza entradas, executa operações transacionais e converte Entities em
+DTOs. @Transactional agrupa alterações relacionadas; consultas podem usar
+readOnly para expressar que não devem modificar dados.
+
+repositories/
+Define consultas Spring Data JPA e operações de persistência. Consultas
+específicas ficam próximas da entidade e são escritas para filtrar exclusões
+lógicas, paginar e carregar relacionamentos necessários sem serializar o
+grafo JPA. Os contadores do feed e da busca de usuários usam consultas COUNT
+agrupadas; não há contadores armazenados como dados redundantes.
+
+entities/
+Representa tabelas, chaves, relacionamentos, timestamps, estados e
+restrições do banco. As relações N:N com atributos próprios são entidades
+associativas: UserSubject, PostLike e Follow. Isso permite guardar tipo de
+interesse/proficiência, data da curtida e direção/data do seguimento.
+
+dtos/
+Define contratos HTTP por domínio e finalidade: entrada, resposta pública,
+resposta privada, resposta administrativa, autenticação e erros. Esta
+separação impede que campos internos como passwordHash sejam expostos e
+evita que clientes enviem papel ou estado administrativo em atualizações de
+perfil.
+
+enums/
+Concentra valores fechados do domínio, como USER/MODERATOR/ADMIN,
+ACTIVE/SUSPENDED/DELETED, interesse acadêmico, proficiência e estado/motivo
+de denúncia. O uso de enums evita valores textuais arbitrários.
+
+security/
+Configura Spring Security stateless, leitura e emissão de JWT, conversão
+de papéis em authorities, autenticação e autorização. O usuário atual é
+identificado pelo token/contexto de segurança, não por um userId enviado
+para reivindicar autoria.
+
+exceptions/
+Concentra exceções de domínio e o GlobalExceptionHandler. Erros da API
+seguem ApiErrorDTO com timestamp, status, título, mensagem, caminho e erros
+de campos. Erros de validação retornam 400; ausência retorna 404; conflito
+de unicidade/integridade retorna 409; falta de autenticação retorna 401; falta
+de permissão retorna 403.
+
+Por que manter essa estrutura?
+
+1. O Controller traduz HTTP sem conhecer detalhes de persistência.
+2. O Service pode ser testado em isolamento e é a fonte das regras do produto.
+3. O Repository permite mudar consultas sem espalhar SQL pela aplicação.
+4. DTOs limitam o que entra e sai da API, reduzindo riscos de segurança.
+5. Entidades associativas preservam restrições e atributos de cada relação.
+6. Um único monólito é simples de executar e demonstrar; separação em
+   camadas preserva organização sem exigir rede, deploy ou observabilidade
+   distribuída de microserviços.
+
+Este é um padrão em camadas (Controller-Service-Repository), não uma
+implementação de Clean Architecture ou arquitetura hexagonal. Interfaces e
+camadas adicionais só devem ser introduzidas quando houver necessidade
+concreta, para não criar abstrações sem benefício.
+
+======================================================================
+3. MAPA DOS PACOTES E DOMÍNIOS
+======================================================================
+
+backend/src/main/java/com/companion/
+  BackendApplication.java             Inicialização Spring Boot
+  controllers/                        Contratos HTTP REST
+  dtos/auth/                          Login, token e redefinição de senha
+  dtos/common/                        Resposta paginada e mensagens comuns
+  dtos/faq/                           Entrada e saída de FAQ
+  dtos/follow/                        Estado/contagens de seguimento
+  dtos/post/                          Posts, respostas e curtidas
+  dtos/report/                        Criação, análise e resposta de denúncia
+  dtos/subject/                       Matérias e associação ao perfil
+  dtos/user/                          Cadastro, perfil público/privado/admin
+  entities/                           Mapeamento JPA
+  enums/                              Valores fechados do domínio
+  exceptions/                         Erros e resposta HTTP padronizada
+  repositories/                       Persistência e consultas
+  security/                           JWT, Spring Security e principal
+  services/                           Casos de uso e regras de negócio
+
+backend/src/main/resources/
+  application.properties              Configuração base e MySQL
+  application-dev.properties          Segredo por ambiente para o perfil dev
+  application-demo.properties         Banco H2 efêmero para demonstração/teste
+
+backend/src/test/java/com/companion/
+  CompanionApiIntegrationTest.java    Fluxos HTTP, regras e autorização
+  services/                           Testes unitários de Services
+  repositories/                       Testes de integração com H2
+
+======================================================================
+4. MODELO DE DADOS E DECISÕES IMPORTANTES
+======================================================================
+
+Entidades persistidas: User, Subject, UserSubject, Post, PostComment,
+PostLike, Follow, Report, Faq e PasswordResetToken.
+
+User reúne autenticação e dados essenciais do perfil. Não existe uma tabela
+Profile separada porque ela não tem ciclo de vida independente. A API separa
+DTO público, DTO privado do titular e DTO administrativo.
+
+UserSubject registra matéria, DOMINA/QUER_APRENDER e proficiência. O par
+usuário/matéria é único.
+
+Post é uma dúvida obrigatoriamente ligada a autor e matéria. Seu título tem
+até 160 caracteres e conteúdo até 300. PostComment é resposta direta a Post,
+sem parent_comment, sem edição e com conteúdo até 300 caracteres. Ambos
+usam exclusão lógica com deletedAt; não apagar respostas ou conteúdo em
+cascata.
+
+PostLike impede curtida duplicada pelo par usuário/post. A contagem é
+calculada por COUNT. Respostas não recebem curtidas.
+
+Follow é direcionado e único por seguidor/seguido; não permite auto-seguimento.
+
+Report aponta para exatamente um post ou uma resposta, não permite denúncia
+do próprio conteúdo nem repetição da mesma pessoa para o mesmo alvo. Denunciar
+não remove o conteúdo. A revisão registra revisor e data.
+
+Faq é conteúdo global, ordenado, ativável/desativável e sem FK para quem o
+editou. PasswordResetToken armazena somente SHA-256, expira em 15 minutos e
+é de uso único.
+
+Uma Subject não pode ser excluída se houver qualquer associação com usuário
+ou post. O Service retorna conflito 409; a FK do banco protege a integridade
+como última barreira. Nenhuma remoção em cascata deve apagar histórico.
+
+Cadastro: apenas e-mail e senha. Nome e username são definidos depois e são
+obrigatórios antes do feed. E-mail e username são comparados sem diferenciar
+maiúsculas/minúsculas; username é guardado em minúsculas, sem @. Matrícula e
+curso são opcionais; matrícula só é mantida se informada e é única. Semestre não é
+obrigatório para usar a conta e só é exigido se a pessoa quiser incluí-lo no
+perfil. Matrícula informada é única. O vínculo acadêmico não é verificado
+externamente.
+
+Perfis ACTIVE podem autenticar. SUSPENDED e DELETED não autenticam. Suspender
+não remove conteúdo. Excluir conta anonimiza os dados pessoais e preserva
+posts/respostas para manter contexto.
+
+======================================================================
+5. AUTENTICAÇÃO E AUTORIZAÇÃO
+======================================================================
+
+Spring Security é stateless: a API não mantém sessão no servidor. Após
+cadastro/login, o cliente envia o token assim:
+
+Authorization: Bearer <accessToken>
+
+O JWT dura 60 minutos e não tem refresh token. Senhas são codificadas com
+BCrypt. JWT_SECRET deve vir do ambiente ou do arquivo local .env ignorado
+pelo Git; os valores de .env.example são somente marcadores e devem ser
+substituídos. Credenciais SMTP também são configuradas por ambiente.
+
+USER usa funcionalidades comuns; MODERATOR analisa denúncias e modera posts
+e respostas; ADMIN também administra contas, matérias e FAQs. A regra é
+verificada no backend. Botões ou parâmetros enviados pelo cliente não
+concedem autorização.
+
+Ao alterar papel/status, autentique novamente para obter um token com claims
+atualizados. Mesmo com claim antiga no JWT, os Services também verificam o
+papel/estado corrente no banco nos casos administrativos/de domínio.
+
+======================================================================
+6. BANCO E CONFIGURAÇÃO DE AMBIENTES
+======================================================================
+
+Perfil dev: MySQL 8.4 pelo Docker Compose. O volume mysql_data preserva os
+dados entre reinicializações comuns do container. A configuração Hibernate
+usa ddl-auto=update no MySQL existente; não usar create/create-drop nesse
+banco nem remover volume para "corrigir" schema, pois isso apaga dados.
+
+Perfil demo: H2 em memória, modo compatível com MySQL e create-drop. É
+efêmero: os registros desaparecem ao encerrar a aplicação. Use para uma
+verificação rápida da API, não para uma apresentação que dependa de dados
+persistentes ou de manutenção posterior.
+
+Perfil de teste: H2 independente do MySQL local e sem depender de credenciais
+reais. Os testes recriam as tabelas no banco efêmero.
+
+Iniciar MySQL, na raiz do projeto (PowerShell):
+
+  docker compose up -d
+
+Iniciar backend no perfil dev, em outro terminal:
+
+  cd backend
+  .\gradlew.bat bootRun --args="--spring.profiles.active=dev"
+
+O arquivo .env da raiz deve existir e conter valores locais válidos para
+MYSQL_DATABASE, MYSQL_USER, MYSQL_PASSWORD, MYSQL_ROOT_PASSWORD e JWT_SECRET
+(no mínimo 32 bytes). Não compartilhe nem faça commit desse arquivo. Na
+verificação atual, o .env local ainda não tinha JWT_SECRET. Se for necessário
+gerar uma chave temporária para uma demonstração local, execute no mesmo
+PowerShell antes de iniciar a API:
+
+  $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+  $secretBytes = [byte[]]::new(32)
+  $rng.GetBytes($secretBytes)
+  $env:JWT_SECRET = [Convert]::ToBase64String($secretBytes)
+  $rng.Dispose()
+
+Essa variável só existe nessa janela do PowerShell e não é salva em arquivo.
+Se fechar a janela, gere/configure outra chave e autentique usuários de novo,
+pois os tokens assinados pela chave anterior deixam de ser válidos.
+
+O Docker Desktop não estava acessível na última verificação deste projeto.
+Se docker compose up -d falhar com erro de conexão ao Docker Engine, inicie o
+Docker Desktop e repita o comando. A suíte de testes com H2 não depende desse
+serviço.
+
+======================================================================
+7. CONTRATO REST PARA O POSTMAN
+======================================================================
+
+URL base local: http://localhost:8080
+Prefixo da API: http://localhost:8080/api
+Content-Type para JSON: application/json
+Autenticação: Bearer Token, salvo nas rotas públicas descritas abaixo.
+
+AUTENTICAÇÃO E CONTA
+POST /api/auth/register                         Público; recebe email,password
+POST /api/auth/login                            Público; identifier,password
+POST /api/auth/password/forgot                  Público; email
+GET  /api/auth/password/reset/validate?token=   Público; valida token
+POST /api/auth/password/reset                   Público; token e nova senha
+GET  /api/users/me                              Conta da sessão atual
+PUT  /api/users/me/profile                      Atualiza perfil próprio
+POST /api/users/me/onboarding/complete          Marca conclusão do onboarding
+DELETE /api/users/me                            Anonimiza a própria conta
+GET  /api/users/{id}                            Perfil público
+GET  /api/users?query=&page=0&size=10            Pesquisa estudantes paginada
+
+ADMINISTRAÇÃO DE CONTAS (ADMIN)
+GET    /api/admin/users?query=&page=0&size=20
+PATCH  /api/admin/users/{id}/role               JSON: {"role":"MODERATOR"}
+PATCH  /api/admin/users/{id}/status             JSON: {"status":"SUSPENDED"}
+DELETE /api/admin/users/{id}                    Exclusão lógica/anônima
+
+MATÉRIAS E PERFIL ACADÊMICO
+GET    /api/subjects?query=                     Lista/pesquisa; autenticado
+GET    /api/subjects/{id}                       Consulta
+POST   /api/subjects                            ADMIN; JSON {"name":"..."}
+PUT    /api/subjects/{id}                       ADMIN; renomeia
+DELETE /api/subjects/{id}                       ADMIN; 409 se associada
+POST   /api/users/me/subjects                   JSON subjectId,interestType,proficiency
+GET    /api/users/me/subjects                   Lista próprias
+GET    /api/users/me/subjects/{subjectId}       Consulta própria
+PUT    /api/users/me/subjects/{subjectId}       Atualiza interesse/proficiência
+DELETE /api/users/me/subjects/{subjectId}       Remove associação própria
+GET    /api/users/{userId}/subjects             Associações públicas do perfil
+
+POSTS, FEED, RESPOSTAS E CURTIDAS
+GET    /api/posts?page=0&size=10                Feed; size máximo 10
+GET    /api/posts?query=árvore&subjectId=1       Pesquisa/filtro paginado
+GET    /api/posts/{id}                           Detalhe ativo
+POST   /api/posts                               JSON subjectId,title,content
+DELETE /api/posts/{id}                           Exclusão lógica; autor/moderação
+GET    /api/posts/{postId}/comments              Respostas diretas
+POST   /api/posts/{postId}/comments              JSON {"content":"..."}
+GET    /api/users/{userId}/comments?page=0       Respostas de um estudante
+DELETE /api/comments/{id}                        Exclusão lógica; autor/moderação
+POST   /api/posts/{postId}/likes                 Curtir post atual
+GET    /api/posts/{postId}/likes                 Contagem/estado da curtida
+DELETE /api/posts/{postId}/likes                 Descurtir
+GET    /api/users/me/liked-posts?page=0           Posts curtidos pelo próprio titular
+
+SEGUIDORES
+POST   /api/users/{userId}/follow                Seguir
+DELETE /api/users/{userId}/follow                Deixar de seguir
+GET    /api/users/{userId}/follow-status         Estado e contagens
+GET    /api/users/{userId}/followers?page=0       Lista paginada
+GET    /api/users/{userId}/following?page=0       Lista paginada
+
+DENÚNCIAS E MODERAÇÃO
+POST   /api/reports                              USER; postId XOR postCommentId,
+                                                 reason e details opcional
+GET    /api/reports?status=PENDING&page=0         MODERATOR/ADMIN
+GET    /api/reports/{id}                          MODERATOR/ADMIN
+PATCH  /api/reports/{id}                          MODERATOR/ADMIN; status RESOLVED
+                                                 ou DISMISSED
+
+FAQ
+GET    /api/faqs                                 Público; somente ativos
+GET    /api/faqs/{id}                            Público; somente ativo
+GET    /api/admin/faqs?page=0                    ADMIN; inclui inativos
+POST   /api/admin/faqs                           ADMIN; pergunta,resposta,
+                                                 displayOrder,active
+PUT    /api/admin/faqs/{id}                      ADMIN; atualiza campos
+DELETE /api/admin/faqs/{id}                      ADMIN
+
+GET /api/test é um endpoint simples de disponibilidade, sem dados do domínio.
+
+Para respostas criadas, a API retorna 201 Created e cabeçalho Location.
+Exclusões retornam 204 No Content. Consultas e atualizações retornam 200.
+Entradas inválidas retornam 400; conflito de unicidade/estado retorna 409;
+sem token retorna 401; sem papel/permissão retorna 403; recurso ausente ou
+logicamente excluído em consulta pública retorna 404.
+
+O conteúdo de post e resposta aceita no máximo 300 caracteres. Não existe
+PUT/PATCH para posts ou respostas. Não envie campos authorId, role, status ou
+datas de auditoria ao criar/atualizar perfil; autoria vem da autenticação.
+
+======================================================================
+8. ROTEIRO RÁPIDO DE DEMONSTRAÇÃO
+======================================================================
+
+1. Inicie Docker Desktop e MySQL. Inicie a API com o perfil dev.
+2. POST /api/auth/register com {"email":"aluno1@exemplo.com",
+   "password":"Senha123"}. Guarde accessToken da resposta.
+3. Envie Authorization: Bearer <token> e faça PUT /api/users/me/profile com
+   {"name":"Aluno Um","username":"aluno1"}. Nome e username liberam o feed.
+4. Para a primeira conta administrativa, use o mecanismo local documentado no
+   README: registre o usuário, promova somente essa conta no banco local e
+   autentique novamente para obter JWT com papel ADMIN. Nunca promova contas
+   em produção por SQL manual. No banco local, o comando é:
+   UPDATE users SET role = 'ADMIN' WHERE email = 'seu-email-local';
+5. Como ADMIN, crie matéria com POST /api/subjects.
+6. Associe a matéria ao perfil com POST /api/users/me/subjects. Exemplo:
+   {"subjectId":1,"interestType":"DOMINA","proficiency":"AVANCADO"}.
+7. Crie um segundo usuário e complete seu perfil. Crie um post com POST
+   /api/posts usando {"subjectId":1,"title":"Dúvida de algoritmos",
+   "content":"Como funciona a busca binária?"}.
+8. Responda com POST /api/posts/{id}/comments, curta com
+   POST /api/posts/{id}/likes e verifique /api/posts?page=0&size=10.
+9. Siga um perfil com POST /api/users/{id}/follow.
+10. Denuncie conteúdo de outra pessoa com POST /api/reports. Como ADMIN ou
+    MODERATOR, consulte /api/reports?status=PENDING e conclua a análise.
+11. Crie/edite/desative um FAQ via /api/admin/faqs e confira /api/faqs.
+12. Exclua post/resposta e confira que não aparecem mais em consultas públicas.
+
+Para recuperar senha com perfil dev, faça POST /api/auth/password/forgot.
+Use o link/token registrado pelo serviço de desenvolvimento no console, valide
+em GET /api/auth/password/reset/validate?token=... e redefina por POST
+/api/auth/password/reset. Nunca use o modo que revela token fora de dev.
+
+O banco MySQL local contém dados persistentes. Não execute comandos para apagar
+volumes em uma demonstração. H2 em perfil demo/test é descartável ao encerrar.
+
+======================================================================
+9. COMO OS TESTES PROTEGEM O BACKEND
+======================================================================
+
+Executar no PowerShell:
+
+  cd backend
+  .\gradlew.bat test --rerun-tasks
+
+DomainRepositoryTest verifica restrições de unicidade em associações e curtidas.
+UserServiceTest cobre normalização/conflito de cadastro. CompanionApiIntegrationTest
+percorre cadastro, perfil, autorização, matéria e associação, feed e busca,
+respostas, curtidas, seguidores, denúncias, moderação, FAQ, exclusões lógicas,
+recuperação de senha e tentativas sem permissão. BackendApplicationTests verifica
+inicialização. Testes usam H2 e não exigem Docker nem credenciais SMTP.
+
+Na última execução desta revisão, a suíte completa foi executada com
+--rerun-tasks e terminou em BUILD SUCCESSFUL. O Docker Engine não estava
+disponível neste computador, portanto não foi possível verificar uma conexão
+real com o MySQL local nesta execução. Inicie Docker Desktop antes da
+apresentação que precise de persistência MySQL.
+
+======================================================================
+10. LIMITES CONHECIDOS DA VERSÃO 1.0
+======================================================================
+
+Não implementar edição de posts/respostas, threads, curtidas em respostas,
+resposta aceita, selo automático de proficiência, Google OAuth, notificações,
+chat, bloqueios, itens salvos, grupos, chamadas, tickets, busca semântica ou
+recomendação personalizada.
+
+O frontend permanece em seu estado visual original e não está integrado à API.
+Este backend foi preparado para validação por HTTP/Postman. O catálogo
+normativo é docs/escopo_v1.md.
