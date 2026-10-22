@@ -1,0 +1,119 @@
+.login-page {
+  --orange-light: #faa851;
+  --orange: #f67f00;
+  --orange-deep: #d96700;
+  --orange-deep-2: #8f4300;
+  --orange-deep-3: #492301;
+  --muted: #69788a;
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: 100dvh;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 10% 18%, rgb(246 127 0 / 11%), transparent 30%),
+    radial-gradient(circle at 87% 80%, rgb(246 127 0 / 7%), transparent 34%),
+    linear-gradient(145deg, #fff8f1 0%, #fffaf5 55%, #f7efe5 100%);
+}
+
+.login-page::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background-image: radial-gradient(rgb(200 112 34 / 9%) 0.7px, transparent 0.7px);
+  background-size: 24px 24px;
+  content: '';
+  pointer-events: none;
+}
+
+.ambient-glow {
+  position: absolute;
+  z-index: -1;
+  width: 33vw;
+  height: 33vw;
+  border-radius: 50%;
+  filter: blur(42px);
+  pointer-events: none;
+}
+
+.ambient-glow--orange {
+  top: -19vw;
+  right: -8vw;
+  background: rgb(246 127 0 / 8%);
+}
+
+.ambient-glow--orange-secondary {
+  bottom: -21vw;
+  left: -10vw;
+  background: rgb(246 127 0 / 6%);
+}
+
+.graph-veil {
+  position: fixed;
+  z-index: 0;
+  inset: 0;
+  background: rgb(65 62 58 / 15%);
+  pointer-events: none;
+}
+
+.login-main {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  min-height: 0;
+  align-items: center;
+  justify-items: end;
+  padding: 10px 120px 10px 22px;
+}
+
+.login-column {
+  display: grid;
+  width: 462px;
+  gap: 14px;
+}
+
+.login-footer {
+  position: relative;
+  z-index: 1;
+  padding: 0 8px;
+  color: var(--muted);
+  font-size: 0.76rem;
+  text-align: right;
+}
+
+@keyframes cardEnter {
+  from { opacity: 0; transform: translateY(18px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes logoEnter {
+  from { opacity: 0; transform: translateY(-9px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes riseIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-brand,
+  .login-card,
+  .login-heading,
+  .field-group,
+  .submit-button,
+  .signup-row,
+  .divider,
+  .alternate-label,
+  .google-button {
+    animation: none;
+  }
+
+  .field-group input,
+  .submit-button,
+  .google-button,
+  .text-button {
+    transition: none;
+  }
+}
