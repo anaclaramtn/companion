@@ -92,6 +92,16 @@
   gap: 5px;
 }
 
+.auth-input-wrap input[aria-invalid='true'] {
+  border-color: #c62828;
+}
+
+.auth-field-error {
+  margin: 0;
+  color: #b42318;
+  font-size: 0.82rem;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .submit-button,
   .text-button {
