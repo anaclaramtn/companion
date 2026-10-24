@@ -2,6 +2,7 @@ import { useState } from 'react'
 import 'bootstrap-icons/font/bootstrap-icons.css'
 import AuthForm from '../../features/auth/components/AuthForm.jsx'
 import AuthLayout from '../../layouts/auth/AuthLayout.jsx'
+import { Link } from 'react-router'
 
 function LoginPage() {
   const [username, setUsername] = useState('')
@@ -53,9 +54,9 @@ function LoginPage() {
             value: password,
             onChange: clearNotice(setPassword),
             labelAction: (
-              <button className="text-button forgot-button" type="button" onClick={showPreviewNotice}>
+              <Link className="text-button forgot-button" to="/recuperar-senha">
                 Esqueceu a senha?
-              </button>
+              </Link>
             ),
             trailing: (
               <button
