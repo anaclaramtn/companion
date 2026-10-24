@@ -78,9 +78,9 @@ function LoginPage() {
         footer={(
           <div className="signup-row">
             <span>Ainda não possui conta?</span>
-            <button className="text-button" type="button" onClick={showPreviewNotice}>
+            <Link className="text-button" to="/criar-conta">
               Criar conta
-            </button>
+            </Link>
           </div>
         )}
       />

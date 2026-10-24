@@ -56,7 +56,7 @@ function ForgotPasswordPage() {
             label: 'E-mail',
             type: 'email',
             autoComplete: 'email',
-            placeholder: 'usuario@gmail.com',
+            placeholder: 'usuario@edu.unifor.br',
             value: email,
             required: true,
             error: emailError,

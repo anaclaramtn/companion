@@ -70,3 +70,23 @@
   font-size: 1rem;
   transform: translateY(-50%);
 }
+
+.auth-field-helper {
+  margin: 0;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid rgb(246 127 0 / 22%);
+  border-radius: 10px;
+  color: #8f4300;
+  background: #fff3e3;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.password-requirements {
+  margin: 0;
+  padding-left: 1rem;
+}
+
+.password-requirements li + li {
+  margin-top: 0.2rem;
+}

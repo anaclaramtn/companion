@@ -12,9 +12,15 @@ function AuthField({
   onBlur,
   required = false,
   error,
+  helper,
   labelAction,
   trailing,
 }) {
+  const describedBy = [
+    helper && `${id}-helper`,
+    error && `${id}-error`,
+  ].filter(Boolean).join(' ') || undefined
+
   return (
     <div className="field-group">
       {labelAction ? (
@@ -38,10 +44,16 @@ function AuthField({
           onChange={(event) => onChange(event.target.value)}
           onBlur={onBlur}
           aria-invalid={Boolean(error)}
-          aria-describedby={error ? `${id}-error` : undefined}
+          aria-describedby={describedBy}
         />
         {trailing && <span className="auth-input-trailing">{trailing}</span>}
       </div>
+
+      {helper && (
+        <p id={`${id}-helper`} className="auth-field-helper">
+          {helper}
+        </p>
+      )}
 
       {error && (
         <p id={`${id}-error`} className="auth-field-error" role="alert">
