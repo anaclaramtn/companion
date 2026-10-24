@@ -1,0 +1,79 @@
+.auth-card {
+  position: relative;
+  width: 100%;
+  padding: 29px 36px 30px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(12px);
+  animation: cardEnter 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.auth-card::after {
+  position: absolute;
+  top: -90px;
+  right: -90px;
+  z-index: -1;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(246 127 0 / 7%), transparent 68%);
+  content: '';
+  pointer-events: none;
+}
+
+.auth-heading {
+  animation: riseIn 600ms 150ms both;
+}
+
+.auth-heading h1 {
+  margin: 8px 0 6px;
+  color: var(--color-text);
+  font-size: 2.72rem;
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 1.1;
+}
+
+.auth-heading p {
+  margin: 0 0 23px;
+  color: var(--color-text-secondary);
+  font-size: 0.96rem;
+  line-height: 1.45;
+}
+
+.auth-card-footer {
+  margin-top: 19px;
+  color: var(--color-text-secondary);
+  font-size: 0.88rem;
+  animation: riseIn 580ms 410ms both;
+}
+
+.preview-notice {
+  position: fixed;
+  z-index: 5;
+  right: 18px;
+  bottom: 18px;
+  width: min(360px, calc(100vw - 36px));
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 11px;
+  color: var(--color-text);
+  background: var(--color-surface);
+  box-shadow: 0 12px 26px rgb(111 65 27 / 13%);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+@media (max-width: 520px) {
+  .auth-card {
+    padding: 25px 22px;
+  }
+
+  .auth-heading h1 {
+    font-size: 2.25rem;
+  }
+}

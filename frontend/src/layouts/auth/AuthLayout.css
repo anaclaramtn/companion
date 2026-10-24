@@ -1,4 +1,4 @@
-.login-page {
+.auth-page {
   --orange-light: #faa851;
   --orange: #f67f00;
   --orange-deep: #d96700;
@@ -12,12 +12,12 @@
   height: 100dvh;
   overflow: hidden;
   background:
-    radial-gradient(circle at 10% 18%, rgb(246 127 0 / 11%), transparent 30%),
-    radial-gradient(circle at 87% 80%, rgb(246 127 0 / 7%), transparent 34%),
+    radial-gradient(circle at 100% 0%, rgb(246 127 0 / 11%), transparent 30%),
+    radial-gradient(circle at 0% 100%, rgb(246 127 0 / 7%), transparent 34%),
     linear-gradient(145deg, #fff8f1 0%, #fffaf5 55%, #f7efe5 100%);
 }
 
-.login-page::before {
+.auth-page::before {
   position: absolute;
   z-index: -1;
   inset: 0;
@@ -53,11 +53,11 @@
   position: fixed;
   z-index: 0;
   inset: 0;
-  background: rgb(65 62 58 / 15%);
+  background: rgba(65, 62, 58, 5%);
   pointer-events: none;
 }
 
-.login-main {
+.auth-main {
   position: relative;
   z-index: 1;
   display: grid;
@@ -67,13 +67,13 @@
   padding: 10px 120px 10px 22px;
 }
 
-.login-column {
+.auth-column {
   display: grid;
-  width: 462px;
+  width: min(462px, 100%);
   gap: 14px;
 }
 
-.login-footer {
+.auth-footer {
   position: relative;
   z-index: 1;
   padding: 0 8px;
@@ -97,10 +97,21 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
+@media (max-width: 768px) {
+  .auth-main {
+    justify-items: center;
+    padding: 10px 22px;
+  }
+
+  .auth-column {
+    width: min(462px, 100%);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .site-brand,
-  .login-card,
-  .login-heading,
+  .auth-card,
+  .auth-heading,
   .field-group,
   .submit-button,
   .signup-row,

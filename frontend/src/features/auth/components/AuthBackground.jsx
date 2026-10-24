@@ -1,10 +1,10 @@
 import { useEffect, useRef } from 'react'
-import './GraphBackground.css'
+import './AuthBackground.css'
 
-const COLORS = { orange: '246, 127, 0', muted: '105, 120, 138' }
-const SPAWN_INTERVAL = 160
+const COLORS = { orange: '255, 160, 75', muted: '105, 120, 138' }
+const SPAWN_INTERVAL = 70
 
-function GraphBackground() {
+function AuthBackground() {
   const canvasRef = useRef(null)
 
   useEffect(() => {
@@ -38,8 +38,8 @@ function GraphBackground() {
         y: Math.min(0.97, Math.max(0.03, y)),
         vx: (Math.random() - 0.5) * 0.004,
         vy: (Math.random() - 0.5) * 0.004,
-        radius: 1.4 + Math.random(),
-        color: Math.random() < 0.12 ? COLORS.muted : COLORS.orange,
+        radius: 1.2 + Math.random() * 1.2,
+        color: COLORS.orange,
         bornAt,
       })
     }
@@ -83,7 +83,7 @@ function GraphBackground() {
           context.beginPath()
           context.moveTo(first.x * width, first.y * height)
           context.lineTo(first.x * width + dx * progress, first.y * height + dy * progress)
-          context.strokeStyle = `rgba(${second.color}, ${strength * 0.2})`
+          context.strokeStyle = `rgba(${second.color}, ${strength * 0.35})`
           context.lineWidth = 1
           context.stroke()
         }
@@ -92,7 +92,7 @@ function GraphBackground() {
         const centerY = first.y * height
         const glow = context.createRadialGradient(
           centerX, centerY, 0, centerX, centerY, first.radius * 3)
-        glow.addColorStop(0, `rgba(${first.color}, ${firstOpacity * 0.06})`)
+        glow.addColorStop(0, `rgba(${first.color}, ${firstOpacity * 0.08})`)
         glow.addColorStop(1, `rgba(${first.color}, 0)`)
         context.beginPath()
         context.arc(centerX, centerY, first.radius * 3, 0, Math.PI * 2)
@@ -101,7 +101,7 @@ function GraphBackground() {
 
         context.beginPath()
         context.arc(centerX, centerY, first.radius, 0, Math.PI * 2)
-        context.fillStyle = `rgba(${first.color}, ${firstOpacity * 0.38})`
+        context.fillStyle = `rgba(${first.color}, ${firstOpacity * 0.45})`
         context.fill()
       }
     }
@@ -113,7 +113,7 @@ function GraphBackground() {
       canvas.width = Math.round(width * pixelRatio)
       canvas.height = Math.round(height * pixelRatio)
       context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0)
-      targetCount = Math.min(135, Math.max(34, Math.round(width * height / 10500)))
+      targetCount = Math.min(180, Math.max(60, Math.round(width * height / 7500)))
       nodes = nodes.slice(-targetCount)
 
       const now = performance.now()
@@ -170,4 +170,4 @@ function GraphBackground() {
   return <canvas ref={canvasRef} className="graph-background" aria-hidden="true" />
 }
 
-export default GraphBackground
+export default AuthBackground
