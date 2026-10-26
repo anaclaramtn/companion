@@ -1,7 +1,7 @@
-import companionLogo from '../../assets/icon_companion.png'
-import './LoginBrand.css'
+import companionLogo from '../../../assets/icon_companion.png'
+import './AuthBrand.css'
 
-function LoginBrand() {
+function AuthBrand() {
   return (
     <header className="site-header">
       <div className="site-brand">
@@ -16,4 +16,4 @@ function LoginBrand() {
   )
 }
 
-export default LoginBrand
+export default AuthBrand
