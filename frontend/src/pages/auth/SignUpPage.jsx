@@ -1,5 +1,6 @@
 import {useState} from 'react'
 import {Link} from 'react-router'
+import 'bootstrap-icons/font/bootstrap-icons.css'
 import AuthForm from '../../features/auth/components/AuthForm.jsx'
 import AuthLayout from '../../layouts/auth/AuthLayout.jsx'
 
@@ -49,6 +50,8 @@ function RegisterPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [passwordConfirmation, setPasswordConfirmation] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [showPasswordConfirmation, setShowPasswordConfirmation] = useState(false)
 
   const [emailTouched, setEmailTouched] = useState(false)
   const [passwordTouched, setPasswordTouched] = useState(false)
@@ -105,12 +108,13 @@ function RegisterPage() {
               setMessage('')
             },
             onBlur: () => setEmailTouched(true),
+            trailing: <i className="bi bi-envelope" aria-hidden="true" />,
           },
           {
             id: 'register-password',
             name: 'password',
             label: 'Senha',
-            type: 'password',
+            type: showPassword ? 'text' : 'password',
             autoComplete: 'new-password',
             placeholder: 'Crie uma senha',
             value: password,
@@ -129,12 +133,23 @@ function RegisterPage() {
               setMessage('')
             },
             onBlur: () => setPasswordTouched(true),
+            trailing: (
+              <button
+                className="password-visibility-button"
+                type="button"
+                aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                aria-pressed={showPassword}
+                onClick={() => setShowPassword((visible) => !visible)}
+              >
+                <i className={`bi ${showPassword ? 'bi-eye-slash' : 'bi-eye'}`} aria-hidden="true" />
+              </button>
+            ),
           },
           {
             id: 'register-password-confirmation',
             name: 'passwordConfirmation',
             label: 'Confirmar senha',
-            type: 'password',
+            type: showPasswordConfirmation ? 'text' : 'password',
             autoComplete: 'new-password',
             placeholder: 'Digite a senha novamente',
             value: passwordConfirmation,
@@ -145,6 +160,17 @@ function RegisterPage() {
               setMessage('')
             },
             onBlur: () => setConfirmationTouched(true),
+            trailing: (
+              <button
+                className="password-visibility-button"
+                type="button"
+                aria-label={showPasswordConfirmation ? 'Ocultar senha' : 'Mostrar senha'}
+                aria-pressed={showPasswordConfirmation}
+                onClick={() => setShowPasswordConfirmation((visible) => !visible)}
+              >
+                <i className={`bi ${showPasswordConfirmation ? 'bi-eye-slash' : 'bi-eye'}`} aria-hidden="true" />
+              </button>
+            ),
           },
         ]}
         submitLabel="Criar conta"
