@@ -1,11 +1,11 @@
-import { useNavigate } from 'react-router'
+import { useNavigate, useOutletContext } from 'react-router'
 import OptionList from '../../components/common/OptionList.jsx'
 import AccountSummaryCard from '../../components/user/AccountSummaryCard.jsx'
-import { mockCurrentUser } from '../../data/mockPublicUsers.js'
 import { mockSettingsSections } from '../../data/mockSettingsOptions.js'
 
 function SettingsPage() {
   const navigate = useNavigate()
+  const { currentUser } = useOutletContext()
 
   function handleSelect(action) {
     if (action === 'logout') {
@@ -23,7 +23,7 @@ function SettingsPage() {
         Configurações
       </h1>
 
-      <AccountSummaryCard user={mockCurrentUser} />
+      <AccountSummaryCard user={currentUser} to="/perfil" />
 
       {mockSettingsSections.map((section) => (
         <OptionList

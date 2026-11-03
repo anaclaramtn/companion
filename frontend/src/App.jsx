@@ -9,6 +9,14 @@ import ExplorePage from './pages/search/ExplorePage.jsx'
 import PublicProfilePage from './pages/profile/PublicProfilePage.jsx'
 import PostDetailPage from './pages/posts/PostDetailPage.jsx'
 import SettingsPage from './pages/settings/SettingsPage.jsx'
+import AccountInfoPage from './pages/settings/AccountInfoPage.jsx'
+import AccountSettingsPage from './pages/settings/AccountSettingsPage.jsx'
+import FaqPage from './pages/faq/FaqPage.jsx'
+import AboutPage from './pages/about/AboutPage.jsx'
+import SupportPage from './pages/support/SupportPage.jsx'
+import TermsPage from './pages/terms/TermsPage.jsx'
+import MyProfilePage from './pages/profile/MyProfilePage.jsx'
+import EditProfilePage from './pages/profile/EditProfilePage.jsx'
 
 function App() {
   return (
@@ -32,6 +40,29 @@ function App() {
 
       <Route path="/configuracoes" element={<FeedLayout />}>
         <Route index element={<SettingsPage />} />
+        <Route path="conta" element={<AccountInfoPage />} />
+        <Route path="ajustes" element={<AccountSettingsPage />} />
+      </Route>
+
+      <Route path="/faq" element={<FeedLayout />}>
+        <Route index element={<FaqPage />} />
+      </Route>
+
+      <Route path="/sobre" element={<FeedLayout />}>
+        <Route index element={<AboutPage />} />
+      </Route>
+
+      <Route path="/ajuda" element={<FeedLayout />}>
+        <Route index element={<SupportPage />} />
+      </Route>
+
+      <Route path="/termos" element={<FeedLayout />}>
+        <Route index element={<TermsPage />} />
+      </Route>
+
+      <Route path="/perfil" element={<FeedLayout />}>
+        <Route index element={<MyProfilePage />} />
+        <Route path="editar" element={<EditProfilePage />} />
       </Route>
     </Routes>
   )

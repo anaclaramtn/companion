@@ -170,6 +170,12 @@ input {
   box-sizing: border-box;
 }
 
+/* Reserva sempre o espaço da barra de rolagem: sem isso, telas curtas (sem
+   rolagem) ficam mais largas que as longas e o layout "pula" entre elas. */
+html {
+  scrollbar-gutter: stable;
+}
+
 body {
   margin: 0;
   font-family: var(--font-family);

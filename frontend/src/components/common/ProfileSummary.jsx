@@ -1,14 +1,14 @@
+import { Link } from 'react-router'
+
 function ProfileSummary({
   name = 'Seu perfil',
   followingCount = 0,
   followersCount = 0,
   avatarUrl,
+  to,
 }) {
-  return (
-    <section
-      aria-label="Resumo do perfil"
-      className="hidden rounded-2xl border border-companion-border/70 bg-companion-surface p-5 shadow-sm sm:block"
-    >
+  const content = (
+    <>
       {avatarUrl ? (
         <img
           src={avatarUrl}
@@ -35,6 +35,25 @@ function ProfileSummary({
           seguidores
         </p>
       </div>
+    </>
+  )
+
+  return (
+    <section
+      aria-label="Resumo do perfil"
+      className="hidden overflow-hidden rounded-2xl border border-companion-border/70 bg-companion-surface shadow-sm sm:block"
+    >
+      {to ? (
+        <Link
+          to={to}
+          aria-label={`Ver meu perfil: ${name}`}
+          className="block p-5 transition-colors hover:bg-white/80"
+        >
+          {content}
+        </Link>
+      ) : (
+        <div className="p-5">{content}</div>
+      )}
     </section>
   )
 }

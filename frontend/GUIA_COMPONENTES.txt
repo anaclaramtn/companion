@@ -33,6 +33,9 @@ frontend/src/
     profile/
     search/
     settings/
+    about/
+    support/
+    terms/
     admin/
     faq/
   routes/                 Configurações auxiliares de rotas, se necessárias.
@@ -79,11 +82,110 @@ COMPONENTES COMUNS — src/components/common/
     itens sem nenhum dos dois aparecem como "Em breve". tone "danger" destaca
     ações como sair da conta.
 
+  SubjectTag.jsx
+    Etiqueta de conteúdo/matéria, usada nos posts e na busca. Recebe name e,
+    opcionalmente, onRemove para exibir o botão de remover.
+
+  TagSearchInput.jsx
+    Campo de busca com etiquetas. Ao digitar "#texto" seguido de dois espaços,
+    chama onAddTag(texto) e mantém o restante em query. Backspace com o campo
+    vazio remove a última etiqueta. Recebe id, label, placeholder, query, tags,
+    onQueryChange, onAddTag e onRemoveTag(index).
+    Opcionalmente recebe suggestions (lista de nomes): elas aparecem abaixo do
+    campo e podem ser escolhidas com clique, setas, Enter ou Tab. A página
+    decide quais sugestões mostrar (na Explorar, matérias que combinam com o
+    texto digitado depois do "#").
+
+  FormField.jsx
+    Campo de formulário com rótulo, dica, contador de caracteres e erro.
+    Recebe id, label, hint, error, multiline (usa <textarea>), value,
+    maxLength e prefix (ex.: "@"); as demais props vão para o campo.
+
+  ToastProvider.jsx
+    Exibe avisos temporários (toasts) no rodapé da tela por 4 segundos. Fica
+    em main.jsx, envolvendo toda a aplicação. Para disparar um aviso, use o
+    hook src/hooks/useToast.js:
+      const showToast = useToast()
+      showToast('E-mail enviado com sucesso.')
+      showToast('Algo deu errado.', { type: 'error' })
+
+  ConfirmDialog.jsx
+    Janela de confirmação para ações importantes. Recebe title, description,
+    confirmLabel, cancelLabel, tone ("danger" deixa o botão vermelho),
+    isConfirming, canConfirm, onConfirm e onCancel (use useCallback, pois é
+    dependência do efeito que trata o Esc). children aparece antes dos botões.
+
+  InfoList.jsx
+    Lista somente leitura de informações, agrupada sob um título (usada em
+    Informações da conta). Recebe id, title e items no formato
+    { id, label, value, icon, hint }; value vazio aparece como
+    "Não informado".
+
+  BackLink.jsx
+    Link de retorno com seta, usado no topo de telas internas como FAQ e
+    Sobre. Recebe to e label.
+
+  FaqItem.jsx
+    Pergunta expansível do FAQ, baseada em <details>. Recebe question e
+    answer. A lista de perguntas fica em src/data/mockFaqs.js.
+
 COMPONENTES DE USUÁRIO — src/components/user/
 
   AccountSummaryCard.jsx
     Cartão com avatar, nome, username, curso e semestre da conta autenticada.
-    Recebe user com name, username, avatarUrl, course e semester.
+    Recebe user com name, username, avatarUrl, course e semester, e "to"
+    opcional para o cartão inteiro virar link (nas configurações, /perfil).
+
+  ProfileHeader.jsx
+    Cabeçalho de perfil com capa, avatar, nome, username, bio, curso, data de
+    entrada e contagem de seguindo/seguidores. Recebe titleId, user,
+    followingCount, followerCount, onOpenRelation('following' | 'followers'),
+    actions (botão no canto direito, como Seguir ou Editar perfil) e children
+    (conteúdo extra abaixo das contagens, como mensagens de erro).
+
+  ProfileSubjects.jsx
+    Matérias do perfil em dois grupos: "Tenho dificuldade" (QUER_APRENDER) e
+    "Posso ajudar" (DOMINA). Recebe subjects no formato de mockUserSubjects.
+    Não renderiza nada quando a lista está vazia.
+
+  ProfileActivityTabs.jsx
+    Abas "Posts" e "Respostas" de um perfil. Recebe posts, comments,
+    postCount e commentCount (opcionais; padrão é o tamanho das listas),
+    currentUserId, reportReasons, onLikeChange, onReport, emptyPostsText e
+    emptyCommentsText. Com likedPosts (e emptyLikedText), mostra também a aba
+    "Curtidos"; só o perfil próprio passa essa lista.
+
+  SubjectInterestPicker.jsx
+    Seleção das matérias do perfil em dois grupos ("Tenho dificuldade" e
+    "Posso ajudar"). Recebe subjects (catálogo), value (lista de
+    { subject, interestType }) e onChange. Uma matéria fica em um só grupo.
+
+  Edição de perfil (src/pages/profile/EditProfilePage.jsx, rota
+  /perfil/editar): usa FormField e SubjectInterestPicker e salva por
+  src/services/accountService.js (mock, só em memória). O FeedLayout guarda
+  currentUser e currentUserSubjects e fornece onProfileUpdate via Outlet
+  context, atualizando também a autoria dos posts e respostas da conta.
+
+  PasswordResetCard.jsx
+    Bloco com o botão "Enviar link por e-mail" para alterar a senha com a
+    conta logada. Recebe id, title (padrão "Senha") e label (padrão "Alterar
+    senha"). Usa o hook src/hooks/usePasswordResetEmail.js, que chama
+    accountService.sendPasswordResetEmail e mostra um toast com o resultado.
+    Aparece em Configurações da conta e em Ajuda e suporte. A tela
+    /recuperar-senha fica só para quem não está logado.
+
+  Curtidas: o FeedLayout guarda likedByCurrentUser/likeCount no estado dos
+  posts e fornece onLikeChange via Outlet context. As páginas repassam esse
+  callback ao PostCard para a curtida valer em todas as telas.
+
+  ProfileLink.jsx
+    Link para o perfil de um usuário. Para a conta autenticada, leva a
+    /perfil; para os demais, a /feed/users/:userId.
+
+  Perfil próprio (src/pages/profile/MyProfilePage.jsx, rota /perfil) e perfil
+  público (PublicProfilePage.jsx, rota /feed/users/:userId) usam os três
+  componentes acima. O perfil próprio pode ser aberto pelo avatar do Header,
+  pelo ProfileSummary da lateral (prop "to") e pelo cartão das configurações.
 
 COMPONENTES DE POSTS — src/components/post/
 

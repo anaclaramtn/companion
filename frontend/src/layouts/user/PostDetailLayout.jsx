@@ -7,6 +7,7 @@ function PostDetailLayout() {
     repliesByPost,
     reportReasons,
     onCreateReply,
+    onLikeChange,
     onReport,
     currentUserId,
   } = useOutletContext()
@@ -33,6 +34,7 @@ function PostDetailLayout() {
           reportReasons,
           currentUserId,
           onCreateReply,
+          onLikeChange,
           onReport,
         }}
       />

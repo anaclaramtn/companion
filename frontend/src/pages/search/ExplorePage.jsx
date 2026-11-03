@@ -1,16 +1,113 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
+import { useOutletContext } from 'react-router'
+import TagSearchInput from '../../components/common/TagSearchInput.jsx'
+import PostCard from '../../components/post/PostCard.jsx'
 import { mockTrendingSubjects } from '../../data/mockExploreSubjects.js'
+import { mockSubjects } from '../../data/mockPosts.js'
+
+const MAX_SUGGESTIONS = 5
+
+// Ignora maiúsculas e acentos: "programacao" encontra "Programação".
+function normalize(text) {
+  return text
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .trim()
+    .toLocaleLowerCase('pt-BR')
+}
+
+// Nomes de matérias conhecidas, sem repetição, para sugerir como etiqueta.
+const subjectNames = [...mockTrendingSubjects, ...mockSubjects]
+  .map((subject) => subject.name)
+  .filter(
+    (name, index, names) =>
+      names.findIndex((other) => normalize(other) === normalize(name)) === index,
+  )
+
+function getPostSubjects(post) {
+  return post.subjects ?? (post.subject ? [post.subject] : [])
+}
 
 function ExplorePage() {
+  const { posts, reportReasons, onLikeChange, onReport, currentUserId } =
+    useOutletContext()
   const [query, setQuery] = useState('')
-  const subjects = useMemo(() => {
-    const normalizedQuery = query.trim().toLocaleLowerCase('pt-BR')
-    if (!normalizedQuery) return mockTrendingSubjects
+  const [tags, setTags] = useState([])
 
-    return mockTrendingSubjects.filter((subject) =>
-      subject.name.toLocaleLowerCase('pt-BR').includes(normalizedQuery),
+  // O trecho depois do último "#" é uma etiqueta ainda em digitação.
+  const hashIndex = query.lastIndexOf('#')
+  const textQuery = normalize(hashIndex === -1 ? query : query.slice(0, hashIndex))
+  const tagDraft = hashIndex === -1 ? null : normalize(query.slice(hashIndex + 1))
+  const tagFilters = [...tags.map(normalize), tagDraft].filter(Boolean)
+  const isSearching = textQuery !== '' || tagFilters.length > 0
+
+  const selectedTags = tags.map(normalize)
+  const suggestions =
+    tagDraft === null
+      ? []
+      : subjectNames
+          .filter((name) => {
+            const normalizedName = normalize(name)
+            return (
+              normalizedName.includes(tagDraft) &&
+              !selectedTags.includes(normalizedName)
+            )
+          })
+          .slice(0, MAX_SUGGESTIONS)
+
+  const words = textQuery.split(/\s+/).filter(Boolean)
+  const relatedPosts = isSearching
+    ? posts.filter((post) => {
+        const subjects = getPostSubjects(post).map((subject) =>
+          normalize(subject.name),
+        )
+        const matchesTags =
+          tagFilters.length === 0 ||
+          tagFilters.some((tag) =>
+            subjects.some((subject) => subject.includes(tag)),
+          )
+        const searchableText = normalize(
+          [
+            post.title,
+            post.content,
+            post.author.name,
+            post.author.username,
+            ...subjects,
+          ].join(' '),
+        )
+        return (
+          matchesTags && words.every((word) => searchableText.includes(word))
+        )
+      })
+    : []
+
+  const trendingSubjects = mockTrendingSubjects.filter((subject) => {
+    const name = normalize(subject.name)
+    const matchesTags =
+      tagFilters.length === 0 || tagFilters.some((tag) => name.includes(tag))
+    return matchesTags && name.includes(textQuery)
+  })
+
+  const searchLabel = [...tags.map((tag) => `#${tag}`), query.trim()]
+    .filter(Boolean)
+    .join(' ')
+
+  function handleAddTag(tagName) {
+    // Usa o nome oficial da matéria quando a etiqueta corresponde a uma.
+    const name =
+      subjectNames.find((item) => normalize(item) === normalize(tagName)) ??
+      tagName
+
+    setTags((currentTags) =>
+      currentTags.some((tag) => normalize(tag) === normalize(name))
+        ? currentTags
+        : [...currentTags, name],
     )
-  }, [query])
+  }
+
+  function handleRemoveTag(index) {
+    setTags((currentTags) => currentTags.filter((_, i) => i !== index))
+  }
 
   return (
     <section aria-labelledby="explore-title" className="space-y-5">
@@ -22,24 +119,56 @@ function ExplorePage() {
       </h1>
 
       <form role="search" onSubmit={(event) => event.preventDefault()}>
-        <label htmlFor="explore-search" className="sr-only">
-          Buscar por dúvidas, tags ou usuários
-        </label>
-        <div className="relative">
-          <i
-            aria-hidden="true"
-            className="bi bi-search pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-companion-muted"
-          />
-          <input
-            id="explore-search"
-            type="search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Buscar por dúvidas, tags ou usuários..."
-            className="h-12 w-full rounded-xl border border-companion-border/70 bg-companion-surface pl-11 pr-4 text-sm text-companion-text shadow-sm outline-none transition placeholder:text-companion-muted focus:border-companion-orange focus:ring-4 focus:ring-companion-orange/15"
-          />
-        </div>
+        <TagSearchInput
+          id="explore-search"
+          label="Buscar por dúvidas, tags ou usuários"
+          placeholder="Buscar por dúvidas, #matérias ou usuários..."
+          query={query}
+          tags={tags}
+          suggestions={suggestions}
+          onQueryChange={setQuery}
+          onAddTag={handleAddTag}
+          onRemoveTag={handleRemoveTag}
+        />
       </form>
+
+      {isSearching && (
+        <section aria-labelledby="related-posts-title" className="space-y-4">
+          <div className="flex items-center justify-between gap-4">
+            <h2
+              id="related-posts-title"
+              className="text-lg font-bold text-companion-text"
+            >
+              Posts relacionados
+            </h2>
+            <span
+              role="status"
+              className="shrink-0 text-sm text-companion-muted"
+            >
+              {relatedPosts.length}{' '}
+              {relatedPosts.length === 1 ? 'resultado' : 'resultados'}
+            </span>
+          </div>
+
+          {relatedPosts.length > 0 ? (
+            relatedPosts.map((post) => (
+              <PostCard
+                key={post.id}
+                post={post}
+                currentUserId={currentUserId}
+                reportReasons={reportReasons}
+                onLikeChange={onLikeChange}
+                onReport={onReport}
+                detailsHref={`/feed/posts/${post.id}`}
+              />
+            ))
+          ) : (
+            <p className="rounded-2xl border border-companion-border/70 bg-companion-surface px-6 py-8 text-sm text-companion-muted shadow-sm">
+              Nenhum post encontrado para “{searchLabel}”.
+            </p>
+          )}
+        </section>
+      )}
 
       <section
         aria-labelledby="trending-title"
@@ -57,28 +186,34 @@ function ExplorePage() {
           </h2>
         </header>
 
-        {subjects.length > 0 ? (
+        {trendingSubjects.length > 0 ? (
           <ol>
-            {subjects.map((subject, index) => (
+            {trendingSubjects.map((subject, index) => (
               <li
                 key={subject.id}
-                className="border-b border-companion-border/50 px-5 py-3 last:border-b-0 sm:px-6"
+                className="border-b border-companion-border/50 last:border-b-0"
               >
-                <p className="text-xs text-companion-muted">
-                  {index + 1} · Assunto acadêmico
-                </p>
-                <h3 className="font-bold text-companion-text">
-                  #{subject.name}
-                </h3>
-                <p className="text-xs text-companion-muted">
-                  {subject.postCount} posts
-                </p>
+                <button
+                  type="button"
+                  onClick={() => handleAddTag(subject.name)}
+                  className="block w-full px-5 py-3 text-left transition-colors hover:bg-white/80 sm:px-6"
+                >
+                  <span className="block text-xs text-companion-muted">
+                    {index + 1} · Assunto acadêmico
+                  </span>
+                  <span className="block font-bold text-companion-text">
+                    #{subject.name}
+                  </span>
+                  <span className="block text-xs text-companion-muted">
+                    {subject.postCount} posts
+                  </span>
+                </button>
               </li>
             ))}
           </ol>
         ) : (
-          <p role="status" className="px-6 py-8 text-sm text-companion-muted">
-            Nenhum assunto encontrado para “{query}”.
+          <p className="px-6 py-8 text-sm text-companion-muted">
+            Nenhum assunto encontrado para “{searchLabel}”.
           </p>
         )}
       </section>

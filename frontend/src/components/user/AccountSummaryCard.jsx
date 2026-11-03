@@ -1,14 +1,14 @@
-function AccountSummaryCard({ user }) {
+import { Link } from 'react-router'
+
+// Cartão da conta autenticada. Com "to", o cartão inteiro vira um link.
+function AccountSummaryCard({ user, to }) {
   const details = [
     user.course,
     user.semester ? `${user.semester}º semestre` : null,
   ].filter(Boolean)
 
-  return (
-    <section
-      aria-label="Sua conta"
-      className="flex items-center gap-4 rounded-2xl border border-companion-border/70 bg-companion-surface p-5 shadow-sm sm:p-6"
-    >
+  const content = (
+    <>
       {user.avatarUrl ? (
         <img
           src={user.avatarUrl}
@@ -21,7 +21,7 @@ function AccountSummaryCard({ user }) {
         </div>
       )}
 
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1">
         <p className="truncate text-lg font-bold text-companion-text">
           {user.name}
         </p>
@@ -34,6 +34,33 @@ function AccountSummaryCard({ user }) {
           </p>
         )}
       </div>
+
+      {to && (
+        <span className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-companion-muted">
+          Ver perfil
+          <i className="bi bi-chevron-right" aria-hidden="true" />
+        </span>
+      )}
+    </>
+  )
+
+  const className = 'flex items-center gap-4 p-5 sm:p-6'
+
+  return (
+    <section
+      aria-label="Sua conta"
+      className="overflow-hidden rounded-2xl border border-companion-border/70 bg-companion-surface shadow-sm"
+    >
+      {to ? (
+        <Link
+          to={to}
+          className={`${className} transition-colors hover:bg-white/80`}
+        >
+          {content}
+        </Link>
+      ) : (
+        <div className={className}>{content}</div>
+      )}
     </section>
   )
 }

@@ -7,10 +7,10 @@ export const mockCurrentUser = {
   bio: 'Estudante de Ciência da Computação e parte da comunidade Companion.',
   course: 'Ciência da Computação',
   semester: 4,
-  postCount: 0,
-  commentCount: 0,
-  followerCount: 0,
-  followingCount: 0,
+  postCount: 1,
+  commentCount: 1,
+  followerCount: 2,
+  followingCount: 1,
   createdAt: '2026-01-10T12:00:00',
 }
 
@@ -23,10 +23,10 @@ export const mockPublicUsers = [
     bio: 'Aprendendo estruturas de dados e compartilhando dúvidas pelo caminho.',
     course: 'Ciência da Computação',
     semester: 3,
-    postCount: 1,
+    postCount: 2,
     commentCount: 0,
     followerCount: 4,
-    followingCount: 6,
+    followingCount: 7,
     createdAt: '2025-08-12T09:30:00',
   },
   {
@@ -37,7 +37,7 @@ export const mockPublicUsers = [
     bio: 'Gosto de modelagem de dados e de aprender em grupo.',
     course: 'Ciência da Computação',
     semester: 5,
-    postCount: 1,
+    postCount: 2,
     commentCount: 0,
     followerCount: 3,
     followingCount: 2,
@@ -51,7 +51,7 @@ export const mockPublicUsers = [
     bio: 'Curioso sobre redes, sistemas e como a internet funciona.',
     course: 'Ciência da Computação',
     semester: 2,
-    postCount: 1,
+    postCount: 2,
     commentCount: 0,
     followerCount: 1,
     followingCount: 1,
@@ -65,10 +65,10 @@ export const mockPublicUsers = [
     bio: 'Explorando desenvolvimento web e construindo projetos com React.',
     course: 'Ciência da Computação',
     semester: 6,
-    postCount: 1,
+    postCount: 3,
     commentCount: 0,
     followerCount: 2,
-    followingCount: 1,
+    followingCount: 2,
     createdAt: '2025-04-05T08:20:00',
   },
   {
@@ -79,7 +79,7 @@ export const mockPublicUsers = [
     bio: 'Compartilhando o que aprendo em algoritmos e estruturas de dados.',
     course: 'Ciência da Computação',
     semester: 7,
-    postCount: 0,
+    postCount: 2,
     commentCount: 1,
     followerCount: 1,
     followingCount: 1,
@@ -93,7 +93,7 @@ export const mockPublicUsers = [
     bio: 'Aprendendo a explicar programação de um jeito simples.',
     course: 'Ciência da Computação',
     semester: 5,
-    postCount: 0,
+    postCount: 2,
     commentCount: 1,
     followerCount: 1,
     followingCount: 1,
@@ -107,7 +107,7 @@ export const mockPublicUsers = [
     bio: 'Interesse em banco de dados e engenharia de software.',
     course: 'Ciência da Computação',
     semester: 4,
-    postCount: 0,
+    postCount: 1,
     commentCount: 1,
     followerCount: 1,
     followingCount: 1,
@@ -116,6 +116,12 @@ export const mockPublicUsers = [
 ]
 
 export const mockUserSubjects = {
+  0: [
+    { id: 1, subject: { id: 7, name: 'Cálculo I' }, interestType: 'QUER_APRENDER', proficiency: 'INICIANTE' },
+    { id: 2, subject: { id: 3, name: 'Redes de Computadores' }, interestType: 'QUER_APRENDER', proficiency: 'INICIANTE' },
+    { id: 3, subject: { id: 8, name: 'Programação Web' }, interestType: 'DOMINA', proficiency: 'INTERMEDIARIO' },
+    { id: 4, subject: { id: 5, name: 'Algoritmos' }, interestType: 'DOMINA', proficiency: 'AVANCADO' },
+  ],
   17: [
     { id: 1701, subject: { id: 1, name: 'Estruturas de Dados' }, interestType: 'QUER_APRENDER', proficiency: 'INICIANTE' },
     { id: 1702, subject: { id: 5, name: 'Algoritmos' }, interestType: 'DOMINA', proficiency: 'INTERMEDIARIO' },
@@ -125,7 +131,7 @@ export const mockUserSubjects = {
     { id: 2302, subject: { id: 4, name: 'Desenvolvimento Web' }, interestType: 'QUER_APRENDER', proficiency: 'INICIANTE' },
   ],
   31: [
-    { id: 3101, subject: { id: 3, name: 'Redes' }, interestType: 'QUER_APRENDER', proficiency: 'INICIANTE' },
+    { id: 3101, subject: { id: 3, name: 'Redes de Computadores' }, interestType: 'QUER_APRENDER', proficiency: 'INICIANTE' },
   ],
   42: [
     { id: 4201, subject: { id: 4, name: 'Desenvolvimento Web' }, interestType: 'DOMINA', proficiency: 'AVANCADO' },
@@ -142,20 +148,21 @@ export const mockUserSubjects = {
 }
 
 export const mockUserFollowStatuses = {
-  17: { userId: 17, followedByCurrentUser: false, followerCount: 4, followingCount: 6 },
+  17: { userId: 17, followedByCurrentUser: false, followerCount: 4, followingCount: 7 },
   23: { userId: 23, followedByCurrentUser: true, followerCount: 3, followingCount: 2 },
   31: { userId: 31, followedByCurrentUser: false, followerCount: 1, followingCount: 1 },
-  42: { userId: 42, followedByCurrentUser: false, followerCount: 2, followingCount: 1 },
+  42: { userId: 42, followedByCurrentUser: false, followerCount: 2, followingCount: 2 },
   56: { userId: 56, followedByCurrentUser: false, followerCount: 1, followingCount: 1 },
   61: { userId: 61, followedByCurrentUser: false, followerCount: 1, followingCount: 1 },
   72: { userId: 72, followedByCurrentUser: false, followerCount: 1, followingCount: 1 },
 }
 
 export const mockUserFollowLists = {
-  17: { followers: [23, 56, 61, 72], following: [23, 31, 42, 56, 61, 72] },
+  0: { followers: [17, 42], following: [23] },
+  17: { followers: [23, 56, 61, 72], following: [0, 23, 31, 42, 56, 61, 72] },
   23: { followers: [0, 17, 31], following: [17, 42] },
   31: { followers: [17], following: [23] },
-  42: { followers: [17, 23], following: [17] },
+  42: { followers: [17, 23], following: [0, 17] },
   56: { followers: [17], following: [61] },
   61: { followers: [17], following: [72] },
   72: { followers: [17], following: [23] },

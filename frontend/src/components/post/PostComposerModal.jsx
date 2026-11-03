@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 
+const MAX_CONTENT_LENGTH = 256
+
 function PostComposerModal({ subjects, onClose, onSubmit }) {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
@@ -141,12 +143,12 @@ function PostComposerModal({ subjects, onClose, onSubmit }) {
               onChange={(event) => setContent(event.target.value)}
               placeholder="Descreva sua dúvida com detalhes para que outras pessoas possam ajudar..."
               rows={5}
-              maxLength={3000}
+              maxLength={MAX_CONTENT_LENGTH}
               required
               className="w-full resize-y rounded-xl border border-companion-border bg-white/80 px-4 py-3 text-sm leading-6 text-companion-text outline-none transition placeholder:text-companion-muted/75 focus:border-companion-orange focus:ring-4 focus:ring-companion-orange/15"
             />
             <p className="mt-1 text-right text-xs text-companion-muted">
-              {content.length}/3000
+              {content.length}/{MAX_CONTENT_LENGTH}
             </p>
           </div>
 

@@ -55,4 +55,22 @@ export const mockRepliesByPost = {
       reportedByCurrentUser: false,
     },
   ],
+  103: [
+    {
+      id: 1004,
+      postId: 103,
+      author: {
+        id: 0,
+        name: 'Você',
+        username: 'voce',
+        avatarUrl: null,
+      },
+      content:
+        'Comecei pelo modelo OSI e TCP/IP e depois fui para os protocolos mais comuns, como HTTP e DNS. Ajudou bastante ver tudo na prática com o Wireshark.',
+      createdAt: minutesAgo(600),
+      likeCount: 5,
+      likedByCurrentUser: false,
+      reportedByCurrentUser: false,
+    },
+  ],
 }
