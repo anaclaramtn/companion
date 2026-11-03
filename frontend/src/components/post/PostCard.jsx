@@ -1,0 +1,221 @@
+import { useCallback, useState } from 'react'
+import { Link } from 'react-router'
+import ReportPopup from './ReportPopup.jsx'
+
+function initials(name) {
+  return name
+    .split(' ')
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join('')
+}
+
+function formatRelativeTime(dateValue) {
+  const elapsedMinutes = Math.max(
+    1,
+    Math.floor((Date.now() - new Date(dateValue).getTime()) / 60000),
+  )
+
+  if (elapsedMinutes < 60) return `há ${elapsedMinutes} min`
+
+  const elapsedHours = Math.floor(elapsedMinutes / 60)
+  if (elapsedHours < 24) return `${elapsedHours}h atrás`
+
+  return `${Math.floor(elapsedHours / 24)}d atrás`
+}
+
+function PostCard({
+  post,
+  onLikeChange,
+  onSaveChange,
+  onReport,
+  reportReasons = [],
+  detailsHref,
+}) {
+  const [isLiked, setIsLiked] = useState(post.likedByCurrentUser)
+  const [likeCount, setLikeCount] = useState(post.likeCount)
+  const [isSaved, setIsSaved] = useState(post.savedByCurrentUser ?? false)
+  const [isReportOpen, setIsReportOpen] = useState(false)
+  const [isReported, setIsReported] = useState(false)
+  const subjects = post.subjects ?? (post.subject ? [post.subject] : [])
+  const closeReportPopup = useCallback(() => {
+    setIsReportOpen(false)
+  }, [])
+
+  function toggleLike() {
+    const nextLiked = !isLiked
+    setIsLiked(nextLiked)
+    setLikeCount((count) => count + (nextLiked ? 1 : -1))
+    onLikeChange?.(post.id, nextLiked)
+  }
+
+  function toggleSaved() {
+    const nextSaved = !isSaved
+    setIsSaved(nextSaved)
+    onSaveChange?.(post.id, nextSaved)
+  }
+
+  function submitReport(report) {
+    onReport?.({ ...report, targetType: 'post', targetId: post.id })
+    setIsReported(true)
+    setIsReportOpen(false)
+  }
+
+  return (
+    <>
+      <article className="rounded-2xl border border-companion-border/70 bg-companion-surface p-5 shadow-[0_8px_24px_rgba(69,42,18,0.06)] sm:p-6">
+        <div className="flex gap-4">
+        {post.author.avatarUrl ? (
+          <img
+            src={post.author.avatarUrl}
+            alt=""
+            className="size-11 shrink-0 rounded-full object-cover"
+          />
+        ) : (
+          <div
+            aria-hidden="true"
+            className="grid size-11 shrink-0 place-items-center rounded-full bg-companion-orange/10 text-sm font-bold text-companion-brand"
+          >
+            {initials(post.author.name)}
+          </div>
+        )}
+
+        <div className="min-w-0 flex-1">
+          {detailsHref ? (
+            <Link
+              to={detailsHref}
+              aria-label={`Abrir dúvida: ${post.title}`}
+              className="block rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-companion-orange"
+            >
+              <PostContent post={post} subjects={subjects} />
+            </Link>
+          ) : (
+            <PostContent post={post} subjects={subjects} />
+          )}
+
+          <div className="mt-5 flex items-center gap-5 border-t border-companion-border/70 pt-4 text-sm text-companion-muted">
+            <button
+              type="button"
+              onClick={toggleLike}
+              aria-label={isLiked ? 'Descurtir publicação' : 'Curtir publicação'}
+              aria-pressed={isLiked}
+              className={`inline-flex items-center gap-2 transition-colors ${
+                isLiked
+                  ? 'text-companion-orange'
+                  : 'text-companion-muted hover:text-companion-orange'
+              }`}
+            >
+              <i
+                className={`bi ${isLiked ? 'bi-heart-fill' : 'bi-heart'} transition-transform duration-200 active:scale-125`}
+                aria-hidden="true"
+              />
+              {likeCount}
+            </button>
+            {detailsHref ? (
+              <Link
+                to={detailsHref}
+                aria-label={`Ver ${post.commentCount} respostas`}
+                className="inline-flex items-center gap-2 transition-colors hover:text-companion-brand"
+              >
+                <i className="bi bi-chat" aria-hidden="true" />
+                {post.commentCount}
+              </Link>
+            ) : (
+              <span className="inline-flex items-center gap-2">
+                <i className="bi bi-chat" aria-hidden="true" />
+                {post.commentCount}
+              </span>
+            )}
+            <div className="ml-auto inline-flex items-center gap-4">
+              <button
+                type="button"
+                onClick={toggleSaved}
+                aria-label={
+                  isSaved ? 'Remover publicação dos salvos' : 'Salvar publicação'
+                }
+                aria-pressed={isSaved}
+                className={`transition-colors ${
+                  isSaved
+                    ? 'text-companion-orange'
+                    : 'text-companion-muted hover:text-companion-orange'
+                }`}
+              >
+                <i
+                  className={`bi ${isSaved ? 'bi-bookmark-fill' : 'bi-bookmark'} transition-transform duration-200 active:scale-125`}
+                  aria-hidden="true"
+                />
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsReportOpen(true)}
+                aria-label={isReported ? 'Publicação denunciada' : 'Denunciar publicação'}
+                aria-pressed={isReported}
+                disabled={isReported || reportReasons.length === 0}
+                className={`transition-colors ${
+                  isReported
+                    ? 'cursor-default text-companion-orange'
+                    : 'text-companion-muted hover:text-companion-orange'
+                } disabled:cursor-not-allowed disabled:opacity-60`}
+              >
+                <i
+                  className={`bi ${isReported ? 'bi-flag-fill' : 'bi-flag'}`}
+                  aria-hidden="true"
+                />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      </article>
+      {isReportOpen && (
+        <ReportPopup
+          reasons={reportReasons}
+          targetLabel="publicação"
+          onClose={closeReportPopup}
+          onSubmit={submitReport}
+        />
+      )}
+    </>
+  )
+}
+
+function PostContent({ post, subjects }) {
+  return (
+    <>
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+        <p className="text-sm font-semibold text-companion-text">
+          {post.author.name}
+          <span className="ml-2 font-normal text-companion-muted">
+            @{post.author.username}
+          </span>
+        </p>
+        <time
+          dateTime={post.createdAt}
+          className="text-xs text-companion-muted"
+        >
+          {formatRelativeTime(post.createdAt)}
+        </time>
+      </div>
+
+      <h2 className="mt-2 text-lg font-bold text-companion-text">
+        {post.title}
+      </h2>
+      <p className="mt-2 text-sm leading-6 text-companion-muted">
+        {post.content}
+      </p>
+
+      <ul className="mt-4 flex flex-wrap gap-2" aria-label="Conteúdos">
+        {subjects.map((subject) => (
+          <li
+            key={subject.id}
+            className="rounded-full bg-companion-orange/10 px-3 py-1 text-xs font-semibold text-companion-brand"
+          >
+            {subject.name}
+          </li>
+        ))}
+      </ul>
+    </>
+  )
+}
+
+export default PostCard
