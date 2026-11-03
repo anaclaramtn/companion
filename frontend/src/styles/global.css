@@ -1,4 +1,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap');
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap');
+
+@theme inline {
+  --color-companion-orange: var(--color-primary);
+  --color-companion-orange-hover: var(--color-primary-hover);
+  --color-companion-cream: var(--color-background);
+  --color-companion-surface: var(--color-surface-solid);
+  --color-companion-text: var(--color-text);
+  --color-companion-muted: var(--color-text-secondary);
+  --color-companion-border: var(--color-border);
+  --color-companion-brand: #d96700;
+}
 
 :root {
   font-family: 'Figtree', sans-serif;
