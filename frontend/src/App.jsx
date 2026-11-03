@@ -8,6 +8,7 @@ import FeedPage from './pages/feed/FeedPage.jsx'
 import ExplorePage from './pages/search/ExplorePage.jsx'
 import PublicProfilePage from './pages/profile/PublicProfilePage.jsx'
 import PostDetailPage from './pages/posts/PostDetailPage.jsx'
+import SettingsPage from './pages/settings/SettingsPage.jsx'
 
 function App() {
   return (
@@ -27,6 +28,10 @@ function App() {
 
       <Route path="/explorar" element={<FeedLayout />}>
         <Route index element={<ExplorePage />} />
+      </Route>
+
+      <Route path="/configuracoes" element={<FeedLayout />}>
+        <Route index element={<SettingsPage />} />
       </Route>
     </Routes>
   )

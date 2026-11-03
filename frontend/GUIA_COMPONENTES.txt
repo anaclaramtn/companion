@@ -32,6 +32,7 @@ frontend/src/
     posts/
     profile/
     search/
+    settings/
     admin/
     faq/
   routes/                 Configurações auxiliares de rotas, se necessárias.
@@ -68,6 +69,21 @@ COMPONENTES COMUNS — src/components/common/
     Resumo do perfil. Recebe name, followingCount, followersCount e avatarUrl.
     Os dados possuem valores padrão para que o componente também possa ser
     usado sem todas as props.
+
+  OptionList.jsx
+    Lista de opções agrupada sob um título, usada na tela de configurações.
+    Recebe id (usado no id acessível do título), title, items e onSelect.
+    Cada item tem o formato:
+      { id, label, description, icon, to, action, tone }
+    Itens com "to" navegam; itens com "action" chamam onSelect(action);
+    itens sem nenhum dos dois aparecem como "Em breve". tone "danger" destaca
+    ações como sair da conta.
+
+COMPONENTES DE USUÁRIO — src/components/user/
+
+  AccountSummaryCard.jsx
+    Cartão com avatar, nome, username, curso e semestre da conta autenticada.
+    Recebe user com name, username, avatarUrl, course e semester.
 
 COMPONENTES DE POSTS — src/components/post/
 

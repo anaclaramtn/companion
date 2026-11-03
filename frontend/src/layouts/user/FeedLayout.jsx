@@ -18,7 +18,7 @@ const navigationItems = [
   { to: '/feed', label: 'Feed', icon: 'bi-house', end: true },
   { to: '/explorar', label: 'Explorar', icon: 'bi-search' },
   { label: 'Salvos', icon: 'bi-bookmark' },
-  { label: 'Configurações', icon: 'bi-gear' },
+  { to: '/configuracoes', label: 'Configurações', icon: 'bi-gear' },
 ]
 
 function FeedLayout() {
