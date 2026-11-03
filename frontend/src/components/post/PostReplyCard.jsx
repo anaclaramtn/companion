@@ -1,0 +1,151 @@
+import { useCallback, useState } from 'react'
+import ReportPopup from './ReportPopup.jsx'
+
+function initials(name) {
+  return name
+    .split(' ')
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join('')
+}
+
+function formatRelativeTime(dateValue) {
+  const elapsedMinutes = Math.max(
+    1,
+    Math.floor((Date.now() - new Date(dateValue).getTime()) / 60000),
+  )
+
+  if (elapsedMinutes < 60) return `há ${elapsedMinutes} min`
+
+  const elapsedHours = Math.floor(elapsedMinutes / 60)
+  if (elapsedHours < 24) return `${elapsedHours}h atrás`
+
+  return `${Math.floor(elapsedHours / 24)}d atrás`
+}
+
+function PostReplyCard({
+  reply,
+  onLikeChange,
+  onReport,
+  reportReasons = [],
+}) {
+  const [isLiked, setIsLiked] = useState(reply.likedByCurrentUser)
+  const [likeCount, setLikeCount] = useState(reply.likeCount)
+  const [isReported, setIsReported] = useState(reply.reportedByCurrentUser)
+  const [isReportOpen, setIsReportOpen] = useState(false)
+  const closeReportPopup = useCallback(() => {
+    setIsReportOpen(false)
+  }, [])
+
+  function toggleLike() {
+    const nextLiked = !isLiked
+    setIsLiked(nextLiked)
+    setLikeCount((count) => count + (nextLiked ? 1 : -1))
+    onLikeChange?.(reply.id, nextLiked)
+  }
+
+  function submitReport(report) {
+    onReport?.({
+      ...report,
+      targetType: 'reply',
+      targetId: reply.id,
+      postId: reply.postId,
+    })
+    setIsReported(true)
+    setIsReportOpen(false)
+  }
+
+  return (
+    <>
+      <article className="border-b border-companion-border/70 bg-companion-surface px-5 py-5 last:border-b-0 sm:px-6">
+      <div className="flex gap-4">
+        {reply.author.avatarUrl ? (
+          <img
+            src={reply.author.avatarUrl}
+            alt=""
+            className="size-10 shrink-0 rounded-full object-cover"
+          />
+        ) : (
+          <div
+            aria-hidden="true"
+            className="grid size-10 shrink-0 place-items-center rounded-full bg-companion-orange/10 text-xs font-bold text-companion-brand"
+          >
+            {initials(reply.author.name)}
+          </div>
+        )}
+
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-baseline gap-x-2">
+            <p className="text-sm font-semibold text-companion-text">
+              {reply.author.name}
+            </p>
+            <span className="text-sm text-companion-muted">
+              @{reply.author.username}
+            </span>
+            <span aria-hidden="true" className="text-companion-muted">
+              ·
+            </span>
+            <time
+              dateTime={reply.createdAt}
+              className="text-xs text-companion-muted"
+            >
+              {formatRelativeTime(reply.createdAt)}
+            </time>
+          </div>
+          <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-companion-text">
+            {reply.content}
+          </p>
+
+          <div className="mt-4 flex items-center gap-6 text-sm">
+            <button
+              type="button"
+              onClick={toggleLike}
+              aria-label={isLiked ? 'Descurtir resposta' : 'Curtir resposta'}
+              aria-pressed={isLiked}
+              className={`inline-flex items-center gap-2 transition-colors ${
+                isLiked
+                  ? 'text-companion-orange'
+                  : 'text-companion-muted hover:text-companion-orange'
+              }`}
+            >
+              <i
+                className={`bi ${isLiked ? 'bi-heart-fill' : 'bi-heart'} transition-transform duration-200 active:scale-125`}
+                aria-hidden="true"
+              />
+              {likeCount}
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsReportOpen(true)}
+              aria-label={isReported ? 'Resposta denunciada' : 'Denunciar resposta'}
+              aria-pressed={isReported}
+              disabled={isReported || reportReasons.length === 0}
+              className={`inline-flex items-center gap-2 transition-colors ${
+                isReported
+                  ? 'cursor-default text-companion-orange'
+                  : 'text-companion-muted hover:text-companion-orange'
+              }`}
+            >
+              <i
+                className={`bi ${isReported ? 'bi-flag-fill' : 'bi-flag'}`}
+                aria-hidden="true"
+              />
+              <span>{isReported ? 'Denunciada' : 'Denunciar'}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      </article>
+      {isReportOpen && (
+        <ReportPopup
+          reasons={reportReasons}
+          targetLabel="resposta"
+          onClose={closeReportPopup}
+          onSubmit={submitReport}
+        />
+      )}
+    </>
+  )
+}
+
+export default PostReplyCard

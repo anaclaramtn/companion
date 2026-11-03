@@ -1,0 +1,287 @@
+GUIA DE COMPONENTES E ESTRUTURA DO FRONTEND
+==========================================
+
+Este guia apresenta a organização atual do frontend, os componentes que podem
+ser reutilizados e as convenções para implementar novas telas.
+
+
+1. MAPA DAS PASTAS
+------------------
+
+frontend/src/
+  App.jsx                 Rotas da aplicação.
+  main.jsx                Inicialização do React, do roteador e dos estilos.
+  api/                    Integração com endpoints da API.
+  assets/                 Imagens, ícones e outros arquivos estáticos.
+  components/             Componentes reutilizáveis da interface.
+    common/               Componentes compartilhados entre áreas/telas.
+    post/                 Componentes de publicações.
+    comment/              Componentes de comentários.
+    user/                 Componentes relacionados ao usuário.
+  contexts/               Contextos React compartilhados.
+  data/                   Dados mockados ou fixtures para desenvolvimento.
+  features/               Componentes e estilos agrupados por funcionalidade.
+    auth/                 Elementos específicos da autenticação.
+  hooks/                  Hooks React reutilizáveis.
+  layouts/                Estruturas que envolvem páginas e rotas.
+    auth/                 Layouts de autenticação.
+    user/                 Layouts da área do usuário.
+  pages/                  Telas associadas às rotas.
+    auth/
+    feed/
+    posts/
+    profile/
+    search/
+    admin/
+    faq/
+  routes/                 Configurações auxiliares de rotas, se necessárias.
+  services/               Lógica de serviços e acesso a dados.
+  styles/                 Estilos globais e estilos base.
+
+Use os nomes de diretório existentes em inglês e mantenha cada arquivo na pasta
+que representa melhor sua responsabilidade.
+
+
+2. COMPONENTES REUTILIZÁVEIS JÁ IMPLEMENTADOS
+---------------------------------------------
+
+COMPONENTES COMUNS — src/components/common/
+
+  Header.jsx
+    Cabeçalho da área do feed, com marca, busca, botão para postar dúvida e
+    avatar.
+    Props atuais:
+      onPostQuestion: função chamada ao clicar em "Postar dúvida".
+      userName: texto acessível do botão de perfil.
+      userAvatarUrl: endereço opcional da imagem do usuário.
+
+  Background.jsx
+    Fundo visual da área principal. Recebe children e envolve o conteúdo que
+    deve aparecer acima das decorações.
+
+  MainNavigation.jsx
+    Navegação lateral. Recebe items, um array com objetos no formato:
+      { to, label, icon, end }
+    Itens sem "to" são apresentados como indisponíveis.
+
+  ProfileSummary.jsx
+    Resumo do perfil. Recebe name, followingCount, followersCount e avatarUrl.
+    Os dados possuem valores padrão para que o componente também possa ser
+    usado sem todas as props.
+
+COMPONENTES DE POSTS — src/components/post/
+
+  PostCard.jsx
+    Apresenta uma publicação, incluindo autor, conteúdos relacionados, horário,
+    quantidade de comentários, curtidas e ações.
+    Recebe post com os dados da publicação e pode receber:
+      detailsHref: destino para abrir o detalhe da dúvida; se omitido ou null,
+        o conteúdo não navega.
+      onLikeChange(postId, liked)
+      onSaveChange(postId, saved)
+      reportReasons: opções de denúncia disponíveis para essa tela.
+      onReport(report): callback após confirmar denúncia.
+    As ações de curtir e salvar possuem estado visual local. Quando a
+    integração com a API for implementada, use os callbacks para comunicar a
+    alteração ao componente pai/serviço. Aceita post.subjects como lista; também
+    mantém compatibilidade com o formato singular post.subject. Ao denunciar,
+    envia ao callback um objeto com reasonId, details, targetType e targetId.
+
+  PostComposerModal.jsx
+    Formulário modal para criar uma dúvida. Recebe subjects (opções de conteúdo
+    vindas da camada de dados/API), onClose e onSubmit. Cada opção possui id e
+    name; a seleção permite até 3 conteúdos. O callback onSubmit recebe:
+      { title, content, subjectIds }
+
+  ReportPopup.jsx
+    Modal reutilizável de denúncia. Recebe:
+      reasons: lista da tabela auxiliar, com objetos { id, label }.
+      targetLabel: nome do item denunciado, exibido no título do modal.
+      onClose: callback para fechar.
+      onSubmit: callback ao confirmar, recebe { reasonId, details }.
+    O campo de detalhes é opcional. O componente não define a lista de motivos:
+    cada tela fornece as opções por props, permitindo usar tabelas diferentes
+    para posts, respostas, perfis ou outras entidades.
+
+  PostReplyForm.jsx
+    Formulário reutilizável de resposta à publicação principal. Recebe onSubmit
+    com o texto da resposta. É usado somente no detalhe da dúvida; não deve ser
+    renderizado dentro de PostReplyCard.
+
+  PostReplyCard.jsx
+    Apresenta uma resposta com ações para curtir e denunciar. Recebe:
+      reply: dados da resposta, incluindo autor, content, createdAt, likeCount
+        e likedByCurrentUser.
+      reportReasons: lista de motivos fornecida pela tela.
+      onLikeChange(replyId, liked): callback opcional para curtir.
+      onReport(report): callback após confirmar denúncia.
+    Não oferece ação de resposta: respostas de outras pessoas não podem ser
+    respondidas. Ao denunciar, usa ReportPopup e envia targetType "reply",
+    targetId e postId no objeto do callback.
+
+COMPONENTES DE AUTENTICAÇÃO — src/features/auth/components/
+
+  AuthBrand.jsx, AuthCard.jsx, AuthField.jsx, AuthForm.jsx e AuthBackground.jsx
+    Componentes da experiência de autenticação. Antes de criar outro campo,
+    formulário ou cartão de autenticação, verifique se estes já atendem ao
+    caso de uso. Os arquivos CSS da mesma pasta guardam estilos específicos
+    desses componentes.
+
+
+3. REGRA PRINCIPAL: SEPARAR COMPONENTE REUTILIZÁVEL DA PÁGINA/LAYOUT
+-------------------------------------------------------------------
+
+Se uma parte visual ou funcional de uma página puder ser usada em outras
+telas, ela deve ser implementada como um componente separado em src/components/
+(ou em src/features/ quando for específica de uma funcionalidade).
+
+Não mantenha a implementação do componente reutilizável dentro do arquivo do
+layout ou da página. A página/layout deve importá-lo e fornecer os dados por
+props. Isso facilita a manutenção e permite que outras telas usem o mesmo
+componente sem copiar código.
+
+Exemplo de composição:
+
+  // src/components/post/PostCard.jsx
+  function PostCard({ post, children }) {
+    return (
+      <article>
+        <h2>{post.title}</h2>
+        <p>{post.content}</p>
+        {children}
+      </article>
+    )
+  }
+
+  // Em uma página:
+  <PostCard post={post}>
+    <PostActions postId={post.id} />
+  </PostCard>
+
+Use props para dados e configurações. Use children quando o componente precisar
+receber conteúdo interno variável, como ações, conteúdo complementar ou uma
+área customizável. Não adicione children quando o componente não precisar dessa
+flexibilidade.
+
+
+4. RESPONSABILIDADE DE CADA CAMADA
+----------------------------------
+
+COMPONENTES (src/components/ e src/features/)
+  Responsáveis por uma parte visual/funcional reutilizável. Devem receber os
+  dados e callbacks necessários por props, em vez de depender dos dados de uma
+  tela específica.
+
+PÁGINAS (src/pages/)
+  Responsáveis por montar o conteúdo de uma rota. A página escolhe quais
+  componentes usar e fornece dados, estados e callbacks.
+  Exemplo atual: src/pages/feed/FeedPage.jsx compõe PostCard com a lista de
+  publicações e mostra uma mensagem quando a lista está vazia.
+  src/pages/posts/PostDetailPage.jsx compõe a publicação, o formulário para
+  responder à publicação principal e os PostReplyCard. Recebe pelo Outlet
+  context a publicação, as respostas, os motivos de denúncia e callbacks.
+
+LAYOUTS (src/layouts/)
+  Responsáveis pela estrutura compartilhada entre várias páginas de uma área:
+  fundo, cabeçalho, navegação, resumo do perfil e espaço da página filha.
+  O layout deve compor componentes e informar suas props; não deve duplicar o
+  código interno desses componentes.
+  Exemplo atual: src/layouts/user/FeedLayout.jsx compõe Background, Header,
+  MainNavigation e ProfileSummary e renderiza a página da rota com <Outlet />.
+  src/layouts/user/PostDetailLayout.jsx organiza a navegação de retorno e
+  fornece à tela os dados da dúvida e das respostas via Outlet context. O
+  FeedLayout mantém os mocks e o estado local de posts, respostas e denúncias;
+  os callbacks atualizam esse estado durante o desenvolvimento.
+
+ROTAS (src/App.jsx)
+  Associam caminhos a páginas e layouts. Uma página dentro de um layout deve
+  ser configurada como rota filha para ser apresentada pelo <Outlet />.
+
+DADOS (src/data/)
+  Durante o desenvolvimento, mantenha dados de exemplo fora dos componentes
+  visuais.
+    mockPosts.js:
+      mockPostsResponse: resposta simulada paginada de publicações.
+      mockSubjects: opções de conteúdo para o formulário de publicação.
+      mockPostReportReasons: opções de denúncia para publicações e respostas.
+    mockPostReplies.js:
+      mockRepliesByPost: respostas agrupadas pelo id da publicação.
+  Ao conectar o backend, substitua os mocks pela chamada apropriada em api/ ou
+  services/, preservando os contratos de dados usados pelos componentes. A
+  lista de motivos deve continuar sendo recebida por props e vir da tabela
+  auxiliar apropriada para cada tipo de alvo.
+
+
+5. PADRÃO DE CÓDIGO
+-------------------
+
+- Use React com arquivos .jsx para componentes e .js para módulos de dados ou
+  utilitários sem JSX.
+- Declare componentes como funções e exporte o componente principal como
+  default, seguindo o padrão existente.
+- Use nomes em PascalCase para componentes e nomes de arquivo, como PostCard.jsx.
+- Use camelCase para props, funções, variáveis e propriedades dos dados.
+- Use props para receber dados; evite embutir dados específicos de uma página
+  dentro de um componente que pretende ser reutilizável.
+- Use estado local (useState) para interações pertencentes ao próprio
+  componente. Para estado compartilhado/persistido, use callbacks, contexts ou
+  a camada de dados conforme a necessidade.
+- Em componentes reutilizáveis de denúncia, receba a lista de opções por props;
+  não fixe no popup categorias que possam variar de acordo com o tipo de alvo.
+- Prefira classes utilitárias Tailwind, tokens de cor Companion e padrões de
+  espaçamento já usados no projeto. Para estilos específicos maiores, mantenha
+  CSS junto à funcionalidade correspondente, seguindo o padrão de features/auth.
+- Inclua semântica e acessibilidade: elementos HTML adequados, labels, nomes
+  acessíveis para botões apenas com ícone, estados como aria-pressed e
+  aria-hidden em ícones decorativos.
+- Use keys estáveis ao renderizar listas (por exemplo, o id do post).
+- Não adicione dependências ou abstrações sem necessidade; reutilize os
+  componentes já existentes antes de criar duplicatas.
+
+
+6. COMO ADICIONAR UMA NOVA TELA
+-------------------------------
+
+1. Crie o arquivo da página dentro da pasta apropriada em src/pages/.
+2. Identifique partes que possam ser compartilhadas com outras páginas. Crie
+   cada uma em src/components/ ou src/features/, recebendo dados por props.
+3. Se a nova página pertencer a uma área com estrutura compartilhada, use o
+   layout existente em src/layouts/ ou crie/ajuste um layout que apenas componha
+   componentes comuns e apresente o <Outlet />.
+4. Registre a rota em src/App.jsx.
+5. Mantenha dados de demonstração em src/data/ e chamadas reais à API em
+   src/api/ ou src/services/.
+6. Rode os comandos de verificação na pasta frontend:
+     npm run lint
+     npm run build
+
+
+7. FLUXO DO FEED ATUAL
+----------------------
+
+  App.jsx
+    -> FeedLayout.jsx
+       -> Background.jsx
+       -> Header.jsx
+       -> MainNavigation.jsx
+       -> ProfileSummary.jsx
+       -> PostComposerModal.jsx (aberto pelo botão "Postar dúvida")
+       -> mantém mocks/estado local e fornece posts, respostas, opções de
+          denúncia e callbacks via Outlet context
+       -> Outlet
+          -> FeedPage.jsx
+             -> posts do Outlet context, inicializados por mockPosts.js
+             -> PostCard.jsx (um por publicação; abre o detalhe)
+                -> ReportPopup.jsx (motivos de denúncia fornecidos por props)
+          -> PostDetailLayout.jsx
+             -> seleciona post e respostas pelo postId e fornece context
+                -> PostDetailPage.jsx
+                -> PostCard.jsx (dúvida principal)
+                   -> ReportPopup.jsx (denúncia da dúvida)
+                -> PostReplyForm.jsx (responde somente à dúvida principal)
+                -> PostReplyCard.jsx (respostas sem opção de responder)
+                   -> ReportPopup.jsx (denúncia da resposta)
+                -> respostas mockadas em mockPostReplies.js
+
+Use esse fluxo como referência para manter a separação entre composição de
+telas, estrutura de layout, componentes reutilizáveis e origem dos dados.
