@@ -8,6 +8,7 @@ function PostDetailLayout() {
     reportReasons,
     onCreateReply,
     onReport,
+    currentUserId,
   } = useOutletContext()
   const post = posts.find((item) => String(item.id) === postId)
 
@@ -30,6 +31,7 @@ function PostDetailLayout() {
           post,
           replies: repliesByPost[postId] ?? [],
           reportReasons,
+          currentUserId,
           onCreateReply,
           onReport,
         }}

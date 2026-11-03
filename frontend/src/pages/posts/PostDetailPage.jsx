@@ -10,6 +10,7 @@ function PostDetailPage() {
     reportReasons,
     onCreateReply,
     onReport,
+    currentUserId,
   } = useOutletContext()
 
   if (!post) {
@@ -26,6 +27,7 @@ function PostDetailPage() {
     <div className="space-y-4">
       <PostCard
         post={post}
+        currentUserId={currentUserId}
         reportReasons={reportReasons}
         onReport={onReport}
         detailsHref={null}
@@ -49,6 +51,7 @@ function PostDetailPage() {
               <PostReplyCard
                 key={reply.id}
                 reply={reply}
+                currentUserId={currentUserId}
                 reportReasons={reportReasons}
                 onReport={onReport}
               />
