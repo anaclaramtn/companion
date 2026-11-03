@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react'
 import { Link } from 'react-router'
+import ProfileLink from '../user/ProfileLink.jsx'
 import ReportPopup from './ReportPopup.jsx'
 
 function initials(name) {
@@ -31,6 +32,7 @@ function PostCard({
   onReport,
   reportReasons = [],
   detailsHref,
+  currentUserId = 0,
 }) {
   const [isLiked, setIsLiked] = useState(post.likedByCurrentUser)
   const [likeCount, setLikeCount] = useState(post.likeCount)
@@ -65,6 +67,11 @@ function PostCard({
     <>
       <article className="rounded-2xl border border-companion-border/70 bg-companion-surface p-5 shadow-[0_8px_24px_rgba(69,42,18,0.06)] sm:p-6">
         <div className="flex gap-4">
+        <ProfileLink
+          user={post.author}
+          currentUserId={currentUserId}
+          className="h-fit shrink-0 rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-companion-orange"
+        >
         {post.author.avatarUrl ? (
           <img
             src={post.author.avatarUrl}
@@ -79,19 +86,15 @@ function PostCard({
             {initials(post.author.name)}
           </div>
         )}
+        </ProfileLink>
 
         <div className="min-w-0 flex-1">
-          {detailsHref ? (
-            <Link
-              to={detailsHref}
-              aria-label={`Abrir dúvida: ${post.title}`}
-              className="block rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-companion-orange"
-            >
-              <PostContent post={post} subjects={subjects} />
-            </Link>
-          ) : (
-            <PostContent post={post} subjects={subjects} />
-          )}
+          <PostContent
+            post={post}
+            subjects={subjects}
+            detailsHref={detailsHref}
+            currentUserId={currentUserId}
+          />
 
           <div className="mt-5 flex items-center gap-5 border-t border-companion-border/70 pt-4 text-sm text-companion-muted">
             <button
@@ -179,16 +182,22 @@ function PostCard({
   )
 }
 
-function PostContent({ post, subjects }) {
+function PostContent({ post, subjects, detailsHref, currentUserId }) {
   return (
     <>
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <p className="text-sm font-semibold text-companion-text">
-          {post.author.name}
+        <div className="text-sm font-semibold text-companion-text">
+          <ProfileLink
+            user={post.author}
+            currentUserId={currentUserId}
+            className="rounded-sm hover:text-companion-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-companion-orange"
+          >
+            {post.author.name}
+          </ProfileLink>
           <span className="ml-2 font-normal text-companion-muted">
             @{post.author.username}
           </span>
-        </p>
+        </div>
         <time
           dateTime={post.createdAt}
           className="text-xs text-companion-muted"
@@ -197,6 +206,24 @@ function PostContent({ post, subjects }) {
         </time>
       </div>
 
+      {detailsHref ? (
+        <Link
+          to={detailsHref}
+          aria-label={`Abrir dúvida: ${post.title}`}
+          className="block rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-companion-orange"
+        >
+          <PostBody post={post} subjects={subjects} />
+        </Link>
+      ) : (
+        <PostBody post={post} subjects={subjects} />
+      )}
+    </>
+  )
+}
+
+function PostBody({ post, subjects }) {
+  return (
+    <>
       <h2 className="mt-2 text-lg font-bold text-companion-text">
         {post.title}
       </h2>

@@ -5,6 +5,8 @@ import SignUpPage from './pages/auth/SignUpPage.jsx'
 import FeedLayout from './layouts/user/FeedLayout.jsx'
 import PostDetailLayout from './layouts/user/PostDetailLayout.jsx'
 import FeedPage from './pages/feed/FeedPage.jsx'
+import ExplorePage from './pages/search/ExplorePage.jsx'
+import PublicProfilePage from './pages/profile/PublicProfilePage.jsx'
 import PostDetailPage from './pages/posts/PostDetailPage.jsx'
 
 function App() {
@@ -17,9 +19,14 @@ function App() {
 
       <Route path="/feed" element={<FeedLayout />}>
         <Route index element={<FeedPage />} />
+        <Route path="users/:userId" element={<PublicProfilePage />} />
         <Route path="posts/:postId" element={<PostDetailLayout />}>
           <Route index element={<PostDetailPage />} />
         </Route>
+      </Route>
+
+      <Route path="/explorar" element={<FeedLayout />}>
+        <Route index element={<ExplorePage />} />
       </Route>
     </Routes>
   )

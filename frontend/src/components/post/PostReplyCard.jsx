@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react'
+import ProfileLink from '../user/ProfileLink.jsx'
 import ReportPopup from './ReportPopup.jsx'
 
 function initials(name) {
@@ -28,6 +29,7 @@ function PostReplyCard({
   onLikeChange,
   onReport,
   reportReasons = [],
+  currentUserId = 0,
 }) {
   const [isLiked, setIsLiked] = useState(reply.likedByCurrentUser)
   const [likeCount, setLikeCount] = useState(reply.likeCount)
@@ -59,6 +61,11 @@ function PostReplyCard({
     <>
       <article className="border-b border-companion-border/70 bg-companion-surface px-5 py-5 last:border-b-0 sm:px-6">
       <div className="flex gap-4">
+        <ProfileLink
+          user={reply.author}
+          currentUserId={currentUserId}
+          className="h-fit shrink-0 rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-companion-orange"
+        >
         {reply.author.avatarUrl ? (
           <img
             src={reply.author.avatarUrl}
@@ -73,12 +80,17 @@ function PostReplyCard({
             {initials(reply.author.name)}
           </div>
         )}
+        </ProfileLink>
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-baseline gap-x-2">
-            <p className="text-sm font-semibold text-companion-text">
+            <ProfileLink
+              user={reply.author}
+              currentUserId={currentUserId}
+              className="text-sm font-semibold text-companion-text hover:text-companion-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-companion-orange"
+            >
               {reply.author.name}
-            </p>
+            </ProfileLink>
             <span className="text-sm text-companion-muted">
               @{reply.author.username}
             </span>

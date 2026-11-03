@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { Outlet } from 'react-router'
+import { Outlet, useLocation } from 'react-router'
 import 'bootstrap-icons/font/bootstrap-icons.css'
 import Background from '../../components/common/Background.jsx'
 import FeedHeader from '../../components/common/Header.jsx'
@@ -12,21 +12,18 @@ import {
   mockSubjects,
 } from '../../data/mockPosts.js'
 import { mockRepliesByPost } from '../../data/mockPostReplies.js'
+import { mockCurrentUser } from '../../data/mockPublicUsers.js'
 
 const navigationItems = [
   { to: '/feed', label: 'Feed', icon: 'bi-house', end: true },
-  { label: 'Explorar', icon: 'bi-search' },
+  { to: '/explorar', label: 'Explorar', icon: 'bi-search' },
   { label: 'Salvos', icon: 'bi-bookmark' },
   { label: 'Configurações', icon: 'bi-gear' },
 ]
 
-const profile = {
-  name: 'Seu perfil',
-  followingCount: 0,
-  followersCount: 0,
-}
-
 function FeedLayout() {
+  const { pathname } = useLocation()
+  const isExplorePage = pathname === '/explorar'
   const [isComposerOpen, setIsComposerOpen] = useState(false)
   const [posts, setPosts] = useState(mockPostsResponse.content)
   const [repliesByPost, setRepliesByPost] = useState(mockRepliesByPost)
@@ -102,12 +99,20 @@ function FeedLayout() {
   return (
     <Background>
       <div className="mx-auto min-h-dvh w-full max-w-[1600px] px-4 py-4 sm:px-6 lg:px-8">
-        <FeedHeader onPostQuestion={() => setIsComposerOpen(true)} />
+        <FeedHeader
+          onPostQuestion={() => setIsComposerOpen(true)}
+          showSearch={!isExplorePage}
+        />
 
         <div className="mt-6 grid gap-6 lg:grid-cols-[248px_minmax(0,1fr)]">
           <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start">
             <MainNavigation items={navigationItems} />
-            <ProfileSummary {...profile} />
+            <ProfileSummary
+              name={mockCurrentUser.name}
+              followingCount={mockCurrentUser.followingCount}
+              followersCount={mockCurrentUser.followerCount}
+              avatarUrl={mockCurrentUser.avatarUrl}
+            />
           </aside>
 
           <main className="min-w-0">
@@ -115,6 +120,7 @@ function FeedLayout() {
               context={{
                 posts,
                 repliesByPost,
+                currentUserId: mockCurrentUser.id,
                 reportReasons: mockPostReportReasons,
                 onCreateReply: handleCreateReply,
                 onReport: handleReport,

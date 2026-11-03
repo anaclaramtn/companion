@@ -76,6 +76,7 @@ function FeedHeader({
   onPostQuestion,
   userName = 'Minha conta',
   userAvatarUrl,
+  showSearch = true,
 }) {
   const [query, setQuery] = useState('')
 
@@ -97,39 +98,43 @@ function FeedHeader({
         <AuthBrand compact />
       </a>
 
-      <span
-        aria-hidden="true"
-        className="hidden h-14 w-px shrink-0 bg-companion-brand/35 md:block"
-      />
-
-      <form
-        role="search"
-        onSubmit={handleSearch}
-        className="relative order-last w-full md:order-none md:w-auto md:max-w-[30rem] md:flex-1"
-      >
-        <label htmlFor="feed-search" className="sr-only">
-          Buscar no Companion
-        </label>
-
-        <svg
+      {showSearch && (
+        <span
           aria-hidden="true"
-          viewBox="0 0 24 24"
-          fill="none"
-          className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-companion-muted"
-        >
-          <circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor" strokeWidth="1.8" />
-          <path d="m16 16 4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-        </svg>
-
-        <input
-          id="feed-search"
-          type="search"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Buscar dúvidas, usuários ou matérias..."
-          className="h-12 w-full rounded-full border border-white/40 bg-white/60 pl-12 pr-4 text-sm text-companion-text shadow-sm outline-none backdrop-blur-md transition placeholder:text-companion-muted focus:border-companion-orange focus:bg-white/80 focus:ring-4 focus:ring-companion-orange/15"
+          className="hidden h-14 w-px shrink-0 bg-companion-brand/35 md:block"
         />
-      </form>
+      )}
+
+      {showSearch && (
+        <form
+          role="search"
+          onSubmit={handleSearch}
+          className="relative order-last w-full md:order-none md:w-auto md:max-w-[30rem] md:flex-1"
+        >
+          <label htmlFor="feed-search" className="sr-only">
+            Buscar no Companion
+          </label>
+
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            fill="none"
+            className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-companion-muted"
+          >
+            <circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor" strokeWidth="1.8" />
+            <path d="m16 16 4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          </svg>
+
+          <input
+            id="feed-search"
+            type="search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Buscar dúvidas, usuários ou matérias..."
+            className="h-12 w-full rounded-full border border-white/40 bg-white/60 pl-12 pr-4 text-sm text-companion-text shadow-sm outline-none backdrop-blur-md transition placeholder:text-companion-muted focus:border-companion-orange focus:bg-white/80 focus:ring-4 focus:ring-companion-orange/15"
+          />
+        </form>
+      )}
 
       <div className="ml-auto flex items-center gap-3">
         <button
