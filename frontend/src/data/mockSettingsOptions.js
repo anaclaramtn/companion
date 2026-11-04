@@ -8,7 +8,7 @@ export const mockSettingsSections = [
       {
         id: 'edit-profile',
         label: 'Editar perfil',
-        description: 'Nome, username, foto, biografia, curso e matérias.',
+        description: 'Nome, foto, biografia, curso e matérias.',
         icon: 'bi-person-gear',
         to: '/perfil/editar',
       },
@@ -22,7 +22,7 @@ export const mockSettingsSections = [
       {
         id: 'account-settings',
         label: 'Configurações da conta',
-        description: 'Alterar senha e excluir a conta.',
+        description: 'Alterar username e senha, ou excluir a conta.',
         icon: 'bi-sliders',
         to: '/configuracoes/ajustes',
       },

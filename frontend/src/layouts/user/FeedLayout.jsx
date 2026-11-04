@@ -9,8 +9,8 @@ import ProfileSummary from '../../components/common/ProfileSummary.jsx'
 import {
   mockPostReportReasons,
   mockPostsResponse,
-  mockSubjects,
 } from '../../data/mockPosts.js'
+import { mockSubjects } from '../../data/mockSubjects.js'
 import { mockRepliesByPost } from '../../data/mockPostReplies.js'
 import {
   mockCurrentUser,
@@ -77,8 +77,6 @@ function FeedLayout() {
       author: authorSummary(currentUser),
       content,
       createdAt: new Date().toISOString(),
-      likeCount: 0,
-      likedByCurrentUser: false,
       reportedByCurrentUser: false,
     }
 
@@ -105,13 +103,14 @@ function FeedLayout() {
   }
 
   // Atualiza o perfil e a autoria exibida nos posts e respostas da conta.
+  // subjects é opcional (ex.: a troca de username não altera as matérias).
   function handleProfileUpdate(user, subjects) {
     const author = authorSummary(user)
     const withAuthor = (item) =>
       item.author.id === user.id ? { ...item, author } : item
 
     setCurrentUser(user)
-    setCurrentUserSubjects(subjects)
+    if (subjects) setCurrentUserSubjects(subjects)
     setPosts((currentPosts) => currentPosts.map(withAuthor))
     setRepliesByPost((currentReplies) =>
       Object.fromEntries(
@@ -178,6 +177,7 @@ function FeedLayout() {
       {isComposerOpen && (
         <PostComposerModal
           subjects={mockSubjects}
+          featuredSubjectIds={currentUserSubjects.map((item) => item.subject.id)}
           onClose={closeComposer}
           onSubmit={handleCreatePost}
         />

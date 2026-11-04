@@ -172,7 +172,14 @@ function AccountInfoPage() {
           />
 
           <p className="text-center text-xs text-companion-muted">
-            Para alterar username, curso ou semestre, use{' '}
+            Para alterar o username, use{' '}
+            <Link
+              to="/configuracoes/ajustes"
+              className="font-semibold text-companion-brand hover:underline"
+            >
+              Configurações da conta
+            </Link>
+            . Curso e semestre ficam em{' '}
             <Link
               to="/perfil/editar"
               className="font-semibold text-companion-brand hover:underline"

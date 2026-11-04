@@ -24,27 +24,18 @@ function formatRelativeTime(dateValue) {
   return `${Math.floor(elapsedHours / 24)}d atrás`
 }
 
+// Respostas não recebem curtidas: no MVP só os posts podem ser curtidos.
 function PostReplyCard({
   reply,
-  onLikeChange,
   onReport,
   reportReasons = [],
   currentUserId = 0,
 }) {
-  const [isLiked, setIsLiked] = useState(reply.likedByCurrentUser)
-  const [likeCount, setLikeCount] = useState(reply.likeCount)
   const [isReported, setIsReported] = useState(reply.reportedByCurrentUser)
   const [isReportOpen, setIsReportOpen] = useState(false)
   const closeReportPopup = useCallback(() => {
     setIsReportOpen(false)
   }, [])
-
-  function toggleLike() {
-    const nextLiked = !isLiked
-    setIsLiked(nextLiked)
-    setLikeCount((count) => count + (nextLiked ? 1 : -1))
-    onLikeChange?.(reply.id, nextLiked)
-  }
 
   function submitReport(report) {
     onReport?.({
@@ -108,24 +99,7 @@ function PostReplyCard({
             {reply.content}
           </p>
 
-          <div className="mt-4 flex items-center gap-6 text-sm">
-            <button
-              type="button"
-              onClick={toggleLike}
-              aria-label={isLiked ? 'Descurtir resposta' : 'Curtir resposta'}
-              aria-pressed={isLiked}
-              className={`inline-flex items-center gap-2 transition-colors ${
-                isLiked
-                  ? 'text-companion-orange'
-                  : 'text-companion-muted hover:text-companion-orange'
-              }`}
-            >
-              <i
-                className={`bi ${isLiked ? 'bi-heart-fill' : 'bi-heart'} transition-transform duration-200 active:scale-125`}
-                aria-hidden="true"
-              />
-              {likeCount}
-            </button>
+          <div className="mt-4 flex items-center justify-end text-sm">
             <button
               type="button"
               onClick={() => setIsReportOpen(true)}

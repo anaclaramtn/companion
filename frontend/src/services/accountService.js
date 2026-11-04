@@ -28,8 +28,9 @@ export function normalizeUsername(username) {
   return username.trim().replace(/^@+/, '').toLowerCase()
 }
 
-export async function updateMyProfile(currentUser, currentSubjects, changes) {
-  const username = normalizeUsername(changes.username)
+// Troca o username da conta, verificando se já está em uso.
+export async function updateUsername(currentUser, newUsername) {
+  const username = normalizeUsername(newUsername)
   const isTaken = mockPublicUsers.some(
     (user) => user.id !== currentUser.id && user.username === username,
   )
@@ -39,10 +40,13 @@ export async function updateMyProfile(currentUser, currentSubjects, changes) {
     throw new Error('Este username já está em uso. Escolha outro.')
   }
 
+  return mockResponse({ ...currentUser, username })
+}
+
+export async function updateMyProfile(currentUser, currentSubjects, changes) {
   const user = {
     ...currentUser,
     name: changes.name.trim(),
-    username,
     avatarUrl: changes.avatarUrl,
     bio: changes.bio.trim(),
     course: changes.course.trim(),

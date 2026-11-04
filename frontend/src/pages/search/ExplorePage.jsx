@@ -3,7 +3,7 @@ import { useOutletContext } from 'react-router'
 import TagSearchInput from '../../components/common/TagSearchInput.jsx'
 import PostCard from '../../components/post/PostCard.jsx'
 import { mockTrendingSubjects } from '../../data/mockExploreSubjects.js'
-import { mockSubjects } from '../../data/mockPosts.js'
+import { mockSubjects } from '../../data/mockSubjects.js'
 
 const MAX_SUGGESTIONS = 5
 
@@ -16,13 +16,23 @@ function normalize(text) {
     .toLocaleLowerCase('pt-BR')
 }
 
-// Nomes de matérias conhecidas, sem repetição, para sugerir como etiqueta.
-const subjectNames = [...mockTrendingSubjects, ...mockSubjects]
-  .map((subject) => subject.name)
-  .filter(
-    (name, index, names) =>
-      names.findIndex((other) => normalize(other) === normalize(name)) === index,
+// Uma etiqueta combina com a disciplina pelo nome ou pelo começo do código
+// (ex.: "t39" encontra T390).
+function matchesSubject(subject, tag) {
+  return (
+    normalize(subject.name).includes(tag) ||
+    normalize(subject.id).startsWith(tag)
   )
+}
+
+function findSubject(text) {
+  const normalizedText = normalize(text)
+  return mockSubjects.find(
+    (subject) =>
+      normalize(subject.name) === normalizedText ||
+      normalize(subject.id) === normalizedText,
+  )
+}
 
 function getPostSubjects(post) {
   return post.subjects ?? (post.subject ? [post.subject] : [])
@@ -45,26 +55,23 @@ function ExplorePage() {
   const suggestions =
     tagDraft === null
       ? []
-      : subjectNames
-          .filter((name) => {
-            const normalizedName = normalize(name)
-            return (
-              normalizedName.includes(tagDraft) &&
-              !selectedTags.includes(normalizedName)
-            )
-          })
+      : mockSubjects
+          .filter(
+            (subject) =>
+              matchesSubject(subject, tagDraft) &&
+              !selectedTags.includes(normalize(subject.name)),
+          )
+          .map((subject) => subject.name)
           .slice(0, MAX_SUGGESTIONS)
 
   const words = textQuery.split(/\s+/).filter(Boolean)
   const relatedPosts = isSearching
     ? posts.filter((post) => {
-        const subjects = getPostSubjects(post).map((subject) =>
-          normalize(subject.name),
-        )
+        const subjects = getPostSubjects(post)
         const matchesTags =
           tagFilters.length === 0 ||
           tagFilters.some((tag) =>
-            subjects.some((subject) => subject.includes(tag)),
+            subjects.some((subject) => matchesSubject(subject, tag)),
           )
         const searchableText = normalize(
           [
@@ -72,7 +79,7 @@ function ExplorePage() {
             post.content,
             post.author.name,
             post.author.username,
-            ...subjects,
+            ...subjects.flatMap((subject) => [subject.name, subject.id]),
           ].join(' '),
         )
         return (
@@ -82,10 +89,10 @@ function ExplorePage() {
     : []
 
   const trendingSubjects = mockTrendingSubjects.filter((subject) => {
-    const name = normalize(subject.name)
     const matchesTags =
-      tagFilters.length === 0 || tagFilters.some((tag) => name.includes(tag))
-    return matchesTags && name.includes(textQuery)
+      tagFilters.length === 0 ||
+      tagFilters.some((tag) => matchesSubject(subject, tag))
+    return matchesTags && normalize(subject.name).includes(textQuery)
   })
 
   const searchLabel = [...tags.map((tag) => `#${tag}`), query.trim()]
@@ -93,10 +100,8 @@ function ExplorePage() {
     .join(' ')
 
   function handleAddTag(tagName) {
-    // Usa o nome oficial da matéria quando a etiqueta corresponde a uma.
-    const name =
-      subjectNames.find((item) => normalize(item) === normalize(tagName)) ??
-      tagName
+    // Usa o nome oficial da disciplina quando a etiqueta é o nome ou o código.
+    const name = findSubject(tagName)?.name ?? tagName
 
     setTags((currentTags) =>
       currentTags.some((tag) => normalize(tag) === normalize(name))
@@ -199,7 +204,7 @@ function ExplorePage() {
                   className="block w-full px-5 py-3 text-left transition-colors hover:bg-white/80 sm:px-6"
                 >
                   <span className="block text-xs text-companion-muted">
-                    {index + 1} · Assunto acadêmico
+                    {index + 1} · Disciplina {subject.id}
                   </span>
                   <span className="block font-bold text-companion-text">
                     #{subject.name}

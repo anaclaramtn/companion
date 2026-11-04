@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useOutletContext } from 'react-router'
+import BackLink from '../../components/common/BackLink.jsx'
 import ProfileActivityTabs from '../../components/user/ProfileActivityTabs.jsx'
 import ProfileHeader from '../../components/user/ProfileHeader.jsx'
 import ProfileSubjects from '../../components/user/ProfileSubjects.jsx'
@@ -85,13 +86,9 @@ function MyProfilePage() {
 
   return (
     <section aria-labelledby="my-profile-name" className="mx-auto max-w-4xl">
-      <Link
-        to="/feed"
-        className="mb-4 inline-flex items-center gap-2 rounded-lg text-sm font-semibold text-companion-muted transition hover:text-companion-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-companion-orange"
-      >
-        <i className="bi bi-arrow-left" aria-hidden="true" />
-        Voltar ao feed
-      </Link>
+      <div className="mb-4">
+        <BackLink to="/feed" label="Feed" />
+      </div>
       <p className="mb-3 text-xs text-companion-muted">
         É assim que outros estudantes veem o seu perfil.
       </p>

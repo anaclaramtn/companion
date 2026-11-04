@@ -3,16 +3,24 @@ import { Link, useOutletContext } from 'react-router'
 import BackLink from '../../components/common/BackLink.jsx'
 import FormField from '../../components/common/FormField.jsx'
 import SubjectInterestPicker from '../../components/user/SubjectInterestPicker.jsx'
-import {
-  normalizeUsername,
-  updateMyProfile,
-} from '../../services/accountService.js'
+import { updateMyProfile } from '../../services/accountService.js'
 
 const MAX_NAME_LENGTH = 60
 const MAX_BIO_LENGTH = 160
 const MAX_COURSE_LENGTH = 80
 const MAX_AVATAR_SIZE = 2 * 1024 * 1024
 const SEMESTERS = Array.from({ length: 12 }, (_, index) => index + 1)
+const LAST_GRADE_SEMESTER = 8
+
+// Sugere as disciplinas do semestre atual e do anterior (sem semestre
+// informado, as do 1º). Semestres além da grade usam os dois últimos.
+function getFeaturedSubjectIds(subjects, semester) {
+  const current = Math.min(Number(semester) || 1, LAST_GRADE_SEMESTER)
+  const semesters = [current, Math.max(current - 1, 1)]
+  return subjects
+    .filter((subject) => semesters.includes(subject.semester))
+    .map((subject) => subject.id)
+}
 
 function initials(name) {
   return name
@@ -29,13 +37,6 @@ function validate(form) {
     errors.name = 'Informe seu nome.'
   }
 
-  if (!form.username) {
-    errors.username = 'Informe um username.'
-  } else if (!/^[a-z0-9._]{3,30}$/.test(form.username)) {
-    errors.username =
-      'Use de 3 a 30 caracteres: letras minúsculas, números, ponto ou sublinhado.'
-  }
-
   return errors
 }
 
@@ -44,7 +45,6 @@ function EditProfilePage() {
     useOutletContext()
   const [form, setForm] = useState(() => ({
     name: currentUser.name,
-    username: currentUser.username,
     avatarUrl: currentUser.avatarUrl,
     bio: currentUser.bio ?? '',
     course: currentUser.course ?? '',
@@ -196,29 +196,15 @@ function EditProfilePage() {
           >
             Informações básicas
           </h2>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <FormField
-              id="profile-name"
-              label="Nome"
-              value={form.name}
-              maxLength={MAX_NAME_LENGTH}
-              error={errors.name}
-              autoComplete="name"
-              onChange={(event) => updateField('name', event.target.value)}
-            />
-            <FormField
-              id="profile-username"
-              label="Username"
-              prefix="@"
-              value={form.username}
-              error={errors.username}
-              hint="Letras minúsculas, números, ponto ou sublinhado."
-              autoComplete="username"
-              onChange={(event) =>
-                updateField('username', normalizeUsername(event.target.value))
-              }
-            />
-          </div>
+          <FormField
+            id="profile-name"
+            label="Nome"
+            value={form.name}
+            maxLength={MAX_NAME_LENGTH}
+            error={errors.name}
+            autoComplete="name"
+            onChange={(event) => updateField('name', event.target.value)}
+          />
           <FormField
             id="profile-bio"
             label="Biografia"
@@ -272,12 +258,14 @@ function EditProfilePage() {
             Matérias
           </h2>
           <p className="mb-4 mt-1 text-xs text-companion-muted">
-            Toque em uma matéria para adicioná-la ou removê-la. Cada matéria
-            pode estar em apenas um grupo.
+            Toque em uma disciplina para adicioná-la ou removê-la. Cada
+            disciplina pode estar em apenas um grupo. Mostramos as do seu
+            semestre; use “Ver mais” para escolher qualquer outra.
           </p>
           <SubjectInterestPicker
             subjects={subjects}
             value={form.subjects}
+            featuredIds={getFeaturedSubjectIds(subjects, form.semester)}
             onChange={(value) => updateField('subjects', value)}
           />
         </section>

@@ -122,8 +122,13 @@ COMPONENTES COMUNS — src/components/common/
     "Não informado".
 
   BackLink.jsx
-    Link de retorno com seta, usado no topo de telas internas como FAQ e
-    Sobre. Recebe to e label.
+    Link "Voltar" com seta, usado no topo das telas internas. Leva sempre à
+    tela aberta antes desta e mostra o nome dela (ex.: abrir o perfil pelas
+    Configurações mostra "← Configurações"). Recebe to e label como destino
+    padrão, usado só quando não há tela anterior (endereço aberto direto).
+    A ordem das telas é guardada por NavigationHistoryProvider (em main.jsx)
+    e lida pelo hook src/hooks/useBackTarget.js. Os nomes das telas ficam em
+    src/routes/routeLabels.js: ao criar uma rota nova, adicione o nome lá.
 
   FaqItem.jsx
     Pergunta expansível do FAQ, baseada em <details>. Recebe question e
@@ -156,15 +161,27 @@ COMPONENTES DE USUÁRIO — src/components/user/
     "Curtidos"; só o perfil próprio passa essa lista.
 
   SubjectInterestPicker.jsx
-    Seleção das matérias do perfil em dois grupos ("Tenho dificuldade" e
+    Seleção das disciplinas do perfil em dois grupos ("Tenho dificuldade" e
     "Posso ajudar"). Recebe subjects (catálogo), value (lista de
-    { subject, interestType }) e onChange. Uma matéria fica em um só grupo.
+    { subject, interestType }), onChange e featuredIds. Mostra só as
+    escolhidas e as sugeridas (featuredIds; no Editar perfil, as do semestre
+    atual e do anterior). "Ver mais" abre a lista completa, agrupada por
+    semestre, com busca por nome ou código. Uma disciplina fica em um só grupo,
+    e cada grupo aceita até 5 (contador "x/5"); ao tentar passar disso,
+    mostra um toast de erro.
 
   Edição de perfil (src/pages/profile/EditProfilePage.jsx, rota
   /perfil/editar): usa FormField e SubjectInterestPicker e salva por
   src/services/accountService.js (mock, só em memória). O FeedLayout guarda
   currentUser e currentUserSubjects e fornece onProfileUpdate via Outlet
   context, atualizando também a autoria dos posts e respostas da conta.
+
+  UsernameCard.jsx
+    Bloco para trocar o username (em Configurações da conta). Recebe
+    currentUser e onSaved(usuárioAtualizado). Converte para minúsculas e tira
+    o "@" ao digitar, valida o formato e salva por
+    accountService.updateUsername, que recusa username já em uso. Mostra um
+    toast ao salvar. O username não é editado em Editar perfil.
 
   PasswordResetCard.jsx
     Bloco com o botão "Enviar link por e-mail" para alterar a senha com a
@@ -206,9 +223,12 @@ COMPONENTES DE POSTS — src/components/post/
     envia ao callback um objeto com reasonId, details, targetType e targetId.
 
   PostComposerModal.jsx
-    Formulário modal para criar uma dúvida. Recebe subjects (opções de conteúdo
-    vindas da camada de dados/API), onClose e onSubmit. Cada opção possui id e
-    name; a seleção permite até 3 conteúdos. O callback onSubmit recebe:
+    Formulário modal para criar uma dúvida. Recebe subjects (disciplinas
+    vindas da camada de dados/API), featuredSubjectIds (disciplinas exibidas
+    primeiro; o FeedLayout passa as do perfil), onClose e onSubmit. Cada
+    opção possui id (código, ex.: T390) e name; a seleção permite até 3
+    disciplinas, com busca por nome ou código e "Ver mais" para a lista
+    completa. O callback onSubmit recebe:
       { title, content, subjectIds }
 
   ReportPopup.jsx
@@ -227,11 +247,10 @@ COMPONENTES DE POSTS — src/components/post/
     renderizado dentro de PostReplyCard.
 
   PostReplyCard.jsx
-    Apresenta uma resposta com ações para curtir e denunciar. Recebe:
-      reply: dados da resposta, incluindo autor, content, createdAt, likeCount
-        e likedByCurrentUser.
+    Apresenta uma resposta com a ação de denunciar. Respostas não recebem
+    curtidas: no MVP, só os posts podem ser curtidos. Recebe:
+      reply: dados da resposta, incluindo autor, content e createdAt.
       reportReasons: lista de motivos fornecida pela tela.
-      onLikeChange(replyId, liked): callback opcional para curtir.
       onReport(report): callback após confirmar denúncia.
     Não oferece ação de resposta: respostas de outras pessoas não podem ser
     respondidas. Ao denunciar, usa ReportPopup e envia targetType "reply",
@@ -320,8 +339,12 @@ DADOS (src/data/)
   visuais.
     mockPosts.js:
       mockPostsResponse: resposta simulada paginada de publicações.
-      mockSubjects: opções de conteúdo para o formulário de publicação.
       mockPostReportReasons: opções de denúncia para publicações e respostas.
+    mockSubjects.js:
+      mockSubjects: todas as disciplinas do curso, com id (código da
+        disciplina, ex.: T390), name e semester (null = optativa). É a única
+        fonte de disciplinas: posts, perfis, Explorar e formulários usam
+        esses códigos. getSubjectById(código) devolve a disciplina.
     mockPostReplies.js:
       mockRepliesByPost: respostas agrupadas pelo id da publicação.
   Ao conectar o backend, substitua os mocks pela chamada apropriada em api/ ou

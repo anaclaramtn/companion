@@ -1,13 +1,51 @@
 import { useEffect, useRef, useState } from 'react'
 
 const MAX_CONTENT_LENGTH = 256
+const DEFAULT_VISIBLE_SUBJECTS = 10
 
-function PostComposerModal({ subjects, onClose, onSubmit }) {
+function normalize(text) {
+  return text
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .trim()
+    .toLocaleLowerCase('pt-BR')
+}
+
+// featuredSubjectIds: disciplinas exibidas primeiro (ex.: as do perfil);
+// as demais aparecem com a busca ou com "Ver mais".
+function PostComposerModal({
+  subjects,
+  featuredSubjectIds = [],
+  onClose,
+  onSubmit,
+}) {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [selectedSubjectIds, setSelectedSubjectIds] = useState([])
+  const [subjectSearch, setSubjectSearch] = useState('')
+  const [showAllSubjects, setShowAllSubjects] = useState(false)
   const [error, setError] = useState('')
   const titleInputRef = useRef(null)
+
+  const normalizedSearch = normalize(subjectSearch)
+  const isSearching = normalizedSearch !== ''
+  const shortListIds =
+    featuredSubjectIds.length > 0
+      ? featuredSubjectIds
+      : subjects.slice(0, DEFAULT_VISIBLE_SUBJECTS).map((subject) => subject.id)
+  const visibleSubjects = subjects.filter((subject) => {
+    if (isSearching) {
+      return (
+        normalize(subject.name).includes(normalizedSearch) ||
+        normalize(subject.id).includes(normalizedSearch)
+      )
+    }
+    return (
+      showAllSubjects ||
+      selectedSubjectIds.includes(subject.id) ||
+      shortListIds.includes(subject.id)
+    )
+  })
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow
@@ -154,7 +192,7 @@ function PostComposerModal({ subjects, onClose, onSubmit }) {
 
           <fieldset>
             <legend className="text-sm font-semibold text-companion-text">
-              Conteúdos relacionados
+              Disciplinas relacionadas
               <span className="ml-2 font-normal text-companion-muted">
                 (selecione até 3)
               </span>
@@ -162,8 +200,30 @@ function PostComposerModal({ subjects, onClose, onSubmit }) {
             <p className="mt-1 text-xs text-companion-muted">
               {selectedSubjectIds.length} de 3 selecionados
             </p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {subjects.map((subject) => {
+            <label htmlFor="post-subject-search" className="sr-only">
+              Buscar disciplina por nome ou código
+            </label>
+            <div className="relative mt-3">
+              <i
+                aria-hidden="true"
+                className="bi bi-search pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-companion-muted"
+              />
+              <input
+                id="post-subject-search"
+                type="search"
+                value={subjectSearch}
+                onChange={(event) => setSubjectSearch(event.target.value)}
+                placeholder="Buscar disciplina por nome ou código (ex.: T390)"
+                className="h-10 w-full rounded-xl border border-companion-border bg-white/80 pl-9 pr-3 text-sm text-companion-text outline-none transition placeholder:text-companion-muted/75 focus:border-companion-orange focus:ring-4 focus:ring-companion-orange/15"
+              />
+            </div>
+            <div className="mt-3 flex max-h-56 flex-wrap gap-2 overflow-y-auto">
+              {visibleSubjects.length === 0 && (
+                <p className="text-sm text-companion-muted">
+                  Nenhuma disciplina encontrada para “{subjectSearch}”.
+                </p>
+              )}
+              {visibleSubjects.map((subject) => {
                 const isSelected = selectedSubjectIds.includes(subject.id)
                 const isLimitReached =
                   selectedSubjectIds.length === 3 && !isSelected
@@ -186,6 +246,22 @@ function PostComposerModal({ subjects, onClose, onSubmit }) {
                 )
               })}
             </div>
+            {!isSearching && (
+              <button
+                type="button"
+                onClick={() => setShowAllSubjects((showAll) => !showAll)}
+                aria-expanded={showAllSubjects}
+                className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-companion-brand hover:underline"
+              >
+                <i
+                  className={`bi ${showAllSubjects ? 'bi-chevron-up' : 'bi-chevron-down'}`}
+                  aria-hidden="true"
+                />
+                {showAllSubjects
+                  ? 'Ver menos'
+                  : `Ver mais: todas as disciplinas (${subjects.length})`}
+              </button>
+            )}
           </fieldset>
 
           <div aria-live="polite" className="min-h-5">

@@ -1,14 +1,16 @@
 import { useCallback, useState } from 'react'
-import { useNavigate } from 'react-router'
+import { useNavigate, useOutletContext } from 'react-router'
 import BackLink from '../../components/common/BackLink.jsx'
 import ConfirmDialog from '../../components/common/ConfirmDialog.jsx'
 import PasswordResetCard from '../../components/user/PasswordResetCard.jsx'
+import UsernameCard from '../../components/user/UsernameCard.jsx'
 import { deleteMyAccount } from '../../services/accountService.js'
 
 const DELETE_CONFIRMATION_TEXT = 'EXCLUIR'
 
 function AccountSettingsPage() {
   const navigate = useNavigate()
+  const { currentUser, onProfileUpdate } = useOutletContext()
 
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
   const [deleteConfirmation, setDeleteConfirmation] = useState('')
@@ -37,9 +39,11 @@ function AccountSettingsPage() {
           Configurações da conta
         </h1>
         <p className="mt-1 text-sm text-companion-muted">
-          Gerencie sua senha e sua conta.
+          Gerencie seu username, sua senha e sua conta.
         </p>
       </div>
+
+      <UsernameCard currentUser={currentUser} onSaved={onProfileUpdate} />
 
       <PasswordResetCard id="account-password" />
 

@@ -1,3 +1,5 @@
+import { getSubjectById } from './mockSubjects.js'
+
 // ID 0 representa a conta autenticada enquanto a autenticação não está integrada.
 export const mockCurrentUser = {
   id: 0,
@@ -79,7 +81,7 @@ export const mockPublicUsers = [
     bio: 'Compartilhando o que aprendo em algoritmos e estruturas de dados.',
     course: 'Ciência da Computação',
     semester: 7,
-    postCount: 2,
+    postCount: 3,
     commentCount: 1,
     followerCount: 1,
     followingCount: 1,
@@ -93,7 +95,7 @@ export const mockPublicUsers = [
     bio: 'Aprendendo a explicar programação de um jeito simples.',
     course: 'Ciência da Computação',
     semester: 5,
-    postCount: 2,
+    postCount: 3,
     commentCount: 1,
     followerCount: 1,
     followingCount: 1,
@@ -107,7 +109,7 @@ export const mockPublicUsers = [
     bio: 'Interesse em banco de dados e engenharia de software.',
     course: 'Ciência da Computação',
     semester: 4,
-    postCount: 1,
+    postCount: 2,
     commentCount: 1,
     followerCount: 1,
     followingCount: 1,
@@ -115,35 +117,44 @@ export const mockPublicUsers = [
   },
 ]
 
+// Monta a associação usuário-matéria a partir do código da disciplina.
+function userSubject(id, subjectCode, interestType, proficiency) {
+  const { name } = getSubjectById(subjectCode)
+  return { id, subject: { id: subjectCode, name }, interestType, proficiency }
+}
+
 export const mockUserSubjects = {
   0: [
-    { id: 1, subject: { id: 7, name: 'Cálculo I' }, interestType: 'QUER_APRENDER', proficiency: 'INICIANTE' },
-    { id: 2, subject: { id: 3, name: 'Redes de Computadores' }, interestType: 'QUER_APRENDER', proficiency: 'INICIANTE' },
-    { id: 3, subject: { id: 8, name: 'Programação Web' }, interestType: 'DOMINA', proficiency: 'INTERMEDIARIO' },
-    { id: 4, subject: { id: 5, name: 'Algoritmos' }, interestType: 'DOMINA', proficiency: 'AVANCADO' },
+    userSubject(1, 'T100', 'QUER_APRENDER', 'INICIANTE'),
+    userSubject(2, 'T310', 'QUER_APRENDER', 'INICIANTE'),
+    userSubject(3, 'T242', 'DOMINA', 'INTERMEDIARIO'),
+    userSubject(4, 'T198', 'DOMINA', 'AVANCADO'),
   ],
   17: [
-    { id: 1701, subject: { id: 1, name: 'Estruturas de Dados' }, interestType: 'QUER_APRENDER', proficiency: 'INICIANTE' },
-    { id: 1702, subject: { id: 5, name: 'Algoritmos' }, interestType: 'DOMINA', proficiency: 'INTERMEDIARIO' },
+    userSubject(1701, 'T390', 'QUER_APRENDER', 'INICIANTE'),
+    userSubject(1702, 'T160', 'DOMINA', 'INTERMEDIARIO'),
   ],
   23: [
-    { id: 2301, subject: { id: 2, name: 'Banco de Dados' }, interestType: 'DOMINA', proficiency: 'INTERMEDIARIO' },
-    { id: 2302, subject: { id: 4, name: 'Desenvolvimento Web' }, interestType: 'QUER_APRENDER', proficiency: 'INICIANTE' },
+    userSubject(2301, 'T333', 'DOMINA', 'INTERMEDIARIO'),
+    userSubject(2302, 'T242', 'QUER_APRENDER', 'INICIANTE'),
   ],
   31: [
-    { id: 3101, subject: { id: 3, name: 'Redes de Computadores' }, interestType: 'QUER_APRENDER', proficiency: 'INICIANTE' },
+    userSubject(3101, 'T310', 'QUER_APRENDER', 'INICIANTE'),
   ],
   42: [
-    { id: 4201, subject: { id: 4, name: 'Desenvolvimento Web' }, interestType: 'DOMINA', proficiency: 'AVANCADO' },
+    userSubject(4201, 'T242', 'DOMINA', 'AVANCADO'),
   ],
   56: [
-    { id: 5601, subject: { id: 1, name: 'Estruturas de Dados' }, interestType: 'DOMINA', proficiency: 'AVANCADO' },
+    userSubject(5601, 'T390', 'DOMINA', 'AVANCADO'),
+    userSubject(5602, 'T290', 'QUER_APRENDER', 'INTERMEDIARIO'),
   ],
   61: [
-    { id: 6101, subject: { id: 5, name: 'Algoritmos' }, interestType: 'QUER_APRENDER', proficiency: 'INTERMEDIARIO' },
+    userSubject(6101, 'T164', 'DOMINA', 'INTERMEDIARIO'),
+    userSubject(6102, 'T100', 'QUER_APRENDER', 'INTERMEDIARIO'),
   ],
   72: [
-    { id: 7201, subject: { id: 2, name: 'Banco de Dados' }, interestType: 'DOMINA', proficiency: 'INTERMEDIARIO' },
+    userSubject(7201, 'T320', 'DOMINA', 'INTERMEDIARIO'),
+    userSubject(7202, 'T296', 'QUER_APRENDER', 'INICIANTE'),
   ],
 }
 
