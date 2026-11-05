@@ -1,4 +1,4 @@
-import companionLogo from '../../../assets/icon_companion.png'
+import CompanionBrand from '../../../components/common/CompanionBrand.jsx'
 import './AuthBrand.css'
 
 function AuthBrand({ compact = false }) {
@@ -10,14 +10,12 @@ function AuthBrand({ compact = false }) {
           : 'site-brand'
       }
     >
-      <img
-        src={companionLogo}
+      <CompanionBrand
         className={
           compact
-            ? 'size-10 shrink-0 object-contain sm:size-11'
+            ? 'size-10 shrink-0 sm:size-11'
             : 'brand-mark'
         }
-        alt=""
       />
       <span
         className={
