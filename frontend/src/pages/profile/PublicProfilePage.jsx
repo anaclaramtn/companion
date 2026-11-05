@@ -19,7 +19,7 @@ import {
 
 function PublicProfilePage() {
   const { userId } = useParams()
-  const { currentUserId, reportReasons, onLikeChange, onReport } =
+  const { currentUserId, reportReasons, onLikeChange, onSaveChange, onReport } =
     useOutletContext()
   const [requestState, setRequestState] = useState({
     key: null,
@@ -261,6 +261,7 @@ function PublicProfilePage() {
         currentUserId={currentUserId}
         reportReasons={reportReasons}
         onLikeChange={onLikeChange}
+        onSaveChange={onSaveChange}
         onReport={onReport}
         emptyPostsText="Esta pessoa ainda não publicou nenhum post."
         emptyCommentsText="Esta pessoa ainda não respondeu a nenhum post."

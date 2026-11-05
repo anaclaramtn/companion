@@ -1,5 +1,5 @@
 import {useState} from 'react'
-import {Link} from 'react-router'
+import {Link, Navigate} from 'react-router'
 import AuthLayout from '../../layouts/auth/AuthLayout.jsx'
 
 const MAX_BIO = 300
@@ -16,25 +16,27 @@ function OnboardingStep5Page() {
   const [bio, setBio] = useState('')
   const [bioTouched, setBioTouched] = useState(false)
   const [submitted, setSubmitted] = useState(false)
-  const [message, setMessage] = useState('')
+  const [done, setDone] = useState(false)
 
   const bioError = bioTouched || submitted ? validateBio(bio) : ''
 
   function handleSubmit(event) {
     event.preventDefault()
     setSubmitted(true)
-    setMessage('')
 
     if (validateBio(bio)) return
 
-    // TODO: enviar os dados à API e trocar a mensagem por um estado done + <Navigate to="/rota-da-proxima-pagina" />
-    setMessage('Cadastro concluído! O redirecionamento ainda não foi conectado.')
+    // O envio à API ainda precisa ser conectado.
+    setDone(true)
   }
 
   function handleSkip() {
-    // TODO: quando a próxima página existir, trocar este botão por <Link to="/rota-da-proxima-pagina">
-    setMessage('Etapa ignorada. O redirecionamento ainda não foi conectado.')
+    setDone(true)
   }
+
+  // Fim da criação de perfil: substitui o histórico para que "voltar" no
+  // navegador não leve de novo às etapas depois de entrar no feed.
+  if (done) return <Navigate to="/feed" replace />
 
   return (
     <AuthLayout>
@@ -62,8 +64,6 @@ function OnboardingStep5Page() {
           />
           {bioError && <p className="field-error">{bioError}</p>}
         </div>
-
-        {message && <p className="form-message">{message}</p>}
 
         <div className="onboarding-actions">
           <Link className="text-button" to="/onboarding/etapa-4">
