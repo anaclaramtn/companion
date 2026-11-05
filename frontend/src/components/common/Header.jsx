@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router'
 import AuthBrand from '../../features/auth/components/AuthBrand.jsx'
 
 function HeaderWaves() {
@@ -74,8 +75,9 @@ function HeaderWaves() {
 
 function FeedHeader({
   onPostQuestion,
-  userName = 'Minha conta',
+  userName = 'Meu perfil',
   userAvatarUrl,
+  profileHref = '/perfil',
   showSearch = true,
 }) {
   const [query, setQuery] = useState('')
@@ -148,8 +150,8 @@ function FeedHeader({
           <span className="hidden sm:inline">Postar dúvida</span>
         </button>
 
-        <button
-          type="button"
+        <Link
+          to={profileHref}
           aria-label={userName}
           className="grid size-12 shrink-0 place-items-center overflow-hidden rounded-full bg-white/95 text-companion-muted ring-2 ring-white/70 transition hover:ring-companion-orange/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-companion-orange"
         >
@@ -161,7 +163,7 @@ function FeedHeader({
               <path d="M4.5 21a7.5 7.5 0 0 1 15 0" fill="currentColor" />
             </svg>
           )}
-        </button>
+        </Link>
       </div>
     </header>
   )

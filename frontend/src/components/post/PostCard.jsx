@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react'
 import { Link } from 'react-router'
+import SubjectTag from '../common/SubjectTag.jsx'
 import ProfileLink from '../user/ProfileLink.jsx'
 import ReportPopup from './ReportPopup.jsx'
 
@@ -233,11 +234,8 @@ function PostBody({ post, subjects }) {
 
       <ul className="mt-4 flex flex-wrap gap-2" aria-label="Conteúdos">
         {subjects.map((subject) => (
-          <li
-            key={subject.id}
-            className="rounded-full bg-companion-orange/10 px-3 py-1 text-xs font-semibold text-companion-brand"
-          >
-            {subject.name}
+          <li key={subject.id}>
+            <SubjectTag name={subject.name} />
           </li>
         ))}
       </ul>

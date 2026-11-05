@@ -1,5 +1,7 @@
 import { useState } from 'react'
 
+const MAX_REPLY_LENGTH = 256
+
 function PostReplyForm({ onSubmit }) {
   const [content, setContent] = useState('')
 
@@ -30,13 +32,13 @@ function PostReplyForm({ onSubmit }) {
         onChange={(event) => setContent(event.target.value)}
         placeholder="Escreva uma resposta útil e respeitosa..."
         rows={3}
-        maxLength={2000}
+        maxLength={MAX_REPLY_LENGTH}
         required
         className="w-full resize-y rounded-xl border border-companion-border bg-white/80 px-4 py-3 text-sm leading-6 text-companion-text outline-none transition placeholder:text-companion-muted/75 focus:border-companion-orange focus:ring-4 focus:ring-companion-orange/15"
       />
       <div className="mt-3 flex items-center justify-between gap-4">
         <span className="text-xs text-companion-muted">
-          {content.length}/2000
+          {content.length}/{MAX_REPLY_LENGTH}
         </span>
         <button
           type="submit"

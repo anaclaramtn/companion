@@ -2,7 +2,8 @@ import PostCard from '../../components/post/PostCard.jsx'
 import { useOutletContext } from 'react-router'
 
 function FeedPage() {
-  const { posts, reportReasons, onReport, currentUserId } = useOutletContext()
+  const { posts, reportReasons, onLikeChange, onReport, currentUserId } =
+    useOutletContext()
 
   return (
     <section aria-labelledby="feed-title">
@@ -32,6 +33,7 @@ function FeedPage() {
               post={post}
               currentUserId={currentUserId}
               reportReasons={reportReasons}
+              onLikeChange={onLikeChange}
               onReport={onReport}
               detailsHref={`/feed/posts/${post.id}`}
             />

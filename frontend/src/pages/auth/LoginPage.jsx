@@ -2,29 +2,19 @@ import { useState } from 'react'
 import 'bootstrap-icons/font/bootstrap-icons.css'
 import AuthForm from '../../features/auth/components/AuthForm.jsx'
 import AuthLayout from '../../layouts/auth/AuthLayout.jsx'
-import { Link } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 
 function LoginPage() {
+  const navigate = useNavigate()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [notice, setNotice] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const canSubmit = username.trim().length > 0 && password.length > 0
 
-  function clearNotice(setValue) {
-    return (value) => {
-      setValue(value)
-      setNotice('')
-    }
-  }
-
-  function showPreviewNotice() {
-    setNotice('Esta funcionalidade estará disponível em breve.')
-  }
-
   function handleSubmit(event) {
     event.preventDefault()
-    if (canSubmit) showPreviewNotice()
+    // Sem autenticação integrada, qualquer usuário e senha entram no feed mockado.
+    if (canSubmit) navigate('/feed')
   }
 
   return (
@@ -41,7 +31,7 @@ function LoginPage() {
             autoComplete: 'username',
             placeholder: 'usuario@edu.unifor.br',
             value: username,
-            onChange: clearNotice(setUsername),
+            onChange: setUsername,
             trailing: <i className="bi bi-person" aria-hidden="true" />,
           },
           {
@@ -52,7 +42,7 @@ function LoginPage() {
             autoComplete: 'current-password',
             placeholder: '********',
             value: password,
-            onChange: clearNotice(setPassword),
+            onChange: setPassword,
             labelAction: (
               <Link className="text-button forgot-button" to="/recuperar-senha">
                 Esqueceu a senha?
@@ -72,7 +62,6 @@ function LoginPage() {
           },
         ]}
         submitLabel="Entrar"
-        message={notice}
         canSubmit={canSubmit}
         onSubmit={handleSubmit}
         footer={(

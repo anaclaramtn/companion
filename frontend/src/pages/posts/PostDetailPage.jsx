@@ -9,6 +9,7 @@ function PostDetailPage() {
     replies,
     reportReasons,
     onCreateReply,
+    onLikeChange,
     onReport,
     currentUserId,
   } = useOutletContext()
@@ -29,6 +30,7 @@ function PostDetailPage() {
         post={post}
         currentUserId={currentUserId}
         reportReasons={reportReasons}
+        onLikeChange={onLikeChange}
         onReport={onReport}
         detailsHref={null}
       />

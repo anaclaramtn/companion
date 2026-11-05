@@ -9,14 +9,10 @@ function ProfileLink({
 }) {
   const isCurrentUser = Number(user.id) === Number(currentUserId)
 
-  if (isCurrentUser) {
-    return <span className={className}>{children}</span>
-  }
-
   return (
     <Link
-      to={`/feed/users/${user.id}`}
-      aria-label={`Ver perfil de ${user.name}`}
+      to={isCurrentUser ? '/perfil' : `/feed/users/${user.id}`}
+      aria-label={isCurrentUser ? 'Ver meu perfil' : `Ver perfil de ${user.name}`}
       className={className}
       onClick={onClick}
     >

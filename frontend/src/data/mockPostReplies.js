@@ -16,8 +16,6 @@ export const mockRepliesByPost = {
       content:
         'Uma lista encadeada armazena cada elemento junto com uma referência para o próximo nó. Isso facilita inserções, mas o acesso por índice é sequencial.',
       createdAt: minutesAgo(45),
-      likeCount: 3,
-      likedByCurrentUser: false,
       reportedByCurrentUser: false,
     },
     {
@@ -32,8 +30,6 @@ export const mockRepliesByPost = {
       content:
         'Se quiser visualizar melhor, desenhe os nós como caixas e as referências como setas. Cada nó aponta para o seguinte.',
       createdAt: minutesAgo(20),
-      likeCount: 1,
-      likedByCurrentUser: false,
       reportedByCurrentUser: false,
     },
   ],
@@ -50,8 +46,22 @@ export const mockRepliesByPost = {
       content:
         'Use uma chave estrangeira quando precisar garantir que o registro relacionado exista na outra tabela.',
       createdAt: minutesAgo(90),
-      likeCount: 2,
-      likedByCurrentUser: false,
+      reportedByCurrentUser: false,
+    },
+  ],
+  103: [
+    {
+      id: 1004,
+      postId: 103,
+      author: {
+        id: 0,
+        name: 'Você',
+        username: 'voce',
+        avatarUrl: null,
+      },
+      content:
+        'Comecei pelo modelo OSI e TCP/IP e depois fui para os protocolos mais comuns, como HTTP e DNS. Ajudou bastante ver tudo na prática com o Wireshark.',
+      createdAt: minutesAgo(600),
       reportedByCurrentUser: false,
     },
   ],
