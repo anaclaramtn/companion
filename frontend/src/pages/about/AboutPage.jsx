@@ -1,4 +1,4 @@
-import companionLogo from '../../assets/icon_companion.png'
+import CompanionBrand from '../../components/common/CompanionBrand.jsx'
 import BackLink from '../../components/common/BackLink.jsx'
 
 const features = [
@@ -34,11 +34,7 @@ function AboutPage() {
       <BackLink to="/configuracoes" label="Configurações" />
 
       <header className="rounded-2xl border border-companion-border/70 bg-companion-surface px-6 py-10 text-center shadow-sm">
-        <img
-          src={companionLogo}
-          alt=""
-          className="mx-auto size-20 object-contain"
-        />
+        <CompanionBrand className="mx-auto size-20" />
         <h1
           id="about-title"
           className="mt-4 text-sm font-extrabold tracking-[0.2em] text-companion-brand"

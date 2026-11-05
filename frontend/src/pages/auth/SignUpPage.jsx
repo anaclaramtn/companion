@@ -1,5 +1,5 @@
 import {useState} from 'react'
-import {Link} from 'react-router'
+import {Link, Navigate} from 'react-router' // MUDANÇA: importa o Navigate
 import 'bootstrap-icons/font/bootstrap-icons.css'
 import AuthForm from '../../features/auth/components/AuthForm.jsx'
 import AuthLayout from '../../layouts/auth/AuthLayout.jsx'
@@ -58,6 +58,7 @@ function RegisterPage() {
   const [confirmationTouched, setConfirmationTouched] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [message, setMessage] = useState('')
+  const [done, setDone] = useState(false) // MUDANÇA: novo estado
 
   const emailError =
     emailTouched || submitted ? validateEmail(email) : ''
@@ -70,7 +71,7 @@ function RegisterPage() {
       ? validatePasswordConfirmation(password, passwordConfirmation)
       : ''
 
-      function handleSubmit(event) {
+  function handleSubmit(event) {
     event.preventDefault()
     setSubmitted(true)
     setMessage('')
@@ -83,8 +84,11 @@ function RegisterPage() {
     if (hasErrors) return
 
     // A validação passou. O cadastro ainda precisa ser conectado à API.
-    setMessage('Dados validados. O cadastro ainda não está conectado ao sistema.')
+    setDone(true) // MUDANÇA: no lugar do setMessage(...)
   }
+
+  // MUDANÇA: depois de todos os hooks, antes do return principal
+  if (done) return <Navigate to="/onboarding/etapa-1" />
 
   return (
     <AuthLayout>

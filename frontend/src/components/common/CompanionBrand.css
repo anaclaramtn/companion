@@ -1,0 +1,30 @@
+.companion-brand-mark {
+  display: block;
+  flex: none;
+  aspect-ratio: 268 / 265;
+  background-image: url('/brand-blink/frame-1.svg');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  animation: companion-blink 3.2s infinite;
+}
+
+@keyframes companion-blink {
+  0%, 82%, 100% { background-image: url('/brand-blink/frame-1.svg'); }
+  83.5625% { background-image: url('/brand-blink/frame-2.svg'); }
+  85.125% { background-image: url('/brand-blink/frame-3.svg'); }
+  86.6875% { background-image: url('/brand-blink/frame-5.svg'); }
+  88.25% { background-image: url('/brand-blink/frame-6.svg'); }
+  89.8125% { background-image: url('/brand-blink/frame-7.svg'); }
+  91.375% { background-image: url('/brand-blink/frame-6.svg'); }
+  92.9375% { background-image: url('/brand-blink/frame-5.svg'); }
+  94.5% { background-image: url('/brand-blink/frame-3.svg'); }
+  96.0625% { background-image: url('/brand-blink/frame-2.svg'); }
+  97.625% { background-image: url('/brand-blink/frame-1.svg'); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .companion-brand-mark {
+    animation: none;
+  }
+}
