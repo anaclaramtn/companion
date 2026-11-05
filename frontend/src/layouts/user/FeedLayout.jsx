@@ -20,7 +20,7 @@ import {
 const navigationItems = [
   { to: '/feed', label: 'Feed', icon: 'bi-house', end: true },
   { to: '/explorar', label: 'Explorar', icon: 'bi-search' },
-  { label: 'Salvos', icon: 'bi-bookmark' },
+  { to: '/salvos', label: 'Salvos', icon: 'bi-bookmark' },
   { to: '/configuracoes', label: 'Configurações', icon: 'bi-gear' },
 ]
 
@@ -102,6 +102,14 @@ function FeedLayout() {
     )
   }
 
+  function handleSaveChange(postId, saved) {
+    setPosts((currentPosts) =>
+      currentPosts.map((post) =>
+        post.id === postId ? { ...post, savedByCurrentUser: saved } : post,
+      ),
+    )
+  }
+
   // Atualiza o perfil e a autoria exibida nos posts e respostas da conta.
   // subjects é opcional (ex.: a troca de username não altera as matérias).
   function handleProfileUpdate(user, subjects) {
@@ -168,6 +176,7 @@ function FeedLayout() {
                 reportReasons: mockPostReportReasons,
                 onCreateReply: handleCreateReply,
                 onLikeChange: handleLikeChange,
+                onSaveChange: handleSaveChange,
                 onReport: handleReport,
               }}
             />

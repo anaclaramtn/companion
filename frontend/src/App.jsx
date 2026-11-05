@@ -2,6 +2,12 @@ import { Navigate, Route, Routes } from 'react-router'
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage.jsx'
 import LoginPage from './pages/auth/LoginPage.jsx'
 import SignUpPage from './pages/auth/SignUpPage.jsx'
+import OnboardingStep1 from './pages/auth/OnboardingStep1.jsx'
+import OnboardingStep2 from './pages/auth/OnboardingStep2.jsx'
+import OnboardingStep3 from './pages/auth/OnboardingStep3.jsx'
+import OnboardingStep4 from './pages/auth/OnboardingStep4.jsx'
+import OnboardingStep5 from './pages/auth/OnboardingStep5.jsx'
+import SavedPage from './pages/auth/SavedPage.jsx'
 import FeedLayout from './layouts/user/FeedLayout.jsx'
 import PostDetailLayout from './layouts/user/PostDetailLayout.jsx'
 import FeedPage from './pages/feed/FeedPage.jsx'
@@ -25,6 +31,11 @@ function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/criar-conta" element={<SignUpPage />} />
       <Route path="/recuperar-senha" element={<ForgotPasswordPage />} />
+      <Route path="/onboarding/etapa-1" element={<OnboardingStep1 />} />
+      <Route path="/onboarding/etapa-2" element={<OnboardingStep2 />} />
+      <Route path="/onboarding/etapa-3" element={<OnboardingStep3 />} />
+      <Route path="/onboarding/etapa-4" element={<OnboardingStep4 />} />
+      <Route path="/onboarding/etapa-5" element={<OnboardingStep5 />} />
 
       <Route path="/feed" element={<FeedLayout />}>
         <Route index element={<FeedPage />} />
@@ -36,6 +47,10 @@ function App() {
 
       <Route path="/explorar" element={<FeedLayout />}>
         <Route index element={<ExplorePage />} />
+      </Route>
+
+      <Route path="/salvos" element={<FeedLayout />}>
+        <Route index element={<SavedPage />} />
       </Route>
 
       <Route path="/configuracoes" element={<FeedLayout />}>

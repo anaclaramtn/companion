@@ -11,14 +11,16 @@
 
 @keyframes companion-blink {
   0%, 82%, 100% { background-image: url('/brand-blink/frame-1.svg'); }
-  84% { background-image: url('/brand-blink/frame-2.svg'); }
-  86% { background-image: url('/brand-blink/frame-6.svg'); }
-  88% { background-image: url('/brand-blink/frame-3.svg'); }
-  90% { background-image: url('/brand-blink/frame-4.svg'); }
-  92% { background-image: url('/brand-blink/frame-5.svg'); }
-  94% { background-image: url('/brand-blink/frame-6.svg'); }
-  96% { background-image: url('/brand-blink/frame-2.svg'); }
-  98% { background-image: url('/brand-blink/frame-1.svg'); }
+  83.5625% { background-image: url('/brand-blink/frame-2.svg'); }
+  85.125% { background-image: url('/brand-blink/frame-3.svg'); }
+  86.6875% { background-image: url('/brand-blink/frame-5.svg'); }
+  88.25% { background-image: url('/brand-blink/frame-6.svg'); }
+  89.8125% { background-image: url('/brand-blink/frame-7.svg'); }
+  91.375% { background-image: url('/brand-blink/frame-6.svg'); }
+  92.9375% { background-image: url('/brand-blink/frame-5.svg'); }
+  94.5% { background-image: url('/brand-blink/frame-3.svg'); }
+  96.0625% { background-image: url('/brand-blink/frame-2.svg'); }
+  97.625% { background-image: url('/brand-blink/frame-1.svg'); }
 }
 
 @media (prefers-reduced-motion: reduce) {
