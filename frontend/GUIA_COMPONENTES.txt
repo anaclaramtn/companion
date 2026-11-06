@@ -399,6 +399,20 @@ DADOS (src/data/)
      npm run build
 
 
+FLUXO DE CRIAÇÃO DE CONTA
+-------------------------
+
+  /criar-conta (SignUpPage)
+    -> /confirmar-email (EmailConfirmationPage)
+       recebe o e-mail do cadastro pelo state da navegação; sem ele, volta
+       ao cadastro. Mostra o e-mail, permite reenviar o link (espera de 30s,
+       toast de confirmação) e voltar ao cadastro para corrigir o e-mail.
+       O botão "Já confirmei meu e-mail" simula o clique no link enviado.
+       As chamadas ficam em src/services/authService.js (mock).
+    -> /onboarding/etapa-1 ... /onboarding/etapa-5 (criação do perfil)
+    -> /feed (Concluir ou Pular na Etapa 5)
+
+
 7. FLUXO DO FEED ATUAL
 ----------------------
 

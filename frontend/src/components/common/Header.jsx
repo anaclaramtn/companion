@@ -92,13 +92,15 @@ function FeedHeader({
     <header className="relative isolate flex min-h-24 flex-wrap items-center gap-x-4 gap-y-3 overflow-hidden rounded-3xl border border-companion-border px-4 py-3 shadow-[0_12px_32px_rgba(69,42,18,0.12)] sm:px-6 md:flex-nowrap md:gap-6 md:px-7">
       <HeaderWaves />
 
-      <a
-        href="/feed"
+      {/* Link do Router (e não <a href>) para trocar de tela sem recarregar
+          a página e perder o estado da sessão. */}
+      <Link
+        to="/feed"
         aria-label="Companion — Feed"
         className="flex min-w-0 items-center gap-3"
       >
         <AuthBrand compact />
-      </a>
+      </Link>
 
       {showSearch && (
         <span
