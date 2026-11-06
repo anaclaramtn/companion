@@ -87,8 +87,10 @@ function RegisterPage() {
     setDone(true) // MUDANÇA: no lugar do setMessage(...)
   }
 
-  // MUDANÇA: depois de todos os hooks, antes do return principal
-  if (done) return <Navigate to="/onboarding/etapa-1" />
+  // Depois do cadastro, a conta precisa confirmar o e-mail antes da criação do perfil.
+  if (done) {
+    return <Navigate to="/confirmar-email" state={{ email: email.trim() }} />
+  }
 
   return (
     <AuthLayout>

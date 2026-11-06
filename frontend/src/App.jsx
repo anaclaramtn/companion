@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router'
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage.jsx'
 import LoginPage from './pages/auth/LoginPage.jsx'
 import SignUpPage from './pages/auth/SignUpPage.jsx'
+import EmailConfirmationPage from './pages/auth/EmailConfirmationPage.jsx'
 import OnboardingStep1 from './pages/auth/OnboardingStep1.jsx'
 import OnboardingStep2 from './pages/auth/OnboardingStep2.jsx'
 import OnboardingStep3 from './pages/auth/OnboardingStep3.jsx'
@@ -30,6 +31,7 @@ function App() {
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/criar-conta" element={<SignUpPage />} />
+      <Route path="/confirmar-email" element={<EmailConfirmationPage />} />
       <Route path="/recuperar-senha" element={<ForgotPasswordPage />} />
       <Route path="/onboarding/etapa-1" element={<OnboardingStep1 />} />
       <Route path="/onboarding/etapa-2" element={<OnboardingStep2 />} />
