@@ -19,6 +19,7 @@ function MyProfilePage() {
     currentUserSubjects,
     reportReasons,
     onLikeChange,
+    onSaveChange,
     onReport,
   } = useOutletContext()
   const [activeRelation, setActiveRelation] = useState(null)
@@ -119,6 +120,7 @@ function MyProfilePage() {
         currentUserId={currentUserId}
         reportReasons={reportReasons}
         onLikeChange={onLikeChange}
+        onSaveChange={onSaveChange}
         onReport={onReport}
         emptyPostsText="Você ainda não publicou nenhuma dúvida."
         emptyCommentsText="Você ainda não respondeu a nenhuma dúvida."
