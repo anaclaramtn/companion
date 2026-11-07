@@ -9,8 +9,8 @@
   isolation: isolate;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  height: 100dvh;
-  overflow: hidden;
+  min-height: 100dvh;
+  overflow: clip;
   background:
     radial-gradient(circle at 100% 0%, rgb(246 127 0 / 11%), transparent 30%),
     radial-gradient(circle at 0% 100%, rgb(246 127 0 / 7%), transparent 34%),
@@ -64,7 +64,7 @@
   min-height: 0;
   align-items: center;
   justify-items: end;
-  padding: 10px 120px 10px 22px;
+  padding: 24px 120px 24px 22px;
 }
 
 .auth-column {
@@ -100,7 +100,7 @@
 @media (max-width: 768px) {
   .auth-main {
     justify-items: center;
-    padding: 10px 22px;
+    padding: 24px 22px;
   }
 
   .auth-column {

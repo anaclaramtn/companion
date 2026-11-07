@@ -1,8 +1,10 @@
 import './AuthCard.css'
 
-function AuthCard({ eyebrow, title, description, children, footer, message }) {
+function AuthCard({ eyebrow, title, description, children, footer, message, topContent }) {
   return (
     <section className="auth-card" aria-labelledby="auth-card-title">
+      {topContent && <div className="auth-card-top">{topContent}</div>}
+
       <div className="auth-heading">
         {eyebrow && <span className="eyebrow">{eyebrow}</span>}
         <h1 id="auth-card-title">{title}</h1>

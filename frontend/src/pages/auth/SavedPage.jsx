@@ -27,7 +27,7 @@ function SavedPage() {
       </div>
 
       {savedPosts.length === 0 ? (
-        <div className="grid min-h-[40vh] place-items-center text-center">
+        <div className="grid min-h-[60vh] place-items-center text-center">
           <p role="status" className="text-lg font-semibold text-companion-muted">
             Você ainda não salvou nenhuma dúvida.
           </p>

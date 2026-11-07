@@ -24,6 +24,10 @@
   pointer-events: none;
 }
 
+.auth-card-top {
+  margin-bottom: 22px;
+}
+
 .auth-heading {
   animation: riseIn 600ms 150ms both;
 }

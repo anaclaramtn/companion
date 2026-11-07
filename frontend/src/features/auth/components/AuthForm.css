@@ -92,7 +92,9 @@
   gap: 5px;
 }
 
-.auth-input-wrap input[aria-invalid='true'] {
+.auth-input-wrap input[aria-invalid='true'],
+.auth-input-wrap select[aria-invalid='true'],
+.auth-input-wrap textarea[aria-invalid='true'] {
   border-color: #c62828;
 }
 
@@ -107,4 +109,126 @@
   .text-button {
     transition: none;
   }
+}
+
+.auth-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 3px;
+}
+
+.auth-actions-end {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.auth-actions .submit-button {
+  width: auto;
+  margin-top: 0;
+  padding: 0 26px;
+}
+
+/* ===== Onboarding: barra de progresso ===== */
+.onboarding-progress {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--color-primary-soft);
+}
+
+.onboarding-progress-bar {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--color-primary);
+  transform-origin: left;
+  animation: progressGrow 800ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes progressGrow {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+/* ===== Onboarding: chips de interesses ===== */
+.chip-group {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 4px 14px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+}
+
+.chip-group legend {
+  padding: 0 6px;
+  color: var(--color-text-secondary);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.chip-group legend span {
+  margin-left: 4px;
+  color: var(--color-primary);
+}
+
+.chip {
+  padding: 6px 12px;
+  border: 1.5px solid transparent;
+  border-radius: 999px;
+  color: #7a6b5d;
+  background: var(--color-background-secondary);
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: border-color 180ms ease, background 180ms ease, color 180ms ease, transform 120ms ease, box-shadow 180ms ease;
+}
+
+.chip:hover {
+  border-color: var(--color-primary-soft);
+}
+
+.chip:active {
+  transform: scale(0.95);
+}
+
+.chip[aria-pressed='true'] {
+  border-color: var(--color-primary);
+  color: #8f4300;
+  background: var(--color-primary-soft);
+  box-shadow: 0 0 0 3px rgba(255, 133, 0, 0.12);
+  animation: chipPop 220ms ease;
+}
+
+@keyframes chipPop {
+  0% { transform: scale(0.94); }
+  60% { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+
+/* ===== Onboarding: contador da biografia ===== */
+.bio-counter {
+  color: var(--color-primary-hover);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .onboarding-progress-bar,
+  .chip[aria-pressed='true'] {
+    animation: none;
+  }
+}
+
+/* ===== Botão "Pular" em cinza ===== */
+.text-button.skip-button {
+  color: #6f6f7a;
+}
+
+.text-button.skip-button:hover {
+  color: #4a4a55;
 }

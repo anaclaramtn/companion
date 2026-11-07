@@ -15,11 +15,25 @@ function AuthField({
   helper,
   labelAction,
   trailing,
+  options, // para type 'select': lista de textos
+  rows, // para type 'textarea'
+  maxLength, // para type 'textarea'
 }) {
   const describedBy = [
     helper && `${id}-helper`,
     error && `${id}-error`,
   ].filter(Boolean).join(' ') || undefined
+
+  const controlProps = {
+    id,
+    name,
+    value,
+    required,
+    onChange: (event) => onChange(event.target.value),
+    onBlur,
+    'aria-invalid': Boolean(error),
+    'aria-describedby': describedBy,
+  }
 
   return (
     <div className="field-group">
@@ -33,19 +47,28 @@ function AuthField({
       )}
 
       <div className="auth-input-wrap">
-        <input
-          id={id}
-          name={name}
-          type={type}
-          autoComplete={autoComplete}
-          placeholder={placeholder}
-          value={value}
-          required={required}
-          onChange={(event) => onChange(event.target.value)}
-          onBlur={onBlur}
-          aria-invalid={Boolean(error)}
-          aria-describedby={describedBy}
-        />
+        {type === 'select' ? (
+          <select {...controlProps}>
+            {placeholder && <option value="">{placeholder}</option>}
+            {options.map((item) => (
+              <option key={item} value={item}>{item}</option>
+            ))}
+          </select>
+        ) : type === 'textarea' ? (
+          <textarea
+            {...controlProps}
+            rows={rows}
+            maxLength={maxLength}
+            placeholder={placeholder}
+          />
+        ) : (
+          <input
+            {...controlProps}
+            type={type}
+            autoComplete={autoComplete}
+            placeholder={placeholder}
+          />
+        )}
         {trailing && <span className="auth-input-trailing">{trailing}</span>}
       </div>
 

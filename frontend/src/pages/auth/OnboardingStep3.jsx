@@ -1,9 +1,14 @@
 import {useState} from 'react'
 import {Link, Navigate} from 'react-router'
+import AuthForm from '../../features/auth/components/AuthForm.jsx'
 import AuthLayout from '../../layouts/auth/AuthLayout.jsx'
 
-const universities = ['Universidade de Fortaleza (UNIFOR)']
-const courses = ['Ciência da Computação', 'Engenharia de Software', 'Sistemas de Informação']
+const universities = ['UNIFOR (Universidade de Fortaleza)']
+const courses = [
+  'Ciência da Computação',
+  'Engenharia da Computação',
+  'Análise e Desenvolvimento de Sistemas',
+]
 const semesters = [
   '1º Semestre',
   '2º Semestre',
@@ -34,75 +39,69 @@ function OnboardingStep3Page() {
 
   return (
     <AuthLayout>
-      <form className="onboarding-card" onSubmit={handleSubmit} noValidate>
-        <div className="onboarding-progress">
-          <div className="onboarding-progress-bar" style={{width: '60%'}} />
-        </div>
+      <div
+        className="onboarding-progress"
+        role="progressbar"
+        aria-label="Progresso do cadastro"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={60}
+      >
+        <div className="onboarding-progress-bar" style={{width: '60%'}} />
+      </div>
 
-        <p className="eyebrow">ETAPA 3 DE 5</p>
-        <h1>Sua vida acadêmica</h1>
-        <p className="description">
-          Você poderá completar ou alterar essas informações depois.
-        </p>
-
-        <div className="form-field">
-          <label htmlFor="onboarding-university">Universidade</label>
-          <select
-            id="onboarding-university"
-            name="university"
-            value={university}
-            onChange={(event) => setUniversity(event.target.value)}
-          >
-            <option value="">Selecionar universidade</option>
-            {universities.map((item) => (
-              <option key={item} value={item}>{item}</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="form-field">
-          <label htmlFor="onboarding-course">Curso</label>
-          <select
-            id="onboarding-course"
-            name="course"
-            value={course}
-            onChange={(event) => setCourse(event.target.value)}
-          >
-            <option value="">Selecionar curso</option>
-            {courses.map((item) => (
-              <option key={item} value={item}>{item}</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="form-field">
-          <label htmlFor="onboarding-semester">Semestre</label>
-          <select
-            id="onboarding-semester"
-            name="semester"
-            value={semester}
-            onChange={(event) => setSemester(event.target.value)}
-          >
-            <option value="">Selecionar semestre</option>
-            {semesters.map((item) => (
-              <option key={item} value={item}>{item}</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="onboarding-actions">
-          <Link className="text-button" to="/onboarding/etapa-2">
-            Voltar
-          </Link>
-
-          <div>
-            <Link className="text-button" to="/onboarding/etapa-4">
+      <AuthForm
+        eyebrow="ETAPA 3 DE 5"
+        title="Sua vida acadêmica"
+        description="Você poderá completar ou alterar essas informações depois."
+        fields={[
+          {
+            id: 'onboarding-university',
+            name: 'university',
+            label: 'Universidade',
+            type: 'select',
+            placeholder: 'Selecionar universidade',
+            options: universities,
+            value: university,
+            onChange: (value) => setUniversity(value),
+          },
+          {
+            id: 'onboarding-course',
+            name: 'course',
+            label: 'Curso',
+            type: 'select',
+            placeholder: 'Selecionar curso',
+            options: courses,
+            value: course,
+            onChange: (value) => setCourse(value),
+          },
+          {
+            id: 'onboarding-semester',
+            name: 'semester',
+            label: 'Semestre',
+            type: 'select',
+            placeholder: 'Selecionar semestre',
+            options: semesters,
+            value: semester,
+            onChange: (value) => setSemester(value),
+          },
+        ]}
+        submitLabel="Avançar"
+        canSubmit
+        onSubmit={handleSubmit}
+        actions={{
+          start: (
+            <Link className="text-button" to="/onboarding/etapa-2">
+              Voltar
+            </Link>
+          ),
+          extra: (
+            <Link className="text-button skip-button" to="/onboarding/etapa-4">
               Pular
             </Link>
-            <button type="submit">Avançar</button>
-          </div>
-        </div>
-      </form>
+          ),
+        }}
+      />
     </AuthLayout>
   )
 }

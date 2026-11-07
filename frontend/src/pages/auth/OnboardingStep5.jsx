@@ -1,8 +1,9 @@
 import {useState} from 'react'
-import {Link} from 'react-router'
+import {Link, Navigate} from 'react-router'
+import AuthForm from '../../features/auth/components/AuthForm.jsx'
 import AuthLayout from '../../layouts/auth/AuthLayout.jsx'
 
-const MAX_BIO = 300
+const MAX_BIO = 200
 
 function validateBio(value) {
   if (value.length > MAX_BIO) {
@@ -16,68 +17,71 @@ function OnboardingStep5Page() {
   const [bio, setBio] = useState('')
   const [bioTouched, setBioTouched] = useState(false)
   const [submitted, setSubmitted] = useState(false)
-  const [message, setMessage] = useState('')
+  const [done, setDone] = useState(false)
 
   const bioError = bioTouched || submitted ? validateBio(bio) : ''
 
   function handleSubmit(event) {
     event.preventDefault()
     setSubmitted(true)
-    setMessage('')
 
     if (validateBio(bio)) return
 
-    // TODO: enviar os dados à API e trocar a mensagem por um estado done + <Navigate to="/rota-da-proxima-pagina" />
-    setMessage('Cadastro concluído! O redirecionamento ainda não foi conectado.')
+    // O envio dos dados à API ainda precisa ser conectado.
+    setDone(true)
   }
 
-  function handleSkip() {
-    // TODO: quando a próxima página existir, trocar este botão por <Link to="/rota-da-proxima-pagina">
-    setMessage('Etapa ignorada. O redirecionamento ainda não foi conectado.')
-  }
+  if (done) return <Navigate to="/feed" />
 
   return (
     <AuthLayout>
-      <form className="onboarding-card" onSubmit={handleSubmit} noValidate>
-        <div className="onboarding-progress">
-          <div className="onboarding-progress-bar" style={{width: '100%'}} />
-        </div>
+      <div
+        className="onboarding-progress"
+        role="progressbar"
+        aria-label="Progresso do cadastro"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={100}
+      >
+        <div className="onboarding-progress-bar" style={{width: '100%'}} />
+      </div>
 
-        <p className="eyebrow">ETAPA 5 DE 5</p>
-        <h1>Conte um pouco sobre você</h1>
-        <p className="description">
-          Você poderá completar ou alterar essas informações depois.
-        </p>
-
-        <div className="form-field">
-          <label htmlFor="onboarding-bio">Biografia</label>
-          <textarea
-            id="onboarding-bio"
-            name="bio"
-            rows={4}
-            placeholder="Conte um pouco sobre você"
-            value={bio}
-            onChange={(event) => setBio(event.target.value)}
-            onBlur={() => setBioTouched(true)}
-          />
-          {bioError && <p className="field-error">{bioError}</p>}
-        </div>
-
-        {message && <p className="form-message">{message}</p>}
-
-        <div className="onboarding-actions">
-          <Link className="text-button" to="/onboarding/etapa-4">
-            Voltar
-          </Link>
-
-          <div>
-            <button type="button" className="text-button" onClick={handleSkip}>
+      <AuthForm
+        eyebrow="ETAPA 5 DE 5"
+        title="Conte um pouco sobre você"
+        description="Você poderá completar ou alterar essas informações depois."
+        fields={[
+          {
+            id: 'onboarding-bio',
+            name: 'bio',
+            label: 'Biografia',
+            type: 'textarea',
+            rows: 8,
+            maxLength: MAX_BIO,
+            labelAction: <span className="bio-counter">{bio.length}/{MAX_BIO}</span>,
+            placeholder: 'Escreva aqui, como se fosse uma carta...',
+            value: bio,
+            error: bioError,
+            onChange: (value) => setBio(value),
+            onBlur: () => setBioTouched(true),
+          },
+        ]}
+        submitLabel="Concluir"
+        canSubmit
+        onSubmit={handleSubmit}
+        actions={{
+          start: (
+            <Link className="text-button" to="/onboarding/etapa-4">
+              Voltar
+            </Link>
+          ),
+          extra: (
+            <Link className="text-button skip-button" to="/feed">
               Pular
-            </button>
-            <button type="submit">Concluir</button>
-          </div>
-        </div>
-      </form>
+            </Link>
+          ),
+        }}
+      />
     </AuthLayout>
   )
 }
