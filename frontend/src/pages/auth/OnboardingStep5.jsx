@@ -1,8 +1,9 @@
 import {useState} from 'react'
 import {Link, Navigate} from 'react-router'
+import AuthForm from '../../features/auth/components/AuthForm.jsx'
 import AuthLayout from '../../layouts/auth/AuthLayout.jsx'
 
-const MAX_BIO = 300
+const MAX_BIO = 200
 
 function validateBio(value) {
   if (value.length > MAX_BIO) {
@@ -26,13 +27,11 @@ function OnboardingStep5Page() {
 
     if (validateBio(bio)) return
 
-    // O envio à API ainda precisa ser conectado.
+    // O envio dos dados à API ainda precisa ser conectado.
     setDone(true)
   }
 
-  function handleSkip() {
-    setDone(true)
-  }
+  if (done) return <Navigate to="/feed" />
 
   // Fim da criação de perfil: substitui o histórico para que "voltar" no
   // navegador não leve de novo às etapas depois de entrar no feed.
@@ -40,44 +39,53 @@ function OnboardingStep5Page() {
 
   return (
     <AuthLayout>
-      <form className="onboarding-card" onSubmit={handleSubmit} noValidate>
-        <div className="onboarding-progress">
-          <div className="onboarding-progress-bar" style={{width: '100%'}} />
-        </div>
+      <div
+        className="onboarding-progress"
+        role="progressbar"
+        aria-label="Progresso do cadastro"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={100}
+      >
+        <div className="onboarding-progress-bar" style={{width: '100%'}} />
+      </div>
 
-        <p className="eyebrow">ETAPA 5 DE 5</p>
-        <h1>Conte um pouco sobre você</h1>
-        <p className="description">
-          Você poderá completar ou alterar essas informações depois.
-        </p>
-
-        <div className="form-field">
-          <label htmlFor="onboarding-bio">Biografia</label>
-          <textarea
-            id="onboarding-bio"
-            name="bio"
-            rows={4}
-            placeholder="Conte um pouco sobre você"
-            value={bio}
-            onChange={(event) => setBio(event.target.value)}
-            onBlur={() => setBioTouched(true)}
-          />
-          {bioError && <p className="field-error">{bioError}</p>}
-        </div>
-
-        <div className="onboarding-actions">
-          <Link className="text-button" to="/onboarding/etapa-4">
-            Voltar
-          </Link>
-
-          <div>
-            <button type="button" className="text-button" onClick={handleSkip}>
+      <AuthForm
+        eyebrow="ETAPA 5 DE 5"
+        title="Conte um pouco sobre você"
+        description="Você poderá completar ou alterar essas informações depois."
+        fields={[
+          {
+            id: 'onboarding-bio',
+            name: 'bio',
+            label: 'Biografia',
+            type: 'textarea',
+            rows: 8,
+            maxLength: MAX_BIO,
+            labelAction: <span className="bio-counter">{bio.length}/{MAX_BIO}</span>,
+            placeholder: 'Escreva aqui, como se fosse uma carta...',
+            value: bio,
+            error: bioError,
+            onChange: (value) => setBio(value),
+            onBlur: () => setBioTouched(true),
+          },
+        ]}
+        submitLabel="Concluir"
+        canSubmit
+        onSubmit={handleSubmit}
+        actions={{
+          start: (
+            <Link className="text-button" to="/onboarding/etapa-4">
+              Voltar
+            </Link>
+          ),
+          extra: (
+            <Link className="text-button skip-button" to="/feed">
               Pular
-            </button>
-            <button type="submit">Concluir</button>
-          </div>
-        </div>
-      </form>
+            </Link>
+          ),
+        }}
+      />
     </AuthLayout>
   )
 }

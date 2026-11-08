@@ -1,5 +1,6 @@
 import {useState} from 'react'
 import {Link, Navigate} from 'react-router'
+import AuthForm from '../../features/auth/components/AuthForm.jsx'
 import AuthLayout from '../../layouts/auth/AuthLayout.jsx'
 
 function validateFullName(value) {
@@ -65,54 +66,59 @@ function OnboardingStep1Page() {
 
   return (
     <AuthLayout>
-      <form className="onboarding-card" onSubmit={handleSubmit} noValidate>
-        <div className="onboarding-progress">
-          <div className="onboarding-progress-bar" style={{width: '20%'}} />
-        </div>
+      <div
+        className="onboarding-progress"
+        role="progressbar"
+        aria-label="Progresso do cadastro"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={20}
+      >
+        <div className="onboarding-progress-bar" style={{width: '20%'}} />
+      </div>
 
-        <p className="eyebrow">ETAPA 1 DE 5</p>
-        <h1>Como devemos chamar você?</h1>
-
-        <div className="form-field">
-          <label htmlFor="onboarding-full-name">Nome completo *</label>
-          <input
-            id="onboarding-full-name"
-            name="fullName"
-            type="text"
-            autoComplete="name"
-            placeholder="Como você quer ser chamado"
-            value={fullName}
-            onChange={(event) => setFullName(event.target.value)}
-            onBlur={() => setFullNameTouched(true)}
-          />
-          {fullNameError && <p className="field-error">{fullNameError}</p>}
-        </div>
-
-        <div className="form-field">
-          <label htmlFor="onboarding-username">Username *</label>
-          <input
-            id="onboarding-username"
-            name="username"
-            type="text"
-            autoComplete="username"
-            placeholder="@seu.username"
-            value={username}
-            onChange={(event) => setUsername(event.target.value)}
-            onBlur={() => setUsernameTouched(true)}
-          />
-          {usernameError && <p className="field-error">{usernameError}</p>}
-        </div>
-
-        <div className="onboarding-actions">
-          <Link className="text-button" to="/login">
-            Cancelar
-          </Link>
-
-          <div>
-            <button type="submit">Avançar</button>
-          </div>
-        </div>
-      </form>
+      <AuthForm
+        eyebrow="ETAPA 1 DE 5"
+        title="Como devemos chamar você?"
+        fields={[
+          {
+            id: 'onboarding-full-name',
+            name: 'fullName',
+            label: 'Nome completo *',
+            type: 'text',
+            autoComplete: 'name',
+            placeholder: 'Como você quer ser chamado',
+            value: fullName,
+            required: true,
+            error: fullNameError,
+            onChange: (value) => setFullName(value),
+            onBlur: () => setFullNameTouched(true),
+          },
+          {
+            id: 'onboarding-username',
+            name: 'username',
+            label: 'Username *',
+            type: 'text',
+            autoComplete: 'username',
+            placeholder: '@seu.username',
+            value: username,
+            required: true,
+            error: usernameError,
+            onChange: (value) => setUsername(value),
+            onBlur: () => setUsernameTouched(true),
+          },
+        ]}
+        submitLabel="Avançar"
+        canSubmit
+        onSubmit={handleSubmit}
+        actions={{
+          start: (
+            <Link className="text-button" to="/login">
+              Cancelar
+            </Link>
+          ),
+        }}
+      />
     </AuthLayout>
   )
 }

@@ -1,5 +1,6 @@
 import {useState} from 'react'
 import {Link, Navigate} from 'react-router'
+import AuthForm from '../../features/auth/components/AuthForm.jsx'
 import AuthLayout from '../../layouts/auth/AuthLayout.jsx'
 
 function validatePhoto(file) {
@@ -18,9 +19,13 @@ function validatePhoto(file) {
 
 function DefaultAvatar() {
   return (
-    <svg viewBox="0 0 120 120" aria-hidden="true">
-      <circle cx="60" cy="46" r="17" fill="#9ca0b0" />
-      <path d="M26 110C26 86 42 74 60 74S94 86 94 110Z" fill="#9ca0b0" />
+    <svg
+      viewBox="0 0 120 120"
+      aria-hidden="true"
+      style={{display: 'block', width: '100%', height: '100%'}}
+    >
+      <circle cx="60" cy="46" r="19" fill="#9ca0b0" />
+      <path d="M6 132C6 96 30 78 60 78S114 96 114 132Z" fill="#9ca0b0" />
     </svg>
   )
 }
@@ -56,18 +61,39 @@ function OnboardingStep2Page() {
 
   return (
     <AuthLayout>
-      <form className="onboarding-card" onSubmit={handleSubmit} noValidate>
-        <div className="onboarding-progress">
-          <div className="onboarding-progress-bar" style={{width: '40%'}} />
-        </div>
+      <div
+        className="onboarding-progress"
+        role="progressbar"
+        aria-label="Progresso do cadastro"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={40}
+      >
+        <div className="onboarding-progress-bar" style={{width: '40%'}} />
+      </div>
 
-        <p className="eyebrow">ETAPA 2 DE 5</p>
-        <h1>Escolha sua foto</h1>
-        <p className="description">
-          Você poderá completar ou alterar essas informações depois.
-        </p>
-
-        <div className="photo-picker">
+      <AuthForm
+        eyebrow="ETAPA 2 DE 5"
+        title="Escolha sua foto"
+        description="Você poderá completar ou alterar essas informações depois."
+        fields={[]}
+        submitLabel="Avançar"
+        canSubmit
+        onSubmit={handleSubmit}
+        actions={{
+          start: (
+            <Link className="text-button" to="/onboarding/etapa-1">
+              Voltar
+            </Link>
+          ),
+          extra: (
+            <Link className="text-button skip-button" to="/onboarding/etapa-3">
+              Pular
+            </Link>
+          ),
+        }}
+      >
+        <div className="photo-picker" style={{textAlign: 'center'}}>
           <div
             className="avatar"
             style={{
@@ -103,26 +129,13 @@ function OnboardingStep2Page() {
             onChange={handleChoosePhoto}
           />
 
-          {photoError && <p className="field-error">{photoError}</p>}
+          {photoError && <p className="auth-field-error">{photoError}</p>}
 
-          <p className="helper">
+          <p className="helper" style={{margin: '0.75rem 0 0', color: '#777783', fontSize: '0.85rem'}}>
             Se você pular esta etapa, usaremos a imagem padrão de usuário.
           </p>
         </div>
-
-        <div className="onboarding-actions">
-          <Link className="text-button" to="/onboarding/etapa-1">
-            Voltar
-          </Link>
-
-          <div>
-            <Link className="text-button" to="/onboarding/etapa-3">
-              Pular
-            </Link>
-            <button type="submit">Avançar</button>
-          </div>
-        </div>
-      </form>
+      </AuthForm>
     </AuthLayout>
   )
 }

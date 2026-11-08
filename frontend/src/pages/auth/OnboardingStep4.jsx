@@ -1,5 +1,6 @@
 import {useState} from 'react'
 import {Link, Navigate} from 'react-router'
+import AuthForm from '../../features/auth/components/AuthForm.jsx'
 import AuthLayout from '../../layouts/auth/AuthLayout.jsx'
 
 const subjects = [
@@ -52,17 +53,38 @@ function OnboardingStep4Page() {
 
   return (
     <AuthLayout>
-      <form className="onboarding-card" onSubmit={handleSubmit} noValidate>
-        <div className="onboarding-progress">
-          <div className="onboarding-progress-bar" style={{width: '80%'}} />
-        </div>
+      <div
+        className="onboarding-progress"
+        role="progressbar"
+        aria-label="Progresso do cadastro"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={80}
+      >
+        <div className="onboarding-progress-bar" style={{width: '80%'}} />
+      </div>
 
-        <p className="eyebrow">ETAPA 4 DE 5</p>
-        <h1>Seus interesses</h1>
-        <p className="description">
-          Você poderá completar ou alterar essas informações depois.
-        </p>
-
+      <AuthForm
+        eyebrow="ETAPA 4 DE 5"
+        title="Seus interesses"
+        description="Você poderá completar ou alterar essas informações depois."
+        fields={[]}
+        submitLabel="Avançar"
+        canSubmit
+        onSubmit={handleSubmit}
+        actions={{
+          start: (
+            <Link className="text-button" to="/onboarding/etapa-3">
+              Voltar
+            </Link>
+          ),
+          extra: (
+            <Link className="text-button skip-button" to="/onboarding/etapa-5">
+              Pular
+            </Link>
+          ),
+        }}
+      >
         <fieldset className="chip-group">
           <legend>
             Matérias que domino <span>{mastered.length}/{MAX_SELECTED}</span>
@@ -96,20 +118,7 @@ function OnboardingStep4Page() {
             </button>
           ))}
         </fieldset>
-
-        <div className="onboarding-actions">
-          <Link className="text-button" to="/onboarding/etapa-3">
-            Voltar
-          </Link>
-
-          <div>
-            <Link className="text-button" to="/onboarding/etapa-5">
-              Pular
-            </Link>
-            <button type="submit">Avançar</button>
-          </div>
-        </div>
-      </form>
+      </AuthForm>
     </AuthLayout>
   )
 }
