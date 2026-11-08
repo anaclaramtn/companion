@@ -106,12 +106,12 @@ function SubjectInterestPicker({ subjects, value, onChange, featuredIds = [] }) 
   )
 
   return (
-    <div className="space-y-4">
-      <div className="grid gap-3 sm:grid-cols-2">
+    <div className="@container space-y-4">
+      <div className="grid gap-3 @lg:grid-cols-2">
         {groups.map((group) => (
           <fieldset
             key={group.interestType}
-            className="rounded-lg bg-[#faecd8] p-4 sm:p-5"
+            className="min-w-0 rounded-lg bg-[#faecd8] p-4 sm:p-5"
           >
             <legend className="sr-only">{group.title}</legend>
             <p className="flex items-center justify-between gap-2 text-xs font-bold uppercase tracking-wide text-companion-brand">
@@ -205,7 +205,7 @@ function SubjectInterestPicker({ subjects, value, onChange, featuredIds = [] }) 
                         key={subject.id}
                         className="flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-companion-border/40 px-4 py-2"
                       >
-                        <span className="min-w-0 flex-1 text-sm text-companion-text">
+                        <span className="min-w-0 grow basis-full text-sm text-companion-text @md:basis-0">
                           <span className="text-companion-muted">{subject.id}</span>
                           {' · '}
                           {subject.name}
