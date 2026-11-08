@@ -2,44 +2,20 @@ import {useState} from 'react'
 import {Link, Navigate} from 'react-router'
 import AuthForm from '../../features/auth/components/AuthForm.jsx'
 import AuthLayout from '../../layouts/auth/AuthLayout.jsx'
+import SubjectInterestPicker from '../../components/user/SubjectInterestPicker.jsx'
+import { mockSubjects } from '../../data/mockSubjects.js'
 
-const subjects = [
-  'Algoritmos',
-  'Álgebra Linear',
-  'Banco de Dados',
-  'Cálculo I',
-  'Cálculo II',
-  'Computação Gráfica',
-  'Engenharia de Software',
-  'Estruturas de Dados',
-  'Estatística',
-  'Inteligência Artificial',
-  'Lógica de Programação',
-  'Matemática Discreta',
-  'Programação Orientada a Objetos',
-  'Programação Web',
-  'Redes de Computadores',
-  'Segurança da Informação',
-  'Sistemas Operacionais',
-]
-
-const MAX_SELECTED = 5
-
-function toggleItem(list, item) {
-  if (list.includes(item)) {
-    return list.filter((current) => current !== item)
-  }
-
-  if (list.length >= MAX_SELECTED) {
-    return list
-  }
-
-  return [...list, item]
-}
+// Mesmo catálogo e seletor usados no Editar perfil. Como o semestre da
+// Etapa 3 ainda não é guardado entre as etapas, sugerimos as disciplinas do
+// 1º semestre (o mesmo que o Editar perfil faz sem semestre informado);
+// "Ver mais" abre a lista completa com busca.
+const featuredSubjectIds = mockSubjects
+  .filter((subject) => subject.semester === 1)
+  .map((subject) => subject.id)
 
 function OnboardingStep4Page() {
-  const [mastered, setMastered] = useState([])
-  const [needHelp, setNeedHelp] = useState([])
+  // Lista de { subject, interestType }, no mesmo formato do Editar perfil.
+  const [subjects, setSubjects] = useState([])
   const [done, setDone] = useState(false)
 
   function handleSubmit(event) {
@@ -85,39 +61,12 @@ function OnboardingStep4Page() {
           ),
         }}
       >
-        <fieldset className="chip-group">
-          <legend>
-            Matérias que domino <span>{mastered.length}/{MAX_SELECTED}</span>
-          </legend>
-          {subjects.map((subject) => (
-            <button
-              key={subject}
-              type="button"
-              className="chip"
-              aria-pressed={mastered.includes(subject)}
-              onClick={() => setMastered(toggleItem(mastered, subject))}
-            >
-              {subject}
-            </button>
-          ))}
-        </fieldset>
-
-        <fieldset className="chip-group">
-          <legend>
-            Matérias em que preciso de ajuda <span>{needHelp.length}/{MAX_SELECTED}</span>
-          </legend>
-          {subjects.map((subject) => (
-            <button
-              key={subject}
-              type="button"
-              className="chip"
-              aria-pressed={needHelp.includes(subject)}
-              onClick={() => setNeedHelp(toggleItem(needHelp, subject))}
-            >
-              {subject}
-            </button>
-          ))}
-        </fieldset>
+        <SubjectInterestPicker
+          subjects={mockSubjects}
+          value={subjects}
+          featuredIds={featuredSubjectIds}
+          onChange={setSubjects}
+        />
       </AuthForm>
     </AuthLayout>
   )

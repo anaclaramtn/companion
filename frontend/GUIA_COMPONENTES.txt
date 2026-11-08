@@ -165,10 +165,12 @@ COMPONENTES DE USUÁRIO — src/components/user/
     "Posso ajudar"). Recebe subjects (catálogo), value (lista de
     { subject, interestType }), onChange e featuredIds. Mostra só as
     escolhidas e as sugeridas (featuredIds; no Editar perfil, as do semestre
-    atual e do anterior). "Ver mais" abre a lista completa, agrupada por
-    semestre, com busca por nome ou código. Uma disciplina fica em um só grupo,
-    e cada grupo aceita até 5 (contador "x/5"); ao tentar passar disso,
-    mostra um toast de erro.
+    atual e do anterior; na Etapa 4 da criação de perfil, as do 1º). "Ver
+    mais" abre a lista completa, agrupada por semestre, com busca por nome ou
+    código. Uma disciplina fica em um só grupo, e cada grupo aceita até 5
+    (contador "x/5"); ao tentar passar disso, mostra um toast de erro. As
+    colunas dependem da largura do próprio componente: duas lado a lado em
+    espaços largos (Editar perfil) e uma só em espaços estreitos (onboarding).
 
   Edição de perfil (src/pages/profile/EditProfilePage.jsx, rota
   /perfil/editar): usa FormField e SubjectInterestPicker e salva por
