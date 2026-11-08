@@ -47,6 +47,7 @@ function PostList({
   currentUserId,
   reportReasons,
   onLikeChange,
+  onSaveChange,
   onReport,
 }) {
   return (
@@ -65,6 +66,7 @@ function PostList({
               detailsHref={`/feed/posts/${post.id}`}
               reportReasons={reportReasons}
               onLikeChange={onLikeChange}
+              onSaveChange={onSaveChange}
               onReport={onReport}
             />
           </div>
@@ -89,6 +91,7 @@ function ProfileActivityTabs({
   currentUserId,
   reportReasons,
   onLikeChange,
+  onSaveChange,
   onReport,
   emptyPostsText,
   emptyCommentsText,
@@ -102,7 +105,13 @@ function ProfileActivityTabs({
       ? [{ id: 'liked', label: `Curtidos (${likedPosts.length})` }]
       : []),
   ]
-  const postListProps = { currentUserId, reportReasons, onLikeChange, onReport }
+  const postListProps = {
+    currentUserId,
+    reportReasons,
+    onLikeChange,
+    onSaveChange,
+    onReport,
+  }
 
   return (
     <div className="mt-4 overflow-hidden rounded-2xl border border-companion-border/70 bg-companion-surface shadow-sm">

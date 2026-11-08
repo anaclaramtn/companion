@@ -10,7 +10,7 @@ export const mockFaqs = [
     id: 2,
     question: 'Quem pode criar uma conta?',
     answer:
-      'Qualquer estudante pode se cadastrar com e-mail e senha, sem aprovação prévia. Depois do cadastro, basta definir seu nome e username para acessar o feed.',
+      'Qualquer estudante pode se cadastrar com e-mail e senha, sem aprovação prévia. Depois do cadastro, confirme seu e-mail pelo link que enviamos e defina seu nome e username para acessar o feed.',
   },
   {
     id: 3,

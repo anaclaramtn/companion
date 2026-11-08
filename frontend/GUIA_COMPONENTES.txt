@@ -191,9 +191,11 @@ COMPONENTES DE USUÁRIO — src/components/user/
     Aparece em Configurações da conta e em Ajuda e suporte. A tela
     /recuperar-senha fica só para quem não está logado.
 
-  Curtidas: o FeedLayout guarda likedByCurrentUser/likeCount no estado dos
-  posts e fornece onLikeChange via Outlet context. As páginas repassam esse
-  callback ao PostCard para a curtida valer em todas as telas.
+  Curtidas e salvos: o FeedLayout guarda likedByCurrentUser/likeCount e
+  savedByCurrentUser no estado dos posts e fornece onLikeChange e
+  onSaveChange via Outlet context. Toda página que mostra PostCard deve
+  repassar os dois callbacks, para que curtir e salvar valham em todas as
+  telas (a tela Salvos, /salvos, lista os posts com savedByCurrentUser).
 
   ProfileLink.jsx
     Link para o perfil de um usuário. Para a conta autenticada, leva a
@@ -395,6 +397,20 @@ DADOS (src/data/)
 6. Rode os comandos de verificação na pasta frontend:
      npm run lint
      npm run build
+
+
+FLUXO DE CRIAÇÃO DE CONTA
+-------------------------
+
+  /criar-conta (SignUpPage)
+    -> /confirmar-email (EmailConfirmationPage)
+       recebe o e-mail do cadastro pelo state da navegação; sem ele, volta
+       ao cadastro. Mostra o e-mail, permite reenviar o link (espera de 30s,
+       toast de confirmação) e voltar ao cadastro para corrigir o e-mail.
+       O botão "Já confirmei meu e-mail" simula o clique no link enviado.
+       As chamadas ficam em src/services/authService.js (mock).
+    -> /onboarding/etapa-1 ... /onboarding/etapa-5 (criação do perfil)
+    -> /feed (Concluir ou Pular na Etapa 5)
 
 
 7. FLUXO DO FEED ATUAL

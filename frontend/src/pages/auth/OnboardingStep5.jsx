@@ -33,6 +33,10 @@ function OnboardingStep5Page() {
 
   if (done) return <Navigate to="/feed" />
 
+  // Fim da criação de perfil: substitui o histórico para que "voltar" no
+  // navegador não leve de novo às etapas depois de entrar no feed.
+  if (done) return <Navigate to="/feed" replace />
+
   return (
     <AuthLayout>
       <div

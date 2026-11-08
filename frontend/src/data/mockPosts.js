@@ -39,6 +39,7 @@ function mockPost({
   hours,
   likeCount = 0,
   likedByCurrentUser = false,
+  savedByCurrentUser = false,
 }) {
   const ownedByCurrentUser = author.id === authors.voce.id
   // Contagem calculada a partir das respostas, como a API fará com COUNT.
@@ -57,7 +58,7 @@ function mockPost({
     likeCount,
     commentCount,
     likedByCurrentUser,
-    savedByCurrentUser: false,
+    savedByCurrentUser,
     ownedByCurrentUser,
   }
 }
@@ -93,6 +94,7 @@ const posts = [
       'Entendo o Big O de laços simples, mas me perco quando a função chama ela mesma. Alguém tem um passo a passo para montar a recorrência?',
     hours: 6,
     likeCount: 18,
+    savedByCurrentUser: true,
   }),
   mockPost({
     id: 106,
@@ -205,6 +207,7 @@ const posts = [
       'Na lista de grafos tem uma questão com arestas de peso negativo e o Dijkstra deu resposta errada. Qual algoritmo devo usar nesse caso?',
     hours: 44,
     likeCount: 14,
+    savedByCurrentUser: true,
   }),
   mockPost({
     id: 104,

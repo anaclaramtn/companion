@@ -6,21 +6,27 @@
   background-position: center;
   background-repeat: no-repeat;
   background-size: contain;
-  animation: companion-blink 3.2s infinite;
+  animation: companion-blink 15s infinite;
 }
 
+/*
+ * Ciclo de 15s: olho aberto por ~14,5s e uma piscada no fim.
+ * Cada troca de quadro leva 0,05s (0,3333% de 15s), a mesma velocidade de
+ * antes; a piscada inteira dura 0,5s. Para mudar o intervalo entre piscadas,
+ * ajuste a duração e recalcule os percentuais mantendo passos de 0,05s.
+ */
 @keyframes companion-blink {
-  0%, 82%, 100% { background-image: url('/brand-blink/frame-1.svg'); }
-  83.5625% { background-image: url('/brand-blink/frame-2.svg'); }
-  85.125% { background-image: url('/brand-blink/frame-3.svg'); }
-  86.6875% { background-image: url('/brand-blink/frame-5.svg'); }
-  88.25% { background-image: url('/brand-blink/frame-6.svg'); }
-  89.8125% { background-image: url('/brand-blink/frame-7.svg'); }
-  91.375% { background-image: url('/brand-blink/frame-6.svg'); }
-  92.9375% { background-image: url('/brand-blink/frame-5.svg'); }
-  94.5% { background-image: url('/brand-blink/frame-3.svg'); }
-  96.0625% { background-image: url('/brand-blink/frame-2.svg'); }
-  97.625% { background-image: url('/brand-blink/frame-1.svg'); }
+  0%, 96.5%, 100% { background-image: url('/brand-blink/frame-1.svg'); }
+  96.8333% { background-image: url('/brand-blink/frame-2.svg'); }
+  97.1667% { background-image: url('/brand-blink/frame-3.svg'); }
+  97.5% { background-image: url('/brand-blink/frame-5.svg'); }
+  97.8333% { background-image: url('/brand-blink/frame-6.svg'); }
+  98.1667% { background-image: url('/brand-blink/frame-7.svg'); }
+  98.5% { background-image: url('/brand-blink/frame-6.svg'); }
+  98.8333% { background-image: url('/brand-blink/frame-5.svg'); }
+  99.1667% { background-image: url('/brand-blink/frame-3.svg'); }
+  99.5% { background-image: url('/brand-blink/frame-2.svg'); }
+  99.8333% { background-image: url('/brand-blink/frame-1.svg'); }
 }
 
 @media (prefers-reduced-motion: reduce) {

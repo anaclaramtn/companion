@@ -39,8 +39,14 @@ function getPostSubjects(post) {
 }
 
 function ExplorePage() {
-  const { posts, reportReasons, onLikeChange, onReport, currentUserId } =
-    useOutletContext()
+  const {
+    posts,
+    reportReasons,
+    onLikeChange,
+    onSaveChange,
+    onReport,
+    currentUserId,
+  } = useOutletContext()
   const [query, setQuery] = useState('')
   const [tags, setTags] = useState([])
 
@@ -163,6 +169,7 @@ function ExplorePage() {
                 currentUserId={currentUserId}
                 reportReasons={reportReasons}
                 onLikeChange={onLikeChange}
+                onSaveChange={onSaveChange}
                 onReport={onReport}
                 detailsHref={`/feed/posts/${post.id}`}
               />
