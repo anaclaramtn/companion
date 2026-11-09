@@ -1,6 +1,6 @@
 import './AuthCard.css'
 
-function AuthCard({ eyebrow, title, description, children, footer, message, topContent }) {
+function AuthCard({ eyebrow, title, description, children, footer, message, messageType = 'status', topContent }) {
   return (
     <section className="auth-card" aria-labelledby="auth-card-title">
       {topContent && <div className="auth-card-top">{topContent}</div>}
@@ -13,7 +13,14 @@ function AuthCard({ eyebrow, title, description, children, footer, message, topC
 
       {children}
       {footer && <div className="auth-card-footer">{footer}</div>}
-      {message && <p className="preview-notice" role="status">{message}</p>}
+      {message && (
+        <p
+          className={messageType === 'error' ? 'auth-error-notice' : 'preview-notice'}
+          role={messageType === 'error' ? 'alert' : 'status'}
+        >
+          {message}
+        </p>
+      )}
     </section>
   )
 }

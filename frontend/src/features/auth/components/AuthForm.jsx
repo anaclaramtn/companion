@@ -9,16 +9,18 @@ function AuthForm({
   fields,
   submitLabel,
   canSubmit,
+  isSubmitting = false,
   onSubmit,
   footer,
   message,
+  messageType,
   topContent, // opcional: conteúdo no topo do card (ex.: barra de progresso)
   children, // opcional: conteúdo livre entre os campos e o botão de envio
   actions, // opcional: { start, extra } para "Voltar"/"Pular" ao lado do botão de envio
 }) {
   const submitButton = (
-    <button className="submit-button" type="submit" disabled={!canSubmit}>
-      {submitLabel} <span aria-hidden="true" />
+    <button className="submit-button" type="submit" disabled={!canSubmit || isSubmitting}>
+      {isSubmitting ? 'Aguarde...' : submitLabel} <span aria-hidden="true" />
     </button>
   )
 
@@ -29,6 +31,7 @@ function AuthForm({
       description={description}
       footer={footer}
       message={message}
+      messageType={messageType}
       topContent={topContent}
     >
       <form className="auth-form" onSubmit={onSubmit} noValidate>

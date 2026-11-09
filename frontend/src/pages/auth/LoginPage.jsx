@@ -3,18 +3,33 @@ import 'bootstrap-icons/font/bootstrap-icons.css'
 import AuthForm from '../../features/auth/components/AuthForm.jsx'
 import AuthLayout from '../../layouts/auth/AuthLayout.jsx'
 import { Link, useNavigate } from 'react-router'
+import { useAuth } from '../../hooks/useAuth.js'
+import { getApiErrorMessage } from '../../services/apiError.js'
 
 function LoginPage() {
   const navigate = useNavigate()
-  const [username, setUsername] = useState('')
+  const { login } = useAuth()
+  const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const canSubmit = username.trim().length > 0 && password.length > 0
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [message, setMessage] = useState('')
+  const canSubmit = identifier.trim().length > 0 && password.length > 0
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault()
-    // Sem autenticação integrada, qualquer usuário e senha entram no feed mockado.
-    if (canSubmit) navigate('/feed')
+    if (!canSubmit || isSubmitting) return
+
+    setMessage('')
+    setIsSubmitting(true)
+    try {
+      const session = await login(identifier.trim(), password)
+      navigate(session.user.profileComplete ? '/feed' : '/onboarding/etapa-1', { replace: true })
+    } catch (error) {
+      setMessage(getApiErrorMessage(error, 'Não foi possível entrar. Tente novamente.'))
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -25,13 +40,16 @@ function LoginPage() {
         description="Continue tirando suas dúvidas."
         fields={[
           {
-            id: 'login-username',
-            name: 'username',
-            label: 'Usuário',
+            id: 'login-identifier',
+            name: 'identifier',
+            label: 'E-mail ou username',
             autoComplete: 'username',
-            placeholder: 'usuario@edu.unifor.br',
-            value: username,
-            onChange: setUsername,
+            placeholder: 'seu e-mail ou username',
+            value: identifier,
+            onChange: (value) => {
+              setIdentifier(value)
+              setMessage('')
+            },
             trailing: <i className="bi bi-person" aria-hidden="true" />,
           },
           {
@@ -42,7 +60,10 @@ function LoginPage() {
             autoComplete: 'current-password',
             placeholder: '********',
             value: password,
-            onChange: setPassword,
+            onChange: (value) => {
+              setPassword(value)
+              setMessage('')
+            },
             labelAction: (
               <Link className="text-button forgot-button" to="/recuperar-senha">
                 Esqueceu a senha?
@@ -63,7 +84,10 @@ function LoginPage() {
         ]}
         submitLabel="Entrar"
         canSubmit={canSubmit}
+        isSubmitting={isSubmitting}
         onSubmit={handleSubmit}
+        message={message}
+        messageType="error"
         footer={(
           <div className="signup-row">
             <span>Ainda não possui conta?</span>

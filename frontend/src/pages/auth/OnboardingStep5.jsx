@@ -1,7 +1,9 @@
 import {useState} from 'react'
-import {Link, Navigate} from 'react-router'
+import {Link, useNavigate} from 'react-router'
 import AuthForm from '../../features/auth/components/AuthForm.jsx'
 import AuthLayout from '../../layouts/auth/AuthLayout.jsx'
+import { useAuth } from '../../hooks/useAuth.js'
+import { getApiErrorMessage } from '../../services/apiError.js'
 
 const MAX_BIO = 200
 
@@ -14,12 +16,33 @@ function validateBio(value) {
 }
 
 function OnboardingStep5Page() {
+  const navigate = useNavigate()
+  const { user, updateProfile, completeOnboarding } = useAuth()
   const [bio, setBio] = useState('')
   const [bioTouched, setBioTouched] = useState(false)
   const [submitted, setSubmitted] = useState(false)
-  const [done, setDone] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [message, setMessage] = useState('')
 
   const bioError = bioTouched || submitted ? validateBio(bio) : ''
+
+  async function finishOnboarding(saveBio) {
+    if (isSubmitting) return
+
+    setMessage('')
+    setIsSubmitting(true)
+    try {
+      if (saveBio && bio.trim()) {
+        await updateProfile({ name: user.name, username: user.username, bio: bio.trim() })
+      }
+      await completeOnboarding()
+      navigate('/feed', { replace: true })
+    } catch (error) {
+      setMessage(getApiErrorMessage(error, 'Não foi possível concluir esta etapa. Tente novamente.'))
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   function handleSubmit(event) {
     event.preventDefault()
@@ -27,15 +50,11 @@ function OnboardingStep5Page() {
 
     if (validateBio(bio)) return
 
-    // O envio dos dados à API ainda precisa ser conectado.
-    setDone(true)
+    finishOnboarding(true)
   }
-
-  if (done) return <Navigate to="/feed" />
 
   // Fim da criação de perfil: substitui o histórico para que "voltar" no
   // navegador não leve de novo às etapas depois de entrar no feed.
-  if (done) return <Navigate to="/feed" replace />
 
   return (
     <AuthLayout>
@@ -72,7 +91,10 @@ function OnboardingStep5Page() {
         ]}
         submitLabel="Concluir"
         canSubmit
+        isSubmitting={isSubmitting}
         onSubmit={handleSubmit}
+        message={message}
+        messageType="error"
         actions={{
           start: (
             <Link className="text-button" to="/onboarding/etapa-4">
@@ -80,9 +102,14 @@ function OnboardingStep5Page() {
             </Link>
           ),
           extra: (
-            <Link className="text-button skip-button" to="/feed">
+            <button
+              className="text-button skip-button"
+              type="button"
+              onClick={() => finishOnboarding(false)}
+              disabled={isSubmitting}
+            >
               Pular
-            </Link>
+            </button>
           ),
         }}
       />

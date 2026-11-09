@@ -1,4 +1,6 @@
-// Simula as operações de autenticação enquanto a API não está integrada.
+import api from '../api/api.js'
+
+// Confirmação de e-mail ainda é somente uma tela de demonstração no frontend.
 
 function mockResponse(value) {
   return new Promise((resolve) => {
@@ -15,4 +17,18 @@ export function resendConfirmationEmail(email) {
 // link recebido; no protótipo, a tela de confirmação simula esse clique.
 export function confirmEmail() {
   return mockResponse(null)
+}
+
+export async function login(identifier, password) {
+  const response = await api.post('/auth/login', {
+    identifier,
+    password,
+  })
+
+  return response.data
+}
+
+export async function register(email, password) {
+  const response = await api.post('/auth/register', { email, password })
+  return response.data
 }
