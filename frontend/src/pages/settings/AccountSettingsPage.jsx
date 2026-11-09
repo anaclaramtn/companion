@@ -4,6 +4,7 @@ import BackLink from '../../components/common/BackLink.jsx'
 import ConfirmDialog from '../../components/common/ConfirmDialog.jsx'
 import PasswordResetCard from '../../components/user/PasswordResetCard.jsx'
 import UsernameCard from '../../components/user/UsernameCard.jsx'
+import { useAuth } from '../../hooks/useAuth.js'
 import { deleteMyAccount } from '../../services/accountService.js'
 
 const DELETE_CONFIRMATION_TEXT = 'EXCLUIR'
@@ -11,6 +12,7 @@ const DELETE_CONFIRMATION_TEXT = 'EXCLUIR'
 function AccountSettingsPage() {
   const navigate = useNavigate()
   const { currentUser, onProfileUpdate } = useOutletContext()
+  const { logout } = useAuth()
 
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
   const [deleteConfirmation, setDeleteConfirmation] = useState('')
@@ -24,7 +26,9 @@ function AccountSettingsPage() {
   async function handleDeleteAccount() {
     setIsDeleting(true)
     await deleteMyAccount()
-    // Sem autenticação integrada, encerrar a conta apenas volta ao login.
+    // A exclusão ainda é simulada em accountService; a sessão é encerrada de
+    // verdade para não deixar o token salvo no navegador.
+    logout()
     navigate('/login', { replace: true })
   }
 

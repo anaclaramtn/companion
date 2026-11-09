@@ -42,7 +42,7 @@ function validateUsername(value) {
 
 function OnboardingStep1Page() {
   const navigate = useNavigate()
-  const { user, updateProfile } = useAuth()
+  const { user, updateProfile, logout } = useAuth()
   const [fullName, setFullName] = useState(user?.name ?? '')
   const [username, setUsername] = useState(user?.username ?? '')
 
@@ -128,7 +128,7 @@ function OnboardingStep1Page() {
         messageType="error"
         actions={{
           start: (
-            <Link className="text-button" to="/login">
+            <Link className="text-button" to="/login" replace onClick={logout}>
               Cancelar
             </Link>
           ),
