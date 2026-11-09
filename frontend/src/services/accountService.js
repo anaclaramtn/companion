@@ -1,8 +1,9 @@
-import { mockAccount } from '../data/mockAccount.js'
+import api from '../api/api.js'
 import { mockPublicUsers } from '../data/mockPublicUsers.js'
 
-// Simula as operações da própria conta enquanto a API não está integrada.
-// As alterações ficam só em memória: recarregar a página volta aos mocks.
+// As demais operações da própria conta ainda são simuladas enquanto a API não
+// está integrada. As alterações ficam só em memória: recarregar a página
+// volta aos mocks.
 
 function mockResponse(value) {
   return new Promise((resolve) => {
@@ -10,14 +11,22 @@ function mockResponse(value) {
   })
 }
 
-export function getMyAccount() {
-  return mockResponse({ ...mockAccount })
+// Dados privados da conta autenticada, vindos de GET /users/me.
+export async function getMyAccount() {
+  const { data } = await api.get('/users/me')
+  return {
+    email: data.email,
+    enrollment: data.registrationNumber,
+    role: data.role,
+    status: data.status,
+  }
 }
 
 // Envia ao e-mail da conta um link para criar uma nova senha.
-// Retorna o e-mail usado, para a tela informar ao usuário.
-export function sendPasswordResetEmail() {
-  return mockResponse({ email: mockAccount.email })
+// Retorna o e-mail usado, para a tela informar ao usuário. O envio ainda é
+// simulado.
+export function sendPasswordResetEmail(email) {
+  return mockResponse({ email })
 }
 
 export function deleteMyAccount() {
