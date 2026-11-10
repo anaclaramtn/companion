@@ -1,7 +1,9 @@
 import {useState} from 'react'
-import {Link, Navigate} from 'react-router'
+import {Link, useNavigate} from 'react-router'
 import AuthForm from '../../features/auth/components/AuthForm.jsx'
 import AuthLayout from '../../layouts/auth/AuthLayout.jsx'
+import { useAuth } from '../../hooks/useAuth.js'
+import { getApiErrorMessage } from '../../services/apiError.js'
 
 function validateFullName(value) {
   const name = value.trim()
@@ -12,6 +14,9 @@ function validateFullName(value) {
 
   if (name.length < 3) {
     return 'O nome deve ter pelo menos 3 caracteres.'
+  }
+  if (name.length > 120) {
+    return 'O nome deve ter no máximo 120 caracteres.'
   }
 
   return ''
@@ -28,21 +33,24 @@ function validateUsername(value) {
     return 'O username deve ter pelo menos 3 caracteres.'
   }
 
-  if (!/^[a-zA-Z0-9_.]+$/.test(username)) {
-    return 'Use apenas letras, números, ponto ou underline.'
+  if (!/^@?[a-zA-Z0-9]{3,30}$/.test(username)) {
+    return 'Use de 3 a 30 letras ou números. O @ no início é opcional.'
   }
 
   return ''
 }
 
 function OnboardingStep1Page() {
-  const [fullName, setFullName] = useState('')
-  const [username, setUsername] = useState('')
+  const navigate = useNavigate()
+  const { user, updateProfile, logout } = useAuth()
+  const [fullName, setFullName] = useState(user?.name ?? '')
+  const [username, setUsername] = useState(user?.username ?? '')
 
   const [fullNameTouched, setFullNameTouched] = useState(false)
   const [usernameTouched, setUsernameTouched] = useState(false)
   const [submitted, setSubmitted] = useState(false)
-  const [done, setDone] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [message, setMessage] = useState('')
 
   const fullNameError =
     fullNameTouched || submitted ? validateFullName(fullName) : ''
@@ -50,36 +58,32 @@ function OnboardingStep1Page() {
   const usernameError =
     usernameTouched || submitted ? validateUsername(username) : ''
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault()
     setSubmitted(true)
+    setMessage('')
 
     const hasErrors = validateFullName(fullName) || validateUsername(username)
 
-    if (hasErrors) return
+    if (hasErrors || isSubmitting) return
 
-    // O envio à API ainda precisa ser conectado.
-    setDone(true)
+    setIsSubmitting(true)
+    try {
+      await updateProfile({ name: fullName.trim(), username: username.trim() })
+      navigate('/onboarding/etapa-2')
+    } catch (error) {
+      setMessage(getApiErrorMessage(error, 'Não foi possível salvar seu perfil. Tente novamente.'))
+    } finally {
+      setIsSubmitting(false)
+    }
   }
-
-  if (done) return <Navigate to="/onboarding/etapa-2" />
 
   return (
     <AuthLayout>
-      <div
-        className="onboarding-progress"
-        role="progressbar"
-        aria-label="Progresso do cadastro"
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-valuenow={20}
-      >
-        <div className="onboarding-progress-bar" style={{width: '20%'}} />
-      </div>
-
       <AuthForm
-        eyebrow="ETAPA 1 DE 5"
+        eyebrow="PERFIL OBRIGATÓRIO"
         title="Como devemos chamar você?"
+        description="Informe seu nome e escolha um username para continuar."
         fields={[
           {
             id: 'onboarding-full-name',
@@ -88,10 +92,14 @@ function OnboardingStep1Page() {
             type: 'text',
             autoComplete: 'name',
             placeholder: 'Como você quer ser chamado',
+            maxLength: 120,
             value: fullName,
             required: true,
             error: fullNameError,
-            onChange: (value) => setFullName(value),
+            onChange: (value) => {
+              setFullName(value)
+              setMessage('')
+            },
             onBlur: () => setFullNameTouched(true),
           },
           {
@@ -100,20 +108,27 @@ function OnboardingStep1Page() {
             label: 'Username *',
             type: 'text',
             autoComplete: 'username',
-            placeholder: '@seu.username',
+            placeholder: '@seuusername',
+            maxLength: 31,
             value: username,
             required: true,
             error: usernameError,
-            onChange: (value) => setUsername(value),
+            onChange: (value) => {
+              setUsername(value)
+              setMessage('')
+            },
             onBlur: () => setUsernameTouched(true),
           },
         ]}
         submitLabel="Avançar"
         canSubmit
+        isSubmitting={isSubmitting}
         onSubmit={handleSubmit}
+        message={message}
+        messageType="error"
         actions={{
           start: (
-            <Link className="text-button" to="/login">
+            <Link className="text-button" to="/login" replace onClick={logout}>
               Cancelar
             </Link>
           ),

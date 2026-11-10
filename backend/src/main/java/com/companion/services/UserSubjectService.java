@@ -35,7 +35,7 @@ public class UserSubjectService {
         }
         Subject subject = subjectService.find(request.subjectId());
         return toResponse(userSubjectRepository.saveAndFlush(
-                new UserSubject(user, subject, request.interestType(), request.proficiency())));
+                new UserSubject(user, subject, request.interestType())));
     }
 
     @Transactional(readOnly = true)
@@ -59,7 +59,7 @@ public class UserSubjectService {
     public UserSubjectResponseDTO updateMine(Long subjectId, UserSubjectUpdateRequestDTO request) {
         Long userId = authenticatedUserService.getCurrentUser().getId();
         UserSubject relation = find(userId, subjectId);
-        relation.update(request.interestType(), request.proficiency());
+        relation.update(request.interestType());
         return toResponse(userSubjectRepository.save(relation));
     }
 
@@ -81,6 +81,6 @@ public class UserSubjectService {
     private UserSubjectResponseDTO toResponse(UserSubject relation) {
         return new UserSubjectResponseDTO(
                 relation.getId(), subjectService.toResponse(relation.getSubject()),
-                relation.getInterestType(), relation.getProficiency());
+                relation.getInterestType());
     }
 }

@@ -1,9 +1,10 @@
 package com.companion.entities;
 
-import com.companion.enums.Proficiency;
 import com.companion.enums.SubjectInterestType;
 import jakarta.persistence.*;
 
+// Disciplina marcada pelo aluno como "domina" ou "quer aprender".
+// Quem não domina nem quer aprender a disciplina simplesmente não tem linha aqui.
 @Entity
 @Table(
         name = "user_subjects",
@@ -30,27 +31,20 @@ public class UserSubject {
     @Column(name = "interest_type", nullable = false, length = 30)
     private SubjectInterestType interestType;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 30)
-    private Proficiency proficiency;
-
     protected UserSubject() { }
 
-    public UserSubject(User user, Subject subject, SubjectInterestType interestType, Proficiency proficiency) {
+    public UserSubject(User user, Subject subject, SubjectInterestType interestType) {
         this.user = user;
         this.subject = subject;
         this.interestType = interestType;
-        this.proficiency = proficiency;
     }
 
-    public void update(SubjectInterestType interestType, Proficiency proficiency) {
+    public void update(SubjectInterestType interestType) {
         this.interestType = interestType;
-        this.proficiency = proficiency;
     }
 
     public Long getId() { return id; }
     public User getUser() { return user; }
     public Subject getSubject() { return subject; }
     public SubjectInterestType getInterestType() { return interestType; }
-    public Proficiency getProficiency() { return proficiency; }
 }

@@ -12,10 +12,16 @@ import {
 } from '../../data/mockPosts.js'
 import { mockSubjects } from '../../data/mockSubjects.js'
 import { mockRepliesByPost } from '../../data/mockPostReplies.js'
-import {
-  mockCurrentUser,
-  mockUserSubjects,
-} from '../../data/mockPublicUsers.js'
+import { useAuth } from '../../hooks/useAuth.js'
+
+// Contadores do perfil que GET /users/me não devolve. Ficam zerados até a
+// integração de seguidores e de posts.
+const profileCountDefaults = {
+  postCount: 0,
+  commentCount: 0,
+  followerCount: 0,
+  followingCount: 0,
+}
 
 const navigationItems = [
   { to: '/feed', label: 'Feed', icon: 'bi-house', end: true },
@@ -35,10 +41,13 @@ function authorSummary(user) {
 
 function FeedLayout() {
   const [isComposerOpen, setIsComposerOpen] = useState(false)
-  const [currentUser, setCurrentUser] = useState(mockCurrentUser)
-  const [currentUserSubjects, setCurrentUserSubjects] = useState(
-    mockUserSubjects[mockCurrentUser.id] ?? [],
-  )
+  const { user } = useAuth()
+  // Edições feitas em "Editar perfil" e na troca de username. Essas telas
+  // ainda são simuladas, então as mudanças ficam só aqui e somem no F5.
+  const [profileEdits, setProfileEdits] = useState(null)
+  const currentUser = { ...profileCountDefaults, ...user, ...profileEdits }
+  // As disciplinas do usuário chegam com a integração de disciplinas.
+  const [currentUserSubjects, setCurrentUserSubjects] = useState([])
   const [posts, setPosts] = useState(mockPostsResponse.content)
   const [repliesByPost, setRepliesByPost] = useState(mockRepliesByPost)
   const [, setReports] = useState([])
@@ -112,12 +121,12 @@ function FeedLayout() {
 
   // Atualiza o perfil e a autoria exibida nos posts e respostas da conta.
   // subjects é opcional (ex.: a troca de username não altera as matérias).
-  function handleProfileUpdate(user, subjects) {
-    const author = authorSummary(user)
+  function handleProfileUpdate(updatedUser, subjects) {
+    const author = authorSummary(updatedUser)
     const withAuthor = (item) =>
-      item.author.id === user.id ? { ...item, author } : item
+      item.author.id === updatedUser.id ? { ...item, author } : item
 
-    setCurrentUser(user)
+    setProfileEdits(updatedUser)
     if (subjects) setCurrentUserSubjects(subjects)
     setPosts((currentPosts) => currentPosts.map(withAuthor))
     setRepliesByPost((currentReplies) =>

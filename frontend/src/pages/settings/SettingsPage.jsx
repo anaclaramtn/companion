@@ -2,14 +2,17 @@ import { useNavigate, useOutletContext } from 'react-router'
 import OptionList from '../../components/common/OptionList.jsx'
 import AccountSummaryCard from '../../components/user/AccountSummaryCard.jsx'
 import { mockSettingsSections } from '../../data/mockSettingsOptions.js'
+import { useAuth } from '../../hooks/useAuth.js'
 
 function SettingsPage() {
   const navigate = useNavigate()
   const { currentUser } = useOutletContext()
+  const { logout } = useAuth()
 
   function handleSelect(action) {
     if (action === 'logout') {
-      // Sem autenticação integrada, sair apenas volta para a tela de acesso.
+      // Encerra a sessão (memória e localStorage) antes de voltar ao login.
+      logout()
       navigate('/login', { replace: true })
     }
   }

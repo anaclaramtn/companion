@@ -72,6 +72,17 @@
   line-height: 1.45;
 }
 
+.auth-error-notice {
+  margin: 14px 0 0;
+  padding: 11px 13px;
+  border: 1px solid #f1b8b5;
+  border-radius: 10px;
+  color: #8f1d18;
+  background: #fff4f3;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
 @media (max-width: 520px) {
   .auth-card {
     padding: 25px 22px;

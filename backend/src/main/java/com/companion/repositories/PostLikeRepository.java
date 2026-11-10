@@ -17,7 +17,7 @@ public interface PostLikeRepository extends JpaRepository<PostLike, Long> {
     Optional<PostLike> findByUserIdAndPostId(Long userId, Long postId);
     long countByPostId(Long postId);
 
-    @EntityGraph(attributePaths = {"post", "post.author", "post.subject"})
+    @EntityGraph(attributePaths = {"post", "post.author"})
     Page<PostLike> findByUserIdAndPostDeletedAtIsNull(Long userId, Pageable pageable);
 
     @Query("""

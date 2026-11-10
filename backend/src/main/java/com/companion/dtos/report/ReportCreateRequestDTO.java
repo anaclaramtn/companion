@@ -8,6 +8,6 @@ public record ReportCreateRequestDTO(
         Long postId,
         Long postCommentId,
         @NotNull(message = "O motivo é obrigatório") ReportReason reason,
-        @Size(max = 500, message = "Os detalhes devem ter no máximo 500 caracteres") String details
+        @Size(max = 1024, message = "Os detalhes devem ter no máximo 1024 caracteres") String details
 ) {
 }

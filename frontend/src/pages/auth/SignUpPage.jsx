@@ -1,8 +1,10 @@
 import {useState} from 'react'
-import {Link, Navigate} from 'react-router' // MUDANÇA: importa o Navigate
+import {Link, useNavigate} from 'react-router'
 import 'bootstrap-icons/font/bootstrap-icons.css'
 import AuthForm from '../../features/auth/components/AuthForm.jsx'
 import AuthLayout from '../../layouts/auth/AuthLayout.jsx'
+import { useAuth } from '../../hooks/useAuth.js'
+import { getApiErrorMessage } from '../../services/apiError.js'
 
 function validateEmail(value) {
     const email = value.trim()
@@ -26,6 +28,7 @@ function validatePassword(value) {
     }
 
     if (value.length < 8) return 'A senha deve ter pelo menos 8 caracteres.'
+    if (value.length > 72) return 'A senha deve ter no máximo 72 caracteres.'
     if (!/[A-Z]/.test(value)) return 'A senha deve conter pelo menos uma letra maiúscula.'
     if (!/[a-z]/.test(value)) return 'A senha deve conter pelo menos uma letra minúscula.'
     if (!/[0-9]/.test(value)) return 'A senha deve conter pelo menos um número.'
@@ -47,6 +50,8 @@ function validatePasswordConfirmation(password, confirmation) {
 }
 
 function RegisterPage() {
+  const navigate = useNavigate()
+  const { register } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [passwordConfirmation, setPasswordConfirmation] = useState('')
@@ -58,7 +63,7 @@ function RegisterPage() {
   const [confirmationTouched, setConfirmationTouched] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [message, setMessage] = useState('')
-  const [done, setDone] = useState(false) // MUDANÇA: novo estado
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const emailError =
     emailTouched || submitted ? validateEmail(email) : ''
@@ -71,8 +76,9 @@ function RegisterPage() {
       ? validatePasswordConfirmation(password, passwordConfirmation)
       : ''
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault()
+    if (isSubmitting) return
     setSubmitted(true)
     setMessage('')
 
@@ -83,13 +89,15 @@ function RegisterPage() {
 
     if (hasErrors) return
 
-    // A validação passou. O cadastro ainda precisa ser conectado à API.
-    setDone(true) // MUDANÇA: no lugar do setMessage(...)
-  }
-
-  // Depois do cadastro, a conta precisa confirmar o e-mail antes da criação do perfil.
-  if (done) {
-    return <Navigate to="/confirmar-email" state={{ email: email.trim() }} />
+    setIsSubmitting(true)
+    try {
+      const session = await register(email.trim(), password)
+      navigate(session.user.profileComplete ? '/feed' : '/onboarding/etapa-1', { replace: true })
+    } catch (error) {
+      setMessage(getApiErrorMessage(error, 'Não foi possível criar a conta. Tente novamente.'))
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -181,8 +189,10 @@ function RegisterPage() {
         ]}
         submitLabel="Criar conta"
         canSubmit
+        isSubmitting={isSubmitting}
         onSubmit={handleSubmit}
         message={message}
+        messageType="error"
         footer={
           <Link className="text-button" to="/login">
             Já tem uma conta? Entrar

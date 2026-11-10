@@ -2,16 +2,18 @@ import {useState} from 'react'
 import {Link, Navigate} from 'react-router'
 import AuthForm from '../../features/auth/components/AuthForm.jsx'
 import AuthLayout from '../../layouts/auth/AuthLayout.jsx'
+import { useAuth } from '../../hooks/useAuth.js'
+import { getApiErrorMessage } from '../../services/apiError.js'
 
 function validatePhoto(file) {
   if (!file) return ''
 
-  if (!file.type.startsWith('image/')) {
-    return 'Escolha um arquivo de imagem.'
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+    return 'Escolha uma imagem JPG, PNG ou WEBP.'
   }
 
-  if (file.size > 5 * 1024 * 1024) {
-    return 'A imagem deve ter no máximo 5 MB.'
+  if (file.size > 2 * 1024 * 1024) {
+    return 'A imagem deve ter no máximo 2 MB.'
   }
 
   return ''
@@ -31,10 +33,13 @@ function DefaultAvatar() {
 }
 
 function OnboardingStep2Page() {
+  const { updateAvatar } = useAuth()
   const [photo, setPhoto] = useState(null)
   const [preview, setPreview] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [done, setDone] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [message, setMessage] = useState('')
 
   const photoError = submitted ? validatePhoto(photo) : ''
 
@@ -47,14 +52,22 @@ function OnboardingStep2Page() {
     setPreview(URL.createObjectURL(file))
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault()
     setSubmitted(true)
 
-    if (validatePhoto(photo)) return
+    if (validatePhoto(photo) || isSubmitting) return
 
-    // O envio da foto à API ainda precisa ser conectado.
-    setDone(true)
+    setMessage('')
+    setIsSubmitting(true)
+    try {
+      if (photo) await updateAvatar(photo)
+      setDone(true)
+    } catch (error) {
+      setMessage(getApiErrorMessage(error, 'Não foi possível enviar sua foto. Tente novamente.'))
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   if (done) return <Navigate to="/onboarding/etapa-3" />
@@ -79,7 +92,10 @@ function OnboardingStep2Page() {
         fields={[]}
         submitLabel="Avançar"
         canSubmit
+        isSubmitting={isSubmitting}
         onSubmit={handleSubmit}
+        message={message}
+        messageType="error"
         actions={{
           start: (
             <Link className="text-button" to="/onboarding/etapa-1">
@@ -124,7 +140,7 @@ function OnboardingStep2Page() {
             id="onboarding-photo"
             name="photo"
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp"
             hidden
             onChange={handleChoosePhoto}
           />

@@ -31,7 +31,10 @@ public class User {
     @Column(name = "password_hash", nullable = false, length = 100)
     private String passwordHash;
 
-    @Column(length = 120)
+    @Column(name = "email_verified_at")
+    private LocalDateTime emailVerifiedAt;
+
+    @Column(length = 64)
     private String name;
 
     @Column(length = 30)
@@ -40,14 +43,15 @@ public class User {
     @Column(name = "avatar_url", length = 500)
     private String avatarUrl;
 
-    @Column(length = 500)
+    @Column(length = 512)
     private String bio;
 
     @Column(name = "registration_number", length = 30)
     private String registrationNumber;
 
-    @Column(length = 120)
-    private String course;
+    @ManyToOne
+    @JoinColumn(name = "course_id", foreignKey = @ForeignKey(name = "fk_users_course"))
+    private Course course;
 
     private Integer semester;
 
@@ -94,7 +98,7 @@ public class User {
     }
 
     public void updateProfile(String name, String username, String avatarUrl, String bio,
-                              String registrationNumber, String course, Integer semester) {
+                              String registrationNumber, Course course, Integer semester) {
         this.name = name;
         this.username = username;
         this.avatarUrl = avatarUrl;
@@ -102,6 +106,10 @@ public class User {
         this.registrationNumber = registrationNumber;
         this.course = course;
         this.semester = semester;
+    }
+
+    public void updateAvatar(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
     }
 
     public void completeOnboarding() {
@@ -150,7 +158,8 @@ public class User {
     public String getAvatarUrl() { return avatarUrl; }
     public String getBio() { return bio; }
     public String getRegistrationNumber() { return registrationNumber; }
-    public String getCourse() { return course; }
+    public LocalDateTime getEmailVerifiedAt() { return emailVerifiedAt; }
+    public Course getCourse() { return course; }
     public Integer getSemester() { return semester; }
     public UserRole getRole() { return role; }
     public UserStatus getStatus() { return status; }

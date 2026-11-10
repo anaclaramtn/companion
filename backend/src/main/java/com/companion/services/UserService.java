@@ -9,6 +9,8 @@ import com.companion.exceptions.BadRequestException;
 import com.companion.exceptions.ConflictException;
 import com.companion.exceptions.DuplicateResourceException;
 import com.companion.exceptions.ResourceNotFoundException;
+import com.companion.entities.Course;
+import com.companion.repositories.CourseRepository;
 import com.companion.repositories.UserRepository;
 import com.companion.repositories.PostRepository;
 import com.companion.repositories.PostCommentRepository;
@@ -37,18 +39,24 @@ public class UserService {
     private final PostRepository postRepository;
     private final PostCommentRepository postCommentRepository;
     private final FollowRepository followRepository;
+    private final CourseRepository courseRepository;
+    private final CloudinaryAvatarService cloudinaryAvatarService;
 
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder,
                        AuthenticatedUserService authenticatedUserService,
                        PostRepository postRepository,
                        PostCommentRepository postCommentRepository,
-                       FollowRepository followRepository) {
+                       FollowRepository followRepository,
+                       CourseRepository courseRepository,
+                       CloudinaryAvatarService cloudinaryAvatarService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.authenticatedUserService = authenticatedUserService;
         this.postRepository = postRepository;
         this.postCommentRepository = postCommentRepository;
         this.followRepository = followRepository;
+        this.courseRepository = courseRepository;
+        this.cloudinaryAvatarService = cloudinaryAvatarService;
     }
 
     @Transactional
@@ -101,15 +109,32 @@ public class UserService {
             throw new DuplicateResourceException("A matrícula já está em uso");
         }
 
+        Course course = null;
+        if (request.courseId() != null) {
+            course = courseRepository.findById(request.courseId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Curso não encontrado"));
+            if (request.semester() != null && request.semester() > course.getTotalSemesters()) {
+                throw new BadRequestException("O curso tem apenas " + course.getTotalSemesters() + " semestres");
+            }
+        }
+
         user.updateProfile(
                 request.name().trim(),
                 username,
                 normalizeOptionalText(request.avatarUrl()),
                 normalizeOptionalText(request.bio()),
                 registration,
-                normalizeOptionalText(request.course()),
+                course,
                 request.semester()
         );
+        return toAccount(userRepository.save(user));
+    }
+
+    @Transactional
+    public UserAccountResponseDTO uploadOwnAvatar(org.springframework.web.multipart.MultipartFile file) {
+        User user = authenticatedUserService.getCurrentUser();
+        String avatarUrl = cloudinaryAvatarService.uploadAvatar(user.getId(), file);
+        user.updateAvatar(avatarUrl);
         return toAccount(userRepository.save(user));
     }
 
@@ -180,7 +205,8 @@ public class UserService {
     public UserAccountResponseDTO toAccount(User user) {
         return new UserAccountResponseDTO(
                 user.getId(), user.getEmail(), user.getName(), user.getUsername(), user.getAvatarUrl(),
-                user.getBio(), user.getRegistrationNumber(), user.getCourse(), user.getSemester(),
+                user.getBio(), user.getRegistrationNumber(),
+                courseId(user), courseName(user), universityId(user), universityName(user), user.getSemester(),
                 user.getRole(), user.getStatus(), user.isProfileComplete(), user.getOnboardingCompletedAt(),
                 user.getCreatedAt(), user.getUpdatedAt()
         );
@@ -216,10 +242,26 @@ public class UserService {
     private UserPublicResponseDTO toPublic(User user, long posts, long comments, long followers, long following) {
         return new UserPublicResponseDTO(
                 user.getId(), user.getName(), user.getUsername(), user.getAvatarUrl(), user.getBio(),
-                user.getCourse(), user.getSemester(),
+                courseId(user), courseName(user), universityId(user), universityName(user), user.getSemester(),
                 posts, comments, followers, following,
                 user.getCreatedAt()
         );
+    }
+
+    private Long courseId(User user) {
+        return user.getCourse() == null ? null : user.getCourse().getId();
+    }
+
+    private String courseName(User user) {
+        return user.getCourse() == null ? null : user.getCourse().getName();
+    }
+
+    private Long universityId(User user) {
+        return user.getCourse() == null ? null : user.getCourse().getUniversity().getId();
+    }
+
+    private String universityName(User user) {
+        return user.getCourse() == null ? null : user.getCourse().getUniversity().getName();
     }
 
     private Map<Long, Long> counts(List<Long> userIds, List<UserCountProjection> rows) {

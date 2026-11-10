@@ -5,7 +5,7 @@ import jakarta.validation.constraints.Size;
 
 public record PostCommentCreateRequestDTO(
         @NotBlank(message = "A resposta é obrigatória")
-        @Size(max = 300, message = "A resposta deve ter no máximo 300 caracteres")
+        @Size(max = 256, message = "A resposta deve ter no máximo 256 caracteres")
         String content
 ) {
 }

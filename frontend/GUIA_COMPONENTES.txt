@@ -444,3 +444,60 @@ FLUXO DE CRIAÇÃO DE CONTA
 
 Use esse fluxo como referência para manter a separação entre composição de
 telas, estrutura de layout, componentes reutilizáveis e origem dos dados.
+
+
+8. SESSÃO E AUTENTICAÇÃO
+------------------------
+
+ARQUIVOS
+  src/api/api.js
+    Instância do axios usada por todos os services. Adiciona o cabeçalho
+    "Authorization: Bearer <token>" em cada requisição e, quando a API
+    responde 401 fora do login/cadastro, avisa o AuthContext para encerrar a
+    sessão. A URL da API vem de VITE_API_BASE_URL (arquivo frontend/.env).
+  src/contexts/AuthContext.jsx
+    Guarda a sessão (token + usuário) e expõe pelo hook useAuth():
+      user, isAuthenticated, isRestoring, login, register, updateProfile,
+      completeOnboarding e logout.
+  src/components/common/RequireAuth.jsx
+    Protege as rotas internas em App.jsx: sem sessão, manda para /login; com
+    perfil incompleto, manda para /onboarding/etapa-1; enquanto a sessão está
+    sendo restaurada, mostra "Carregando sessão...".
+
+COMO A SESSÃO SOBREVIVE AO F5 (SOLUÇÃO PROVISÓRIA)
+  O backend devolve um JWT (access token) no login e no cadastro, válido por
+  60 minutos. Para a apresentação do projeto, o token é salvo no localStorage
+  do navegador, na chave "companion.accessToken":
+
+    login/cadastro -> salva o token no localStorage
+    F5             -> AuthContext lê o token salvo e chama GET /api/users/me
+                      200: sessão restaurada com os dados atuais do usuário
+                      401: token expirado, apaga o token e volta ao login
+                      sem resposta: volta ao login (API fora do ar)
+    sair da conta  -> logout() apaga o token da memória e do localStorage
+
+  Para sair, sempre chame logout() do useAuth(); apenas navegar para /login
+  deixa o token salvo e a pessoa continua logada.
+
+  LIMITAÇÕES
+  - Segurança: qualquer script que rode na página consegue ler o
+    localStorage. Se o site tiver uma falha de XSS, o token pode ser roubado
+    e usado até expirar. Por isso esta solução é apenas para demonstração.
+    Nunca use dangerouslySetInnerHTML com conteúdo vindo de usuários.
+  - Expiração: não há renovação automática. Depois de 60 minutos do login, a
+    próxima chamada à API recebe 401 e a pessoa precisa entrar de novo.
+
+SOLUÇÃO DEFINITIVA (PRODUÇÃO)
+  Access token de vida curta (~15 min) somente em memória + refresh token de
+  vida longa em cookie HttpOnly; Secure; SameSite=Strict, que o JavaScript não
+  consegue ler. Exige mudanças no backend:
+    - entidade RefreshToken salvando só o hash do token (mesmo padrão de
+      PasswordResetToken), com validade e revogação;
+    - login/cadastro enviando o cookie; novos POST /api/auth/refresh (gera um
+      novo access token e troca o refresh token, invalidando o anterior) e
+      POST /api/auth/logout (revoga o token e apaga o cookie);
+    - revogar os refresh tokens ao excluir a conta ou redefinir a senha.
+  No frontend: axios com withCredentials: true; ao abrir a página, chamar
+  /auth/refresh no lugar de GET /users/me; no 401, renovar uma única vez e
+  repetir a requisição. As alterações ficam concentradas em AuthContext.jsx
+  e api.js, e o estado isRestoring e o logout() continuam valendo.
