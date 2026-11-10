@@ -40,26 +40,55 @@ function PostCard({
   const [isSaved, setIsSaved] = useState(post.savedByCurrentUser ?? false)
   const [isReportOpen, setIsReportOpen] = useState(false)
   const [isReported, setIsReported] = useState(false)
+  const [isLikePending, setIsLikePending] = useState(false)
+  const [isSavePending, setIsSavePending] = useState(false)
   const subjects = post.subjects ?? (post.subject ? [post.subject] : [])
   const closeReportPopup = useCallback(() => {
     setIsReportOpen(false)
   }, [])
 
-  function toggleLike() {
+  // Curtir e salvar mudam a tela na hora. Os callbacks podem devolver uma
+  // Promise (API): se ela falhar, volta ao estado anterior; enquanto não
+  // termina, novos cliques no mesmo botão são ignorados.
+  async function toggleLike() {
+    if (isLikePending) return
+    const previous = { isLiked, likeCount }
     const nextLiked = !isLiked
     setIsLiked(nextLiked)
     setLikeCount((count) => count + (nextLiked ? 1 : -1))
-    onLikeChange?.(post.id, nextLiked)
+    setIsLikePending(true)
+    try {
+      const status = await onLikeChange?.(post.id, nextLiked)
+      // A API devolve a contagem real, que pode ter mudado por outras pessoas.
+      if (status?.likeCount != null) {
+        setIsLiked(status.likedByCurrentUser)
+        setLikeCount(status.likeCount)
+      }
+    } catch {
+      setIsLiked(previous.isLiked)
+      setLikeCount(previous.likeCount)
+    } finally {
+      setIsLikePending(false)
+    }
   }
 
-  function toggleSaved() {
+  async function toggleSaved() {
+    if (isSavePending) return
     const nextSaved = !isSaved
     setIsSaved(nextSaved)
-    onSaveChange?.(post.id, nextSaved)
+    setIsSavePending(true)
+    try {
+      await onSaveChange?.(post.id, nextSaved)
+    } catch {
+      setIsSaved(!nextSaved)
+    } finally {
+      setIsSavePending(false)
+    }
   }
 
-  function submitReport(report) {
-    onReport?.({ ...report, targetType: 'post', targetId: post.id })
+  // Erros sobem para o ReportPopup, que continua aberto e mostra a mensagem.
+  async function submitReport(report) {
+    await onReport?.({ ...report, targetType: 'post', targetId: post.id })
     setIsReported(true)
     setIsReportOpen(false)
   }
@@ -149,23 +178,26 @@ function PostCard({
                   aria-hidden="true"
                 />
               </button>
-              <button
-                type="button"
-                onClick={() => setIsReportOpen(true)}
-                aria-label={isReported ? 'Publicação denunciada' : 'Denunciar publicação'}
-                aria-pressed={isReported}
-                disabled={isReported || reportReasons.length === 0}
-                className={`transition-colors ${
-                  isReported
-                    ? 'cursor-default text-companion-orange'
-                    : 'text-companion-muted hover:text-companion-orange'
-                } disabled:cursor-not-allowed disabled:opacity-60`}
-              >
-                <i
-                  className={`bi ${isReported ? 'bi-flag-fill' : 'bi-flag'}`}
-                  aria-hidden="true"
-                />
-              </button>
+              {/* Ninguém denuncia a própria dúvida (o backend também recusa). */}
+              {!post.ownedByCurrentUser && (
+                <button
+                  type="button"
+                  onClick={() => setIsReportOpen(true)}
+                  aria-label={isReported ? 'Publicação denunciada' : 'Denunciar publicação'}
+                  aria-pressed={isReported}
+                  disabled={isReported || reportReasons.length === 0}
+                  className={`transition-colors ${
+                    isReported
+                      ? 'cursor-default text-companion-orange'
+                      : 'text-companion-muted hover:text-companion-orange'
+                  } disabled:cursor-not-allowed disabled:opacity-60`}
+                >
+                  <i
+                    className={`bi ${isReported ? 'bi-flag-fill' : 'bi-flag'}`}
+                    aria-hidden="true"
+                  />
+                </button>
+              )}
             </div>
           </div>
         </div>

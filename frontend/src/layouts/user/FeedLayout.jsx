@@ -6,17 +6,20 @@ import FeedHeader from '../../components/common/Header.jsx'
 import MainNavigation from '../../components/common/MainNavigation.jsx'
 import PostComposerModal from '../../components/post/PostComposerModal.jsx'
 import ProfileSummary from '../../components/common/ProfileSummary.jsx'
-import {
-  mockPostReportReasons,
-  mockPostsResponse,
-} from '../../data/mockPosts.js'
+import { mockPostsResponse } from '../../data/mockPosts.js'
 import { mockSubjects } from '../../data/mockSubjects.js'
 import { mockRepliesByPost } from '../../data/mockPostReplies.js'
 import { useAuth } from '../../hooks/useAuth.js'
 import { useToast } from '../../hooks/useToast.js'
 import { getAllSubjects, getCourseSubjects } from '../../services/academicService.js'
 import { getApiErrorMessage } from '../../services/apiError.js'
-import { createPost } from '../../services/postService.js'
+import {
+  createPost,
+  REPORT_REASONS,
+  reportContent,
+  setPostLiked,
+  setPostSaved,
+} from '../../services/postService.js'
 import { getMySubjects } from '../../services/profileService.js'
 
 // Contadores do perfil que GET /users/me não devolve. Ficam zerados até a
@@ -143,6 +146,46 @@ function FeedLayout() {
     )
   }
 
+  // Ações das telas que já usam o banco (feed, detalhe e Salvos). Erros
+  // mostram um toast e voltam para quem chamou, que desfaz a mudança na tela
+  // (ou, na denúncia, mantém a janela aberta com a mensagem).
+  async function likePost(postId, liked) {
+    try {
+      return await setPostLiked(postId, liked)
+    } catch (error) {
+      showToast(getApiErrorMessage(error, 'Não foi possível registrar a curtida.'), {
+        type: 'error',
+      })
+      throw error
+    }
+  }
+
+  async function savePost(postId, saved) {
+    try {
+      await setPostSaved(postId, saved)
+      showToast(saved ? 'Dúvida salva.' : 'Dúvida removida dos salvos.')
+    } catch (error) {
+      showToast(getApiErrorMessage(error, 'Não foi possível atualizar seus salvos.'), {
+        type: 'error',
+      })
+      throw error
+    }
+  }
+
+  async function reportItem({ targetType, targetId, reasonId, details }) {
+    const { alreadyReported } = await reportContent({
+      targetType,
+      targetId,
+      reason: reasonId,
+      details,
+    })
+    showToast(
+      alreadyReported
+        ? 'Você já tinha denunciado este conteúdo.'
+        : 'Denúncia enviada. Obrigado por avisar.',
+    )
+  }
+
   // Atualiza o perfil e a autoria exibida nos posts e respostas da conta.
   // subjects é opcional (ex.: a troca de username não altera as matérias).
   function handleProfileUpdate(updatedUser, subjects) {
@@ -206,8 +249,14 @@ function FeedLayout() {
                 currentUserSubjects,
                 subjects: mockSubjects,
                 onProfileUpdate: handleProfileUpdate,
-                reportReasons: mockPostReportReasons,
+                reportReasons: REPORT_REASONS,
                 onCreateReply: handleCreateReply,
+                // Ações sobre posts do banco (feed, detalhe e Salvos).
+                onLikePost: likePost,
+                onSavePost: savePost,
+                onReportItem: reportItem,
+                // PROVISÓRIO: ações sobre os posts falsos de Explorar e dos
+                // perfis; saem quando essas telas forem integradas.
                 onLikeChange: handleLikeChange,
                 onSaveChange: handleSaveChange,
                 onReport: handleReport,

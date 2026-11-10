@@ -8,9 +8,9 @@ function PostDetailLayout() {
   const { postId } = useParams()
   const {
     reportReasons,
-    onLikeChange,
-    onSaveChange,
-    onReport,
+    onLikePost,
+    onSavePost,
+    onReportItem,
     currentUserId,
   } = useOutletContext()
   // A dúvida e as respostas vêm do banco a cada vez que o detalhe é aberto,
@@ -82,9 +82,9 @@ function PostDetailLayout() {
           reportReasons,
           currentUserId,
           onCreateReply: handleCreateReply,
-          onLikeChange,
-          onSaveChange,
-          onReport,
+          onLikeChange: onLikePost,
+          onSaveChange: onSavePost,
+          onReport: onReportItem,
         }}
       />
     </section>

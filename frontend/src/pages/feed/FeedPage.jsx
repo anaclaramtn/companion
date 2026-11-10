@@ -16,9 +16,9 @@ function FeedPage() {
 function PostFeed() {
   const {
     reportReasons,
-    onLikeChange,
-    onSaveChange,
-    onReport,
+    onLikePost,
+    onSavePost,
+    onReportItem,
     currentUserId,
   } = useOutletContext()
   const fetchPage = useCallback((page) => getPosts({ page }), [])
@@ -69,9 +69,9 @@ function PostFeed() {
               post={post}
               currentUserId={currentUserId}
               reportReasons={reportReasons}
-              onLikeChange={onLikeChange}
-              onSaveChange={onSaveChange}
-              onReport={onReport}
+              onLikeChange={onLikePost}
+              onSaveChange={onSavePost}
+              onReport={onReportItem}
               detailsHref={`/feed/posts/${post.id}`}
             />
           ))}

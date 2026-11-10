@@ -1,9 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
+import { getApiErrorMessage } from '../../services/apiError.js'
+import { REPORT_DETAILS_MAX_LENGTH as MAX_DETAILS_LENGTH } from '../../services/postService.js'
 
+// onSubmit({ reasonId, details }) pode devolver uma Promise; se ela falhar,
+// a janela continua aberta e mostra a mensagem da API.
 function ReportPopup({ reasons, targetLabel = 'conteúdo', onClose, onSubmit }) {
   const [selectedReasonId, setSelectedReasonId] = useState('')
   const [details, setDetails] = useState('')
   const [error, setError] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const firstReasonRef = useRef(null)
 
   useEffect(() => {
@@ -23,8 +28,9 @@ function ReportPopup({ reasons, targetLabel = 'conteúdo', onClose, onSubmit }) 
     }
   }, [onClose])
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault()
+    if (isSubmitting) return
 
     const selectedReason = reasons.find(
       (reason) => String(reason.id) === selectedReasonId,
@@ -35,10 +41,18 @@ function ReportPopup({ reasons, targetLabel = 'conteúdo', onClose, onSubmit }) 
       return
     }
 
-    onSubmit({
-      reasonId: selectedReason.id,
-      details: details.trim(),
-    })
+    setError('')
+    setIsSubmitting(true)
+    try {
+      await onSubmit({
+        reasonId: selectedReason.id,
+        details: details.trim(),
+      })
+    } catch (submitError) {
+      setError(getApiErrorMessage(submitError, 'Não foi possível enviar a denúncia. Tente novamente.'))
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -130,11 +144,11 @@ function ReportPopup({ reasons, targetLabel = 'conteúdo', onClose, onSubmit }) 
               onChange={(event) => setDetails(event.target.value)}
               placeholder="Conte um pouco mais sobre o motivo da denúncia..."
               rows={4}
-              maxLength={1000}
+              maxLength={MAX_DETAILS_LENGTH}
               className="w-full resize-y rounded-xl border border-companion-border bg-white/80 px-4 py-3 text-sm leading-6 text-companion-text outline-none transition placeholder:text-companion-muted/75 focus:border-companion-orange focus:ring-4 focus:ring-companion-orange/15"
             />
             <p className="mt-1 text-right text-xs text-companion-muted">
-              {details.length}/1000
+              {details.length}/{MAX_DETAILS_LENGTH}
             </p>
           </div>
 
@@ -152,10 +166,11 @@ function ReportPopup({ reasons, targetLabel = 'conteúdo', onClose, onSubmit }) 
             </button>
             <button
               type="submit"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-companion-orange px-5 py-3 text-sm font-bold text-white shadow-[0_8px_20px_rgba(255,133,0,0.22)] transition hover:bg-companion-orange-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-companion-orange"
+              disabled={isSubmitting}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-companion-orange px-5 py-3 text-sm font-bold text-white shadow-[0_8px_20px_rgba(255,133,0,0.22)] transition hover:bg-companion-orange-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-companion-orange disabled:cursor-not-allowed disabled:opacity-60"
             >
               <i className="bi bi-flag" aria-hidden="true" />
-              Enviar denúncia
+              {isSubmitting ? 'Enviando...' : 'Enviar denúncia'}
             </button>
           </div>
         </form>

@@ -194,11 +194,14 @@ COMPONENTES DE USUÁRIO — src/components/user/
     Aparece em Configurações da conta e em Ajuda e suporte. A tela
     /recuperar-senha fica só para quem não está logado.
 
-  Curtidas e salvos: o FeedLayout guarda likedByCurrentUser/likeCount e
-  savedByCurrentUser no estado dos posts e fornece onLikeChange e
-  onSaveChange via Outlet context. Toda página que mostra PostCard deve
-  repassar os dois callbacks, para que curtir e salvar valham em todas as
-  telas (a tela Salvos, /salvos, lista os posts com savedByCurrentUser).
+  Curtidas, salvos e denúncias: o FeedLayout fornece via Outlet context
+  onLikePost, onSavePost e onReportItem, que gravam no banco e mostram um
+  toast. O PostCard muda a tela na hora do clique e, se a API falhar, volta
+  ao estado anterior; a contagem de curtidas vem da resposta da API. A tela
+  Salvos (/salvos) lista GET /api/users/me/saved-posts e tira da lista a
+  dúvida removida dos salvos. A bandeira de denúncia não aparece no que é
+  da própria conta. PROVISÓRIO: Explorar e as abas dos perfis ainda usam
+  onLikeChange, onSaveChange e onReport, que só mexem nos posts falsos.
 
   ProfileLink.jsx
     Link para o perfil de um usuário. Para a conta autenticada, leva a
@@ -241,11 +244,14 @@ COMPONENTES DE POSTS — src/components/post/
 
   ReportPopup.jsx
     Modal reutilizável de denúncia. Recebe:
-      reasons: lista da tabela auxiliar, com objetos { id, label }.
+      reasons: lista de objetos { id, label }; nas telas integradas é
+        REPORT_REASONS (postService.js), cujo id é o enum ReportReason.
       targetLabel: nome do item denunciado, exibido no título do modal.
       onClose: callback para fechar.
-      onSubmit: callback ao confirmar, recebe { reasonId, details }.
-    O campo de detalhes é opcional. O componente não define a lista de motivos:
+      onSubmit: callback ao confirmar, recebe { reasonId, details }; pode
+        devolver uma Promise, e se ela falhar a janela mostra o erro da API.
+    O campo de detalhes é opcional (até 1024 caracteres, como no backend).
+    O componente não define a lista de motivos:
     cada tela fornece as opções por props, permitindo usar tabelas diferentes
     para posts, respostas, perfis ou outras entidades.
 
@@ -451,9 +457,9 @@ FLUXO DE CRIAÇÃO DE CONTA
                    -> ReportPopup.jsx (denúncia da resposta)
 
   As chamadas de posts ficam em src/services/postService.js. Ainda usam os
-  mocks do FeedLayout (mockPosts.js e mockPostReplies.js): curtir, salvar,
-  denunciar, Salvos, Explorar e as abas dos perfis. Criar dúvidas e
-  respostas já usa a API.
+  mocks do FeedLayout (mockPosts.js e mockPostReplies.js) só Explorar e as
+  abas dos perfis. Feed, detalhe, Salvos, criar dúvidas e respostas,
+  curtir, salvar e denunciar já usam a API.
 
   Apagar dúvidas e respostas não aparece no app, por decisão do projeto. O
   backend já tem DELETE /api/posts/{id} e DELETE /api/comments/{id} (o autor
