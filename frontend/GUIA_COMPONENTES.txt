@@ -219,6 +219,10 @@ COMPONENTES DE POSTS — src/components/post/
         o conteúdo não navega.
       onLikeChange(postId, liked)
       onSaveChange(postId, saved)
+      onDelete(postId): mostra a lixeira para o autor (post.ownedByCurrentUser)
+        e, com canModerate, para moderação/administração. O FeedLayout
+        fornece onDeletePost(postId, onDeleted), que confirma com o
+        ConfirmDialog, apaga pela API e só então chama onDeleted.
       reportReasons: opções de denúncia disponíveis para essa tela.
       onReport(report): callback após confirmar denúncia.
     As ações de curtir e salvar possuem estado visual local. Quando a
@@ -228,13 +232,16 @@ COMPONENTES DE POSTS — src/components/post/
     envia ao callback um objeto com reasonId, details, targetType e targetId.
 
   PostComposerModal.jsx
-    Formulário modal para criar uma dúvida. Recebe subjects (disciplinas
-    vindas da camada de dados/API), featuredSubjectIds (disciplinas exibidas
-    primeiro; o FeedLayout passa as do perfil), onClose e onSubmit. Cada
-    opção possui id (código, ex.: T390) e name; a seleção permite até 3
-    disciplinas, com busca por nome ou código e "Ver mais" para a lista
-    completa. O callback onSubmit recebe:
-      { title, content, subjectIds }
+    Formulário modal para criar uma dúvida. Recebe subjects (disciplinas do
+    banco; null enquanto carregam), subjectsError, featuredSubjectIds
+    (disciplinas exibidas primeiro; o FeedLayout passa as do perfil), onClose
+    e onSubmit. Cada opção possui id, code (ex.: T390) e name; a seleção
+    permite até 3 disciplinas, com busca por nome ou código e "Ver mais"
+    para a lista completa. Título até 128 e conteúdo até 256 caracteres,
+    como no backend. O callback onSubmit recebe { title, content, subjectIds }
+    e deve devolver uma Promise; se ela falhar, a janela mostra o erro da API
+    e mantém o texto. No FeedLayout, publicar fecha a janela, mostra um toast
+    e recarrega o feed (indo para /feed) com a dúvida nova no topo.
 
   ReportPopup.jsx
     Modal reutilizável de denúncia. Recebe:
@@ -447,8 +454,9 @@ FLUXO DE CRIAÇÃO DE CONTA
                    -> ReportPopup.jsx (denúncia da resposta)
 
   As chamadas de posts ficam em src/services/postService.js. Ainda usam os
-  mocks do FeedLayout (mockPosts.js e mockPostReplies.js): criar dúvida,
-  curtir, salvar, denunciar, Salvos, Explorar e as abas dos perfis.
+  mocks do FeedLayout (mockPosts.js e mockPostReplies.js): curtir, salvar,
+  denunciar, Salvos, Explorar e as abas dos perfis. Criar e apagar dúvidas
+  já usam a API.
 
   usePaginatedPosts(fetchPage)
     Hook para qualquer lista paginada de posts (feed, salvos, posts de um

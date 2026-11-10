@@ -1,7 +1,8 @@
 import { useCallback, useState } from 'react'
-import { Outlet } from 'react-router'
+import { Outlet, useLocation, useNavigate } from 'react-router'
 import 'bootstrap-icons/font/bootstrap-icons.css'
 import Background from '../../components/common/Background.jsx'
+import ConfirmDialog from '../../components/common/ConfirmDialog.jsx'
 import FeedHeader from '../../components/common/Header.jsx'
 import MainNavigation from '../../components/common/MainNavigation.jsx'
 import PostComposerModal from '../../components/post/PostComposerModal.jsx'
@@ -13,6 +14,11 @@ import {
 import { mockSubjects } from '../../data/mockSubjects.js'
 import { mockRepliesByPost } from '../../data/mockPostReplies.js'
 import { useAuth } from '../../hooks/useAuth.js'
+import { useToast } from '../../hooks/useToast.js'
+import { getAllSubjects, getCourseSubjects } from '../../services/academicService.js'
+import { getApiErrorMessage } from '../../services/apiError.js'
+import { createPost, deletePost } from '../../services/postService.js'
+import { getMySubjects } from '../../services/profileService.js'
 
 // Contadores do perfil que GET /users/me não devolve. Ficam zerados até a
 // integração de seguidores e de posts.
@@ -51,32 +57,80 @@ function FeedLayout() {
   const [posts, setPosts] = useState(mockPostsResponse.content)
   const [repliesByPost, setRepliesByPost] = useState(mockRepliesByPost)
   const [, setReports] = useState([])
+  const navigate = useNavigate()
+  const location = useLocation()
+  const showToast = useToast()
+  // Disciplinas da janela "Postar dúvida": a grade do curso (ou todas) e,
+  // em destaque, as do perfil. null enquanto carregam.
+  const [composerSubjects, setComposerSubjects] = useState(null)
+  const [composerSubjectsError, setComposerSubjectsError] = useState('')
+  // Muda a cada dúvida publicada para o feed recarregar a primeira página.
+  const [feedRefreshKey, setFeedRefreshKey] = useState(0)
+  // Dúvida aguardando confirmação para ser apagada.
+  const [pendingDelete, setPendingDelete] = useState(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const canModerate = ['MODERATOR', 'ADMIN'].includes(currentUser.role)
 
   const closeComposer = useCallback(() => {
     setIsComposerOpen(false)
   }, [])
 
-  function handleCreatePost({ title, content, subjectIds }) {
-    const selectedSubjects = mockSubjects.filter((subject) =>
-      subjectIds.includes(subject.id),
-    )
+  // Abre a janela e busca as disciplinas a cada abertura, para refletir
+  // mudanças de curso ou de disciplinas do perfil.
+  async function openComposer() {
+    setIsComposerOpen(true)
+    setComposerSubjects(null)
+    setComposerSubjectsError('')
+    try {
+      const [catalog, mySubjects] = await Promise.all([
+        user?.courseId ? getCourseSubjects(user.courseId) : getAllSubjects(),
+        getMySubjects(),
+      ])
+      setComposerSubjects({
+        list: catalog,
+        featuredIds: mySubjects.map((item) => item.subject.id),
+      })
+    } catch (error) {
+      setComposerSubjectsError(
+        getApiErrorMessage(error, 'Não foi possível carregar as disciplinas.'),
+      )
+    }
+  }
 
-    setPosts((currentPosts) => [
-      {
-        id: Date.now(),
-        author: authorSummary(currentUser),
-        subjects: selectedSubjects,
-        title,
-        content,
-        createdAt: new Date().toISOString(),
-        likeCount: 0,
-        likedByCurrentUser: false,
-        savedByCurrentUser: false,
-        ownedByCurrentUser: true,
-      },
-      ...currentPosts,
-    ])
+  // Erros chegam à janela de publicação, que mostra a mensagem e mantém o texto.
+  async function handleCreatePost({ title, content, subjectIds }) {
+    await createPost({ title, content, subjectIds })
     closeComposer()
+    showToast('Dúvida publicada.')
+    setFeedRefreshKey((key) => key + 1)
+    // A dúvida nova aparece no topo do feed.
+    if (location.pathname !== '/feed') navigate('/feed')
+  }
+
+  // Pede confirmação antes de apagar. onDeleted roda depois que a API apagar
+  // a dúvida, para a tela que pediu tirá-la da lista ou sair do detalhe.
+  function requestDeletePost(postId, onDeleted) {
+    setPendingDelete({ postId, onDeleted })
+  }
+
+  const cancelDeletePost = useCallback(() => {
+    if (!isDeleting) setPendingDelete(null)
+  }, [isDeleting])
+
+  async function confirmDeletePost() {
+    setIsDeleting(true)
+    try {
+      await deletePost(pendingDelete.postId)
+      showToast('Dúvida apagada.')
+      pendingDelete.onDeleted?.()
+      setPendingDelete(null)
+    } catch (error) {
+      showToast(getApiErrorMessage(error, 'Não foi possível apagar a dúvida.'), {
+        type: 'error',
+      })
+    } finally {
+      setIsDeleting(false)
+    }
   }
 
   function handleCreateReply(postId, content) {
@@ -154,7 +208,7 @@ function FeedLayout() {
     <Background>
       <div className="mx-auto min-h-dvh w-full max-w-[1600px] px-4 py-4 sm:px-6 lg:px-8">
         <FeedHeader
-          onPostQuestion={() => setIsComposerOpen(true)}
+          onPostQuestion={openComposer}
           userAvatarUrl={currentUser.avatarUrl}
           // A busca fica na página Explorar; o campo do cabeçalho não é usado.
           showSearch={false}
@@ -187,6 +241,9 @@ function FeedLayout() {
                 onLikeChange: handleLikeChange,
                 onSaveChange: handleSaveChange,
                 onReport: handleReport,
+                feedRefreshKey,
+                onDeletePost: requestDeletePost,
+                canModerate,
               }}
             />
           </main>
@@ -194,10 +251,22 @@ function FeedLayout() {
       </div>
       {isComposerOpen && (
         <PostComposerModal
-          subjects={mockSubjects}
-          featuredSubjectIds={currentUserSubjects.map((item) => item.subject.id)}
+          subjects={composerSubjects?.list ?? null}
+          featuredSubjectIds={composerSubjects?.featuredIds ?? []}
+          subjectsError={composerSubjectsError}
           onClose={closeComposer}
           onSubmit={handleCreatePost}
+        />
+      )}
+      {pendingDelete && (
+        <ConfirmDialog
+          title="Apagar dúvida?"
+          description="A dúvida e as respostas dela deixam de aparecer para todos. Essa ação não pode ser desfeita."
+          confirmLabel="Apagar"
+          tone="danger"
+          isConfirming={isDeleting}
+          onConfirm={confirmDeletePost}
+          onCancel={cancelDeletePost}
         />
       )}
     </Background>

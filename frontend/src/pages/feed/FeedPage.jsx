@@ -5,18 +5,35 @@ import PostCard from '../../components/post/PostCard.jsx'
 import { usePaginatedPosts } from '../../hooks/usePaginatedPosts.js'
 import { getPosts } from '../../services/postService.js'
 
+// feedRefreshKey muda quando uma dúvida é publicada; a key nova recria o
+// feed do zero, que recarrega e mostra a dúvida no topo.
 function FeedPage() {
+  const { feedRefreshKey } = useOutletContext()
+  return <PostFeed key={feedRefreshKey} />
+}
+
+// Feed vindo do banco, 10 dúvidas por vez, das mais novas para as mais antigas.
+function PostFeed() {
   const {
     reportReasons,
     onLikeChange,
     onSaveChange,
     onReport,
     currentUserId,
+    onDeletePost,
+    canModerate,
   } = useOutletContext()
-  // Feed vindo do banco, 10 dúvidas por vez, das mais novas para as mais antigas.
   const fetchPage = useCallback((page) => getPosts({ page }), [])
-  const { posts, totalElements, isLoading, error, hasMore, loadMore, retry } =
-    usePaginatedPosts(fetchPage)
+  const {
+    posts,
+    totalElements,
+    isLoading,
+    error,
+    hasMore,
+    loadMore,
+    retry,
+    removePost,
+  } = usePaginatedPosts(fetchPage)
   const isFirstLoad = isLoading && posts.length === 0
 
   return (
@@ -58,6 +75,8 @@ function FeedPage() {
               onLikeChange={onLikeChange}
               onSaveChange={onSaveChange}
               onReport={onReport}
+              onDelete={(postId) => onDeletePost(postId, () => removePost(postId))}
+              canModerate={canModerate}
               detailsHref={`/feed/posts/${post.id}`}
             />
           ))}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Outlet, useOutletContext, useParams } from 'react-router'
+import { Outlet, useNavigate, useOutletContext, useParams } from 'react-router'
 import BackLink from '../../components/common/BackLink.jsx'
 import { getApiErrorMessage } from '../../services/apiError.js'
 import { getPost, getPostReplies } from '../../services/postService.js'
@@ -13,7 +13,10 @@ function PostDetailLayout() {
     onSaveChange,
     onReport,
     currentUserId,
+    onDeletePost,
+    canModerate,
   } = useOutletContext()
+  const navigate = useNavigate()
   // A dúvida e as respostas vêm do banco a cada vez que o detalhe é aberto,
   // então o link funciona direto e também depois do F5.
   const [detail, setDetail] = useState({
@@ -104,6 +107,10 @@ function PostDetailLayout() {
           onLikeChange,
           onSaveChange,
           onReport,
+          // Depois de apagar, volta ao feed (substituindo o detalhe no histórico).
+          onDelete: (deletedPostId) =>
+            onDeletePost(deletedPostId, () => navigate('/feed', { replace: true })),
+          canModerate,
         }}
       />
     </section>

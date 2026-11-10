@@ -1,30 +1,43 @@
 import { useEffect, useRef, useState } from 'react'
+import { getApiErrorMessage } from '../../services/apiError.js'
+import {
+  POST_CONTENT_MAX_LENGTH as MAX_CONTENT_LENGTH,
+  POST_MAX_SUBJECTS as MAX_SUBJECTS,
+  POST_TITLE_MAX_LENGTH as MAX_TITLE_LENGTH,
+} from '../../services/postService.js'
 
-const MAX_CONTENT_LENGTH = 256
 const DEFAULT_VISIBLE_SUBJECTS = 10
 
 function normalize(text) {
-  return text
+  return String(text)
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
     .trim()
     .toLocaleLowerCase('pt-BR')
 }
 
+// subjects: disciplinas que podem ser escolhidas; null enquanto carregam.
 // featuredSubjectIds: disciplinas exibidas primeiro (ex.: as do perfil);
 // as demais aparecem com a busca ou com "Ver mais".
+// subjectsError: mensagem quando as disciplinas não puderam ser carregadas.
+// onSubmit deve devolver uma Promise; se ela falhar, a mensagem de erro da
+// API aparece na janela e o texto digitado é mantido.
 function PostComposerModal({
-  subjects,
+  subjects: subjectsProp,
   featuredSubjectIds = [],
+  subjectsError = '',
   onClose,
   onSubmit,
 }) {
+  const subjects = subjectsProp ?? []
+  const isLoadingSubjects = subjectsProp == null && !subjectsError
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [selectedSubjectIds, setSelectedSubjectIds] = useState([])
   const [subjectSearch, setSubjectSearch] = useState('')
   const [showAllSubjects, setShowAllSubjects] = useState(false)
   const [error, setError] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const titleInputRef = useRef(null)
 
   const normalizedSearch = normalize(subjectSearch)
@@ -37,7 +50,7 @@ function PostComposerModal({
     if (isSearching) {
       return (
         normalize(subject.name).includes(normalizedSearch) ||
-        normalize(subject.id).includes(normalizedSearch)
+        normalize(subject.code ?? subject.id).includes(normalizedSearch)
       )
     }
     return (
@@ -73,8 +86,8 @@ function PostComposerModal({
       return
     }
 
-    if (selectedSubjectIds.length >= 3) {
-      setError('Você pode selecionar no máximo 3 conteúdos.')
+    if (selectedSubjectIds.length >= MAX_SUBJECTS) {
+      setError(`Você pode selecionar no máximo ${MAX_SUBJECTS} conteúdos.`)
       return
     }
 
@@ -82,8 +95,9 @@ function PostComposerModal({
     setError('')
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault()
+    if (isSubmitting) return
 
     if (!title.trim() || !content.trim()) {
       setError('Preencha o título e o conteúdo da dúvida.')
@@ -95,11 +109,21 @@ function PostComposerModal({
       return
     }
 
-    onSubmit({
-      title: title.trim(),
-      content: content.trim(),
-      subjectIds: selectedSubjectIds,
-    })
+    setError('')
+    setIsSubmitting(true)
+    try {
+      await onSubmit({
+        title: title.trim(),
+        content: content.trim(),
+        subjectIds: selectedSubjectIds,
+      })
+    } catch (submitError) {
+      setError(
+        getApiErrorMessage(submitError, 'Não foi possível publicar sua dúvida. Tente novamente.'),
+      )
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -158,12 +182,12 @@ function PostComposerModal({
               value={title}
               onChange={(event) => setTitle(event.target.value)}
               placeholder="Ex.: Como funcionam as listas encadeadas?"
-              maxLength={150}
+              maxLength={MAX_TITLE_LENGTH}
               required
               className="w-full rounded-xl border border-companion-border bg-white/80 px-4 py-3 text-sm text-companion-text outline-none transition placeholder:text-companion-muted/75 focus:border-companion-orange focus:ring-4 focus:ring-companion-orange/15"
             />
             <p className="mt-1 text-right text-xs text-companion-muted">
-              {title.length}/150
+              {title.length}/{MAX_TITLE_LENGTH}
             </p>
           </div>
 
@@ -194,11 +218,11 @@ function PostComposerModal({
             <legend className="text-sm font-semibold text-companion-text">
               Disciplinas relacionadas
               <span className="ml-2 font-normal text-companion-muted">
-                (selecione até 3)
+                (selecione até {MAX_SUBJECTS})
               </span>
             </legend>
             <p className="mt-1 text-xs text-companion-muted">
-              {selectedSubjectIds.length} de 3 selecionados
+              {selectedSubjectIds.length} de {MAX_SUBJECTS} selecionados
             </p>
             <label htmlFor="post-subject-search" className="sr-only">
               Buscar disciplina por nome ou código
@@ -218,7 +242,17 @@ function PostComposerModal({
               />
             </div>
             <div className="mt-3 flex max-h-56 flex-wrap gap-2 overflow-y-auto">
-              {visibleSubjects.length === 0 && (
+              {isLoadingSubjects && (
+                <p role="status" className="text-sm text-companion-muted">
+                  Carregando disciplinas...
+                </p>
+              )}
+              {subjectsError && (
+                <p role="alert" className="text-sm font-medium text-red-700">
+                  {subjectsError}
+                </p>
+              )}
+              {!isLoadingSubjects && !subjectsError && visibleSubjects.length === 0 && (
                 <p className="text-sm text-companion-muted">
                   Nenhuma disciplina encontrada para “{subjectSearch}”.
                 </p>
@@ -226,7 +260,7 @@ function PostComposerModal({
               {visibleSubjects.map((subject) => {
                 const isSelected = selectedSubjectIds.includes(subject.id)
                 const isLimitReached =
-                  selectedSubjectIds.length === 3 && !isSelected
+                  selectedSubjectIds.length === MAX_SUBJECTS && !isSelected
 
                 return (
                   <button
@@ -246,7 +280,7 @@ function PostComposerModal({
                 )
               })}
             </div>
-            {!isSearching && (
+            {!isSearching && subjects.length > 0 && (
               <button
                 type="button"
                 onClick={() => setShowAllSubjects((showAll) => !showAll)}
@@ -278,10 +312,11 @@ function PostComposerModal({
             </button>
             <button
               type="submit"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-companion-orange px-5 py-3 text-sm font-bold text-white shadow-[0_8px_20px_rgba(255,133,0,0.22)] transition hover:bg-companion-orange-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-companion-orange"
+              disabled={isSubmitting || isLoadingSubjects}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-companion-orange px-5 py-3 text-sm font-bold text-white shadow-[0_8px_20px_rgba(255,133,0,0.22)] transition hover:bg-companion-orange-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-companion-orange disabled:cursor-not-allowed disabled:opacity-60"
             >
               <i className="bi bi-send" aria-hidden="true" />
-              Publicar dúvida
+              {isSubmitting ? 'Publicando...' : 'Publicar dúvida'}
             </button>
           </div>
         </form>

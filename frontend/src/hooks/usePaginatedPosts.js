@@ -80,8 +80,19 @@ export function usePaginatedPosts(fetchPage) {
     if (!isLoading && !last && !error) loadNextPage()
   }, [isLoading, last, error, loadNextPage])
 
+  // Tira da lista um post apagado, sem recarregar. (A página seguinte vem
+  // do servidor já sem ele, então um post pode ficar de fora até recarregar.)
+  const removePost = useCallback((postId) => {
+    setState((current) => ({
+      ...current,
+      posts: current.posts.filter((post) => post.id !== postId),
+      totalElements: Math.max(0, current.totalElements - 1),
+    }))
+  }, [])
+
   return {
     posts: state.posts,
+    removePost,
     totalElements: state.totalElements,
     isLoading,
     error,

@@ -26,6 +26,7 @@ import java.time.LocalDateTime;
 import java.util.HexFormat;
 
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.matchesPattern;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
@@ -138,6 +139,8 @@ class CompanionApiIntegrationTest {
                                 + "],\"title\":\"Complexidade\",\"content\":\"Como analisar este algoritmo?\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.subjects", hasSize(2)))
+                // O frontend lê a data como texto ISO (ex.: 2026-11-10T14:30:00).
+                .andExpect(jsonPath("$.createdAt").value(matchesPattern("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}.*")))
                 .andReturn().getResponse().getContentAsString());
         mockMvc.perform(post("/api/posts").header("Authorization", bearer(adminToken))
                         .contentType(MediaType.APPLICATION_JSON)
