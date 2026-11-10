@@ -173,8 +173,9 @@ COMPONENTES DE USUÁRIO — src/components/user/
     espaços largos (Editar perfil) e uma só em espaços estreitos (onboarding).
 
   Edição de perfil (src/pages/profile/EditProfilePage.jsx, rota
-  /perfil/editar): usa FormField e SubjectInterestPicker e salva por
-  src/services/accountService.js (mock, só em memória). O FeedLayout guarda
+  /perfil/editar): usa FormField e SubjectInterestPicker. A foto já usa a
+  API (updateAvatar/removeAvatar do useAuth, ao clicar em Salvar); o resto
+  salva por src/services/accountService.js (mock, só em memória). O FeedLayout guarda
   currentUser e currentUserSubjects e fornece onProfileUpdate via Outlet
   context, atualizando também a autoria dos posts e respostas da conta.
 
@@ -458,7 +459,14 @@ ARQUIVOS
   src/contexts/AuthContext.jsx
     Guarda a sessão (token + usuário) e expõe pelo hook useAuth():
       user, isAuthenticated, isRestoring, login, register, updateProfile,
-      completeOnboarding e logout.
+      updateAvatar, removeAvatar, completeOnboarding e logout.
+    updateProfile envia só os campos informados; os que ficam de fora não
+    mudam no backend (cada etapa do onboarding salva só a sua parte).
+  src/services/profileService.js
+    Chamadas de /api/users/me. Também guarda as regras da foto de perfil,
+    iguais às do backend: JPG, PNG ou WEBP com até 2 MB (getAvatarFileError).
+    Arquivo inválido mostra um toast na hora da escolha; se a API ainda assim
+    responder 413, a tela mostra o mesmo toast do limite de 2 MB.
   src/components/common/RequireAuth.jsx
     Protege as rotas internas em App.jsx: sem sessão, manda para /login; com
     perfil incompleto, manda para /onboarding/etapa-1; enquanto a sessão está

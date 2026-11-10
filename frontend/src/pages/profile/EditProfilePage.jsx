@@ -1,14 +1,22 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useOutletContext } from 'react-router'
 import BackLink from '../../components/common/BackLink.jsx'
 import FormField from '../../components/common/FormField.jsx'
 import SubjectInterestPicker from '../../components/user/SubjectInterestPicker.jsx'
+import { useAuth } from '../../hooks/useAuth.js'
+import { useToast } from '../../hooks/useToast.js'
 import { updateMyProfile } from '../../services/accountService.js'
+import { getApiErrorMessage } from '../../services/apiError.js'
+import {
+  AVATAR_ACCEPT,
+  AVATAR_SIZE_MESSAGE,
+  getAvatarFileError,
+  isAvatarTooLargeError,
+} from '../../services/profileService.js'
 
 const MAX_NAME_LENGTH = 60
 const MAX_BIO_LENGTH = 160
 const MAX_COURSE_LENGTH = 80
-const MAX_AVATAR_SIZE = 2 * 1024 * 1024
 const SEMESTERS = Array.from({ length: 12 }, (_, index) => index + 1)
 const LAST_GRADE_SEMESTER = 8
 
@@ -54,9 +62,21 @@ function EditProfilePage() {
       interestType,
     })),
   }))
+  const { updateAvatar, removeAvatar } = useAuth()
+  const showToast = useToast()
+  // Foto escolhida e ainda não enviada; sobe para a API só ao salvar.
+  const [avatarFile, setAvatarFile] = useState(null)
   const [errors, setErrors] = useState({})
   const [status, setStatus] = useState({ type: 'idle', message: '' })
   const isSaving = status.type === 'saving'
+
+  // A pré-visualização da foto nova usa um endereço temporário (blob:), que
+  // precisa ser liberado da memória ao trocar de foto ou sair da tela.
+  useEffect(() => {
+    const previewUrl = form.avatarUrl
+    if (!previewUrl?.startsWith('blob:')) return undefined
+    return () => URL.revokeObjectURL(previewUrl)
+  }, [form.avatarUrl])
 
   function updateField(field, value) {
     setForm((current) => ({ ...current, [field]: value }))
@@ -69,22 +89,28 @@ function EditProfilePage() {
     event.target.value = ''
     if (!file) return
 
-    if (!file.type.startsWith('image/')) {
-      setErrors((current) => ({ ...current, avatar: 'Escolha um arquivo de imagem.' }))
-      return
-    }
-    if (file.size > MAX_AVATAR_SIZE) {
-      setErrors((current) => ({ ...current, avatar: 'A imagem deve ter até 2 MB.' }))
+    const fileError = getAvatarFileError(file)
+    if (fileError) {
+      showToast(fileError, { type: 'error' })
       return
     }
 
-    // Sem API de upload, a imagem fica em memória como data URL.
-    const reader = new FileReader()
-    reader.onload = () => {
-      updateField('avatarUrl', reader.result)
-      setErrors((current) => ({ ...current, avatar: undefined }))
+    setAvatarFile(file)
+    updateField('avatarUrl', URL.createObjectURL(file))
+  }
+
+  function handleAvatarRemove() {
+    setAvatarFile(null)
+    updateField('avatarUrl', null)
+  }
+
+  // Envia a foto nova ou remove a atual pela API e devolve o endereço final.
+  async function saveAvatar() {
+    if (avatarFile) return (await updateAvatar(avatarFile)).avatarUrl
+    if (!form.avatarUrl && currentUser.avatarUrl) {
+      return (await removeAvatar()).avatarUrl
     }
-    reader.readAsDataURL(file)
+    return currentUser.avatarUrl
   }
 
   async function handleSubmit(event) {
@@ -98,17 +124,30 @@ function EditProfilePage() {
 
     setStatus({ type: 'saving', message: '' })
     try {
+      const avatarUrl = await saveAvatar()
+      setAvatarFile(null)
+      setForm((current) => ({ ...current, avatarUrl }))
+
+      // O resto do perfil ainda é salvo pelo mock de accountService.
       const { user, subjects: savedSubjects } = await updateMyProfile(
         currentUser,
         currentUserSubjects,
-        form,
+        { ...form, avatarUrl },
       )
       onProfileUpdate(user, savedSubjects)
       setStatus({ type: 'success', message: 'Perfil atualizado com sucesso.' })
     } catch (saveError) {
+      const fallback = 'Não foi possível salvar as alterações.'
+      if (isAvatarTooLargeError(saveError)) {
+        showToast(AVATAR_SIZE_MESSAGE, { type: 'error' })
+        setStatus({ type: 'idle', message: '' })
+        return
+      }
       setStatus({
         type: 'error',
-        message: saveError.message || 'Não foi possível salvar as alterações.',
+        message: saveError.response
+          ? getApiErrorMessage(saveError, fallback)
+          : saveError.message || fallback,
       })
     }
   }
@@ -155,7 +194,7 @@ function EditProfilePage() {
               Foto de perfil
             </h2>
             <p className="mt-0.5 text-xs text-companion-muted">
-              JPG, PNG ou GIF com até 2 MB.
+              JPG, PNG ou WEBP com até 2 MB.
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
               <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-companion-orange px-4 py-2 text-sm font-bold text-white transition hover:bg-companion-orange-hover focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-companion-orange">
@@ -163,7 +202,7 @@ function EditProfilePage() {
                 Escolher foto
                 <input
                   type="file"
-                  accept="image/*"
+                  accept={AVATAR_ACCEPT}
                   onChange={handleAvatarChange}
                   className="sr-only"
                 />
@@ -171,18 +210,13 @@ function EditProfilePage() {
               {form.avatarUrl && (
                 <button
                   type="button"
-                  onClick={() => updateField('avatarUrl', null)}
+                  onClick={handleAvatarRemove}
                   className="rounded-xl border border-companion-border bg-white px-4 py-2 text-sm font-bold text-companion-text transition hover:bg-companion-orange/5"
                 >
                   Remover
                 </button>
               )}
             </div>
-            {errors.avatar && (
-              <p role="alert" className="mt-2 text-xs text-red-700">
-                {errors.avatar}
-              </p>
-            )}
           </div>
         </section>
 

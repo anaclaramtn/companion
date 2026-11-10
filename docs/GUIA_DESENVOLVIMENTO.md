@@ -172,7 +172,15 @@ Arquivos e responsabilidades esperados:
 - `dtos/user/UserRegistrationRequestDTO.java`: somente e-mail e senha para o
   cadastro público.
 - `dtos/user/UserProfileUpdateRequestDTO.java`: campos editáveis da própria
-  conta e do perfil; nunca recebe papel, status ou datas de auditoria.
+  conta e do perfil; nunca recebe papel, status ou datas de auditoria. A
+  atualização é parcial: campo ausente mantém o valor atual, e texto vazio
+  limpa biografia ou matrícula. A foto não passa por aqui.
+- `services/UserAvatarService.java` e `services/CloudinaryAvatarService.java`:
+  foto de perfil por `PUT /api/users/me/avatar` (multipart, campo `file`;
+  JPG, PNG ou WEBP de até 2 MB, conferidos pelos bytes do arquivo) e
+  `DELETE /api/users/me/avatar`. O envio ao Cloudinary acontece fora de
+  transação; erros do Cloudinary viram 400 (imagem inválida) ou 503
+  (serviço indisponível ou sem configuração), e arquivo grande demais vira 413.
 - `dtos/user/UserPublicResponseDTO.java`: somente dados visíveis no perfil de
   outro estudante.
 - `dtos/user/UserAccountResponseDTO.java`: dados privados necessários ao titular.

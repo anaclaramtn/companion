@@ -12,7 +12,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import com.companion.exceptions.ServiceUnavailableException;
+import com.companion.services.CloudinaryAvatarService;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.nio.charset.StandardCharsets;
@@ -21,6 +26,10 @@ import java.time.LocalDateTime;
 import java.util.HexFormat;
 
 import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -34,6 +43,7 @@ class CompanionApiIntegrationTest {
     @Autowired UniversityRepository universityRepository;
     @Autowired CourseRepository courseRepository;
     @Autowired SubjectRepository subjectRepository;
+    @MockitoBean CloudinaryAvatarService cloudinaryAvatarService;
 
     @Test
     void executesCriticalCrudAndSecurityFlows() throws Exception {
@@ -280,6 +290,73 @@ class CompanionApiIntegrationTest {
         mockMvc.perform(get("/api/posts")).andExpect(status().isUnauthorized());
         mockMvc.perform(get("/api/admin/users").header("Authorization", bearer(secondToken)))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void keepsUnsentProfileFieldsAndManagesAvatar() throws Exception {
+        String token = register("carla@unifor.br", "Senha123");
+        long userId = userRepository.findByEmailIgnoreCase("carla@unifor.br").orElseThrow().getId();
+        long universityId = universityRepository.findByAcronymIgnoreCase("UNIFOR").orElseThrow().getId();
+        long courseId = courseRepository.findByUniversityIdOrderByNameAsc(universityId).getFirst().getId();
+        String avatarUrl = "https://res.cloudinary.com/demo/image/upload/v1/companion/avatars/user-" + userId;
+
+        mockMvc.perform(put("/api/users/me/profile").header("Authorization", bearer(token))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Carla\",\"username\":\"carla\",\"bio\":\"Gosto de cálculo\","
+                                + "\"courseId\":" + courseId + ",\"semester\":3}"))
+                .andExpect(status().isOk());
+
+        when(cloudinaryAvatarService.uploadAvatar(eq(userId), any())).thenReturn(avatarUrl);
+        mockMvc.perform(multipart(HttpMethod.PUT, "/api/users/me/avatar").file(avatarFile())
+                        .header("Authorization", bearer(token)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.avatarUrl").value(avatarUrl));
+
+        // Voltar à Etapa 1 e salvar só nome e username não apaga o resto do perfil.
+        mockMvc.perform(put("/api/users/me/profile").header("Authorization", bearer(token))
+                        .contentType(MediaType.APPLICATION_JSON).content(profileJson("Carla Souza", "carla")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Carla Souza"))
+                .andExpect(jsonPath("$.avatarUrl").value(avatarUrl))
+                .andExpect(jsonPath("$.bio").value("Gosto de cálculo"))
+                .andExpect(jsonPath("$.courseId").value(courseId))
+                .andExpect(jsonPath("$.semester").value(3));
+
+        // Texto vazio limpa a biografia; o perfil não aceita mais URL de avatar.
+        mockMvc.perform(put("/api/users/me/profile").header("Authorization", bearer(token))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"bio\":\"\",\"avatarUrl\":\"https://exemplo.com/outra.png\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.bio").doesNotExist())
+                .andExpect(jsonPath("$.avatarUrl").value(avatarUrl))
+                .andExpect(jsonPath("$.name").value("Carla Souza"));
+        mockMvc.perform(put("/api/users/me/profile").header("Authorization", bearer(token))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"   \"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.fieldErrors.name").value("O nome não pode ficar em branco"));
+        mockMvc.perform(put("/api/users/me/profile").header("Authorization", bearer(token))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"semester\":9}"))
+                .andExpect(status().isBadRequest());
+
+        // Erros do envio chegam com mensagem própria, e não como erro interno.
+        mockMvc.perform(multipart(HttpMethod.PUT, "/api/users/me/avatar").header("Authorization", bearer(token)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Selecione uma imagem para enviar"));
+        when(cloudinaryAvatarService.uploadAvatar(eq(userId), any()))
+                .thenThrow(new ServiceUnavailableException("Envio indisponível"));
+        mockMvc.perform(multipart(HttpMethod.PUT, "/api/users/me/avatar").file(avatarFile())
+                        .header("Authorization", bearer(token)))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.message").value("Envio indisponível"));
+
+        mockMvc.perform(delete("/api/users/me/avatar").header("Authorization", bearer(token)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.avatarUrl").doesNotExist());
+        verify(cloudinaryAvatarService).deleteAvatar(userId);
+    }
+
+    private MockMultipartFile avatarFile() {
+        return new MockMultipartFile("file", "foto.jpg", "image/jpeg", new byte[]{(byte) 0xFF, (byte) 0xD8, (byte) 0xFF});
     }
 
     private String register(String email, String password) throws Exception {
