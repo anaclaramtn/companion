@@ -150,15 +150,27 @@ COMPONENTES DE USUÁRIO — src/components/user/
 
   ProfileSubjects.jsx
     Matérias do perfil em dois grupos: "Tenho dificuldade" (QUER_APRENDER) e
-    "Posso ajudar" (DOMINA). Recebe subjects no formato de mockUserSubjects.
+    "Posso ajudar" (DOMINA). Recebe subjects como GET /api/users/{id}/subjects
+    devolve: { id, subject: { id, code, name }, interestType }.
     Não renderiza nada quando a lista está vazia.
 
   ProfileActivityTabs.jsx
-    Abas "Posts" e "Respostas" de um perfil. Recebe posts, comments,
-    postCount e commentCount (opcionais; padrão é o tamanho das listas),
-    currentUserId, reportReasons, onLikeChange, onReport, emptyPostsText e
-    emptyCommentsText. Com likedPosts (e emptyLikedText), mostra também a aba
-    "Curtidos"; só o perfil próprio passa essa lista.
+    Abas "Posts" e "Respostas" de um perfil, vindas do banco: cada aba só
+    carrega quando é aberta, de 10 em 10 (GET /api/posts?authorId= e
+    GET /api/users/{id}/comments). Recebe userId, postCount, commentCount,
+    postActions (props repassadas a cada PostCard: currentUserId,
+    reportReasons, onLikeChange, onSaveChange, onReport) e os textos de lista
+    vazia. Com showLiked, mostra também a aba "Curtidos"
+    (GET /api/users/me/liked-posts); só o perfil próprio usa, porque a API
+    só lista as curtidas de quem está logado.
+
+  ProfileView.jsx
+    Tela de perfil completa, vinda do banco: ProfileHeader, ProfileSubjects,
+    ProfileActivityTabs e o UserListPopup de seguidores/seguindo (até 50).
+    Recebe userId; use com key={userId}. No próprio perfil mostra "Editar
+    perfil" e a aba "Curtidos"; nos outros, o botão Seguir, que grava pela
+    API e avisa o FeedLayout (onFollowingChange) para atualizar o "seguindo"
+    da lateral. As chamadas ficam em src/services/publicProfileService.js.
 
   SubjectInterestPicker.jsx
     Seleção das disciplinas do perfil em dois grupos ("Tenho dificuldade" e
@@ -200,16 +212,19 @@ COMPONENTES DE USUÁRIO — src/components/user/
   ao estado anterior; a contagem de curtidas vem da resposta da API. A tela
   Salvos (/salvos) lista GET /api/users/me/saved-posts e tira da lista a
   dúvida removida dos salvos. A bandeira de denúncia não aparece no que é
-  da própria conta. PROVISÓRIO: Explorar e as abas dos perfis ainda usam
-  onLikeChange, onSaveChange e onReport, que só mexem nos posts falsos.
+  da própria conta. PROVISÓRIO: Explorar ainda usa onLikeChange,
+  onSaveChange e onReport, que só mexem nos posts falsos.
 
   ProfileLink.jsx
     Link para o perfil de um usuário. Para a conta autenticada, leva a
-    /perfil; para os demais, a /feed/users/:userId.
+    /perfil; para os demais, a /feed/users/:userId. Ao clicar, guarda o nome
+    (src/services/userNames.js) para o "Voltar" da tela seguinte mostrar
+    "Perfil de Fulano".
 
   Perfil próprio (src/pages/profile/MyProfilePage.jsx, rota /perfil) e perfil
-  público (PublicProfilePage.jsx, rota /feed/users/:userId) usam os três
-  componentes acima. O perfil próprio pode ser aberto pelo avatar do Header,
+  público (PublicProfilePage.jsx, rota /feed/users/:userId) só renderizam o
+  ProfileView. A lateral (ProfileSummary) mostra os números de
+  GET /api/users/{id} da conta. O perfil próprio pode ser aberto pelo avatar do Header,
   pelo ProfileSummary da lateral (prop "to") e pelo cartão das configurações.
 
 COMPONENTES DE POSTS — src/components/post/
@@ -457,9 +472,9 @@ FLUXO DE CRIAÇÃO DE CONTA
                    -> ReportPopup.jsx (denúncia da resposta)
 
   As chamadas de posts ficam em src/services/postService.js. Ainda usam os
-  mocks do FeedLayout (mockPosts.js e mockPostReplies.js) só Explorar e as
-  abas dos perfis. Feed, detalhe, Salvos, criar dúvidas e respostas,
-  curtir, salvar e denunciar já usam a API.
+  mocks do FeedLayout (mockPosts.js e mockPostReplies.js) só em Explorar.
+  Feed, detalhe, Salvos, perfis, criar dúvidas e respostas, curtir, salvar,
+  denunciar e seguir já usam a API.
 
   Apagar dúvidas e respostas não aparece no app, por decisão do projeto. O
   backend já tem DELETE /api/posts/{id} e DELETE /api/comments/{id} (o autor

@@ -15,7 +15,7 @@ const initialState = {
 // estável (useCallback): quando ela muda (ex.: outro filtro), a lista é
 // trocada pela página 0 da nova busca assim que ela chegar. Para limpar a
 // lista na hora, dê uma key nova ao componente que usa o hook.
-export function usePaginatedPosts(fetchPage) {
+export function usePaginatedPosts(fetchPage, errorFallback = 'Não foi possível carregar as dúvidas.') {
   const [state, setState] = useState(initialState)
   // Identifica a requisição mais recente, para descartar respostas atrasadas.
   const requestRef = useRef(0)
@@ -44,9 +44,9 @@ export function usePaginatedPosts(fetchPage) {
     setState((current) => ({
       ...current,
       isLoading: false,
-      error: getApiErrorMessage(error, 'Não foi possível carregar as dúvidas.'),
+      error: getApiErrorMessage(error, errorFallback),
     }))
-  }, [])
+  }, [errorFallback])
 
   const fetchAndStore = useCallback(
     (page) => {

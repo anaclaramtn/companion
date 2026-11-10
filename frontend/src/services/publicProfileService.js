@@ -1,145 +1,62 @@
-import { mockRepliesByPost } from '../data/mockPostReplies.js'
-import { mockPostsResponse } from '../data/mockPosts.js'
-import {
-  mockCurrentUser,
-  mockPublicUsers,
-  mockUserFollowLists,
-  mockUserFollowStatuses,
-  mockUserSubjects,
-} from '../data/mockPublicUsers.js'
+import api from '../api/api.js'
+import { rememberUserName } from './userNames.js'
 
-const followStatuses = Object.fromEntries(
-  Object.entries(mockUserFollowStatuses).map(([userId, status]) => [
-    userId,
-    { ...status },
-  ]),
-)
-const followLists = Object.fromEntries(
-  Object.entries(mockUserFollowLists).map(([userId, lists]) => [
-    userId,
-    {
-      followers: [...lists.followers],
-      following: [...lists.following],
-    },
-  ]),
-)
+// Perfis de estudantes e seguidores, vindos do banco.
 
-function mockResponse(value) {
-  return new Promise((resolve) => {
-    window.setTimeout(() => resolve(value), 180)
-  })
-}
-
-function pageResponse(content, page = 0, size = 10, totalElements = content.length) {
-  return {
-    content,
-    page,
-    size,
-    totalElements,
-    totalPages: Math.ceil(totalElements / size),
-    first: page === 0,
-    last: true,
-  }
-}
-
-function getUserSummary(userId) {
-  const user = [mockCurrentUser, ...mockPublicUsers].find(
-    (item) => item.id === Number(userId),
-  )
-  if (!user) return null
-  return {
-    id: user.id,
-    name: user.name,
-    username: user.username,
-    avatarUrl: user.avatarUrl,
-  }
-}
-
-function getRelationPage(userId, relation, { page = 0, size = 20 } = {}) {
-  const userIds = followLists[userId]?.[relation] ?? []
-  const users = userIds.map(getUserSummary).filter(Boolean)
-  const content = users.slice(page * size, (page + 1) * size)
-  return mockResponse(pageResponse(content, page, size, users.length))
-}
-
+// Perfil público: { id, name, username, avatarUrl, bio, courseId, course,
+// universityId, university, semester, postCount, commentCount,
+// followerCount, followingCount, createdAt }.
 export async function getUserById(userId) {
-  const user = mockPublicUsers.find((item) => item.id === Number(userId))
-  if (!user) throw new Error('Este perfil não foi encontrado.')
-  return mockResponse(user)
+  const response = await api.get(`/users/${userId}`)
+  rememberUserName(response.data)
+  return response.data
 }
 
-export function getUserSubjects(userId) {
-  return mockResponse(mockUserSubjects[userId] ?? [])
+// Disciplinas do perfil: lista de { id, subject: { id, code, name }, interestType }.
+export async function getUserSubjects(userId) {
+  const response = await api.get(`/users/${userId}/subjects`)
+  return response.data
 }
 
-export function getPostsByAuthorId(userId, { page = 0, size = 10 } = {}) {
-  const posts = mockPostsResponse.content
-    .filter((post) => post.author.id === Number(userId))
-    .map(({ savedByCurrentUser: _savedByCurrentUser, ...post }) => post)
-  return mockResponse(pageResponse(posts, page, size))
+// Respostas do usuário, das mais novas para as mais antigas, 10 por página.
+// Cada uma traz postId e postTitle da dúvida respondida.
+export async function getUserComments(userId, { page = 0, size = 10 } = {}) {
+  const response = await api.get(`/users/${userId}/comments`, { params: { page, size } })
+  return response.data
 }
 
-export function getUserComments(userId, { page = 0, size = 10 } = {}) {
-  const postsById = new Map(
-    mockPostsResponse.content.map((post) => [post.id, post]),
-  )
-  const comments = Object.values(mockRepliesByPost)
-    .flat()
-    .filter((reply) => reply.author.id === Number(userId))
-    .map((reply) => ({
-      id: reply.id,
-      postId: reply.postId,
-      postTitle: postsById.get(reply.postId)?.title ?? '',
-      author: reply.author,
-      content: reply.content,
-      createdAt: reply.createdAt,
-      ownedByCurrentUser: reply.author.id === 0,
-    }))
-  return mockResponse(pageResponse(comments, page, size))
+// { userId, followedByCurrentUser, followerCount, followingCount }.
+export async function getUserFollowStatus(userId) {
+  const response = await api.get(`/users/${userId}/follow-status`)
+  return response.data
 }
 
-export function getUserFollowStatus(userId) {
-  const status = followStatuses[userId] ?? {
-    userId: Number(userId),
-    followedByCurrentUser: false,
-    followerCount: 0,
-    followingCount: 0,
-  }
-  return mockResponse({ ...status })
+// Listas de seguidores e de seguidos (resumos { id, name, username,
+// avatarUrl }). A API entrega no máximo 50 por página.
+export async function getUserFollowers(userId, { page = 0, size = 50 } = {}) {
+  const response = await api.get(`/users/${userId}/followers`, { params: { page, size } })
+  return response.data
 }
 
-export function getUserFollowers(userId, options = {}) {
-  return getRelationPage(userId, 'followers', options)
+export async function getUserFollowing(userId, { page = 0, size = 50 } = {}) {
+  const response = await api.get(`/users/${userId}/following`, { params: { page, size } })
+  return response.data
 }
 
-export function getUserFollowing(userId, options = {}) {
-  return getRelationPage(userId, 'following', options)
-}
-
+// Segue e devolve o novo estado. Se já seguia (409, ex.: em outra aba),
+// basta ler o estado atual.
 export async function followUser(userId) {
-  const status = followStatuses[userId]
-  if (status && !status.followedByCurrentUser) {
-    status.followedByCurrentUser = true
-    status.followerCount += 1
-    const followers = followLists[userId]?.followers
-    if (followers && !followers.includes(mockCurrentUser.id)) {
-      followers.unshift(mockCurrentUser.id)
-    }
+  try {
+    const response = await api.post(`/users/${userId}/follow`)
+    return response.data
+  } catch (error) {
+    if (error.response?.status !== 409) throw error
+    return getUserFollowStatus(userId)
   }
-  return mockResponse(status ? { ...status } : undefined)
 }
 
+// Deixa de seguir e devolve o novo estado (a API responde sem corpo).
 export async function unfollowUser(userId) {
-  const status = followStatuses[userId]
-  if (status?.followedByCurrentUser) {
-    status.followedByCurrentUser = false
-    status.followerCount = Math.max(0, status.followerCount - 1)
-    const followers = followLists[userId]?.followers
-    if (followers) {
-      followLists[userId].followers = followers.filter(
-        (followerId) => followerId !== mockCurrentUser.id,
-      )
-    }
-  }
-  return mockResponse(undefined)
+  await api.delete(`/users/${userId}/follow`)
+  return getUserFollowStatus(userId)
 }

@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router'
 import 'bootstrap-icons/font/bootstrap-icons.css'
 import Background from '../../components/common/Background.jsx'
@@ -21,9 +21,10 @@ import {
   setPostSaved,
 } from '../../services/postService.js'
 import { getMySubjects } from '../../services/profileService.js'
+import { getUserById } from '../../services/publicProfileService.js'
 
-// Contadores do perfil que GET /users/me não devolve. Ficam zerados até a
-// integração de seguidores e de posts.
+// Contadores do perfil que GET /users/me não devolve. Ficam zerados até o
+// perfil público da conta (GET /users/{id}) responder.
 const profileCountDefaults = {
   postCount: 0,
   commentCount: 0,
@@ -53,7 +54,39 @@ function FeedLayout() {
   // Edições feitas em "Editar perfil" e na troca de username. Essas telas
   // ainda são simuladas, então as mudanças ficam só aqui e somem no F5.
   const [profileEdits, setProfileEdits] = useState(null)
-  const currentUser = { ...profileCountDefaults, ...user, ...profileEdits }
+  // Seguidores, seguidos, posts e respostas da conta, para a lateral.
+  const [myCounts, setMyCounts] = useState(null)
+  const currentUser = { ...profileCountDefaults, ...user, ...profileEdits, ...myCounts }
+
+  const userId = user?.id
+  useEffect(() => {
+    if (userId == null) return undefined
+    let active = true
+    getUserById(userId)
+      .then((profile) => {
+        if (!active) return
+        setMyCounts({
+          postCount: profile.postCount,
+          commentCount: profile.commentCount,
+          followerCount: profile.followerCount,
+          followingCount: profile.followingCount,
+        })
+      })
+      // Sem os números, a lateral só continua mostrando zero.
+      .catch(() => {})
+    return () => {
+      active = false
+    }
+  }, [userId])
+
+  // Seguir ou deixar de seguir alguém muda o "seguindo" da conta.
+  const handleFollowingChange = useCallback((delta) => {
+    setMyCounts((counts) =>
+      counts
+        ? { ...counts, followingCount: Math.max(0, counts.followingCount + delta) }
+        : counts,
+    )
+  }, [])
   // As disciplinas do usuário chegam com a integração de disciplinas.
   const [currentUserSubjects, setCurrentUserSubjects] = useState([])
   const [posts, setPosts] = useState(mockPostsResponse.content)
@@ -255,12 +288,13 @@ function FeedLayout() {
                 onLikePost: likePost,
                 onSavePost: savePost,
                 onReportItem: reportItem,
-                // PROVISÓRIO: ações sobre os posts falsos de Explorar e dos
-                // perfis; saem quando essas telas forem integradas.
+                // PROVISÓRIO: ações sobre os posts falsos de Explorar; saem
+                // quando essa tela for integrada.
                 onLikeChange: handleLikeChange,
                 onSaveChange: handleSaveChange,
                 onReport: handleReport,
                 feedRefreshKey,
+                onFollowingChange: handleFollowingChange,
               }}
             />
           </main>

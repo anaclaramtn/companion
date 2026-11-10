@@ -1,4 +1,4 @@
-import { mockPublicUsers } from '../data/mockPublicUsers.js'
+import { getRememberedUserName } from '../services/userNames.js'
 
 // Nome de cada tela, usado no link "Voltar" para dizer para onde ele leva.
 // Ao criar uma rota nova em App.jsx, adicione o nome dela aqui.
@@ -23,9 +23,9 @@ export function getRouteLabel(pathname) {
 
   const userMatch = pathname.match(/^\/feed\/users\/(\d+)$/)
   if (userMatch) {
-    // Enquanto não há API, o nome vem dos dados de exemplo.
-    const user = mockPublicUsers.find((item) => item.id === Number(userMatch[1]))
-    return user ? `Perfil de ${user.name}` : 'Perfil'
+    // Nome de quem já apareceu na sessão (perfil aberto ou link clicado).
+    const name = getRememberedUserName(userMatch[1])
+    return name ? `Perfil de ${name}` : 'Perfil'
   }
 
   return 'Voltar'

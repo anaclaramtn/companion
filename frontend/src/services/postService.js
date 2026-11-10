@@ -66,6 +66,14 @@ export async function getSavedPosts({ page = 0 } = {}) {
   return response.data
 }
 
+// Dúvidas curtidas pela conta, das curtidas mais recentemente para as mais antigas.
+export async function getLikedPosts({ page = 0 } = {}) {
+  const response = await api.get('/users/me/liked-posts', {
+    params: { page, size: POSTS_PAGE_SIZE },
+  })
+  return response.data
+}
+
 // Motivos de denúncia: o id é o valor do enum ReportReason do backend.
 export const REPORT_REASONS = [
   { id: 'SPAM', label: 'Spam' },
