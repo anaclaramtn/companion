@@ -29,6 +29,7 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.matchesPattern;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -356,6 +357,11 @@ class CompanionApiIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.avatarUrl").doesNotExist());
         verify(cloudinaryAvatarService).deleteAvatar(userId);
+
+        // Excluir a conta também apaga a foto guardada no Cloudinary.
+        mockMvc.perform(delete("/api/users/me").header("Authorization", bearer(token)))
+                .andExpect(status().isNoContent());
+        verify(cloudinaryAvatarService, times(2)).deleteAvatar(userId);
     }
 
     @Test

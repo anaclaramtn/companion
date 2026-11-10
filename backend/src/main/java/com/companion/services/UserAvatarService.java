@@ -30,6 +30,13 @@ public class UserAvatarService {
         return userService.changeOwnAvatarUrl(avatarUrl);
     }
 
+    /** Exclui (anonimiza) a própria conta e apaga a foto guardada no Cloudinary. */
+    public void deleteOwnAccount() {
+        Long userId = authenticatedUserService.getCurrentUser().getId();
+        userService.deleteOwnAccount();
+        cloudinaryAvatarService.deleteAvatar(userId);
+    }
+
     public UserAccountResponseDTO removeOwnAvatar() {
         Long userId = authenticatedUserService.getCurrentUser().getId();
         UserAccountResponseDTO account = userService.changeOwnAvatarUrl(null);

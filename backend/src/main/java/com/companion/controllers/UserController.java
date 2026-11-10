@@ -55,7 +55,7 @@ public class UserController {
 
     @DeleteMapping("/me")
     public ResponseEntity<Void> deleteMyAccount() {
-        userService.deleteOwnAccount();
+        userAvatarService.deleteOwnAccount();
         return ResponseEntity.noContent().build();
     }
 

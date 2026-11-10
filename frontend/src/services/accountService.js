@@ -1,9 +1,4 @@
 import api from '../api/api.js'
-import { mockPublicUsers } from '../data/mockPublicUsers.js'
-
-// As demais operações da própria conta ainda são simuladas enquanto a API não
-// está integrada. As alterações ficam só em memória: recarregar a página
-// volta aos mocks.
 
 function mockResponse(value) {
   return new Promise((resolve) => {
@@ -23,57 +18,19 @@ export async function getMyAccount() {
 }
 
 // Envia ao e-mail da conta um link para criar uma nova senha.
-// Retorna o e-mail usado, para a tela informar ao usuário. O envio ainda é
-// simulado.
+// Retorna o e-mail usado, para a tela informar ao usuário. PROVISÓRIO: o
+// envio ainda é simulado, porque o backend precisa de um servidor de e-mail
+// configurado (MAIL_* no .env) para POST /api/auth/password/forgot.
 export function sendPasswordResetEmail(email) {
   return mockResponse({ email })
 }
 
-export function deleteMyAccount() {
-  return mockResponse(null)
+// Exclui a conta: o backend anonimiza os dados pessoais e apaga a foto.
+export async function deleteMyAccount() {
+  await api.delete('/users/me')
 }
 
+// Mesmo formato que o backend guarda: sem "@" e em minúsculas.
 export function normalizeUsername(username) {
   return username.trim().replace(/^@+/, '').toLowerCase()
-}
-
-// Troca o username da conta, verificando se já está em uso.
-export async function updateUsername(currentUser, newUsername) {
-  const username = normalizeUsername(newUsername)
-  const isTaken = mockPublicUsers.some(
-    (user) => user.id !== currentUser.id && user.username === username,
-  )
-
-  if (isTaken) {
-    await mockResponse(null)
-    throw new Error('Este username já está em uso. Escolha outro.')
-  }
-
-  return mockResponse({ ...currentUser, username })
-}
-
-export async function updateMyProfile(currentUser, currentSubjects, changes) {
-  const user = {
-    ...currentUser,
-    name: changes.name.trim(),
-    avatarUrl: changes.avatarUrl,
-    bio: changes.bio.trim(),
-    course: changes.course.trim(),
-    semester: changes.semester ? Number(changes.semester) : null,
-  }
-
-  // Mantém a proficiência das matérias que já estavam associadas.
-  const subjects = changes.subjects.map(({ subject, interestType }) => {
-    const existing = currentSubjects.find(
-      (item) => item.subject.id === subject.id,
-    )
-    return {
-      id: existing?.id ?? subject.id,
-      subject,
-      interestType,
-      proficiency: existing?.proficiency ?? 'INICIANTE',
-    }
-  })
-
-  return mockResponse({ user, subjects })
 }

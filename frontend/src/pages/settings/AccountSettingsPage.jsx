@@ -5,31 +5,42 @@ import ConfirmDialog from '../../components/common/ConfirmDialog.jsx'
 import PasswordResetCard from '../../components/user/PasswordResetCard.jsx'
 import UsernameCard from '../../components/user/UsernameCard.jsx'
 import { useAuth } from '../../hooks/useAuth.js'
+import { useToast } from '../../hooks/useToast.js'
 import { deleteMyAccount } from '../../services/accountService.js'
+import { getApiErrorMessage } from '../../services/apiError.js'
 
 const DELETE_CONFIRMATION_TEXT = 'EXCLUIR'
 
 function AccountSettingsPage() {
   const navigate = useNavigate()
-  const { currentUser, onProfileUpdate } = useOutletContext()
+  const { currentUser } = useOutletContext()
   const { logout } = useAuth()
+  const showToast = useToast()
 
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
   const [deleteConfirmation, setDeleteConfirmation] = useState('')
   const [isDeleting, setIsDeleting] = useState(false)
 
   const closeDeleteDialog = useCallback(() => {
+    if (isDeleting) return
     setIsDeleteOpen(false)
     setDeleteConfirmation('')
-  }, [])
+  }, [isDeleting])
 
+  // A API anonimiza a conta; depois a sessão é encerrada e o token apagado.
   async function handleDeleteAccount() {
     setIsDeleting(true)
-    await deleteMyAccount()
-    // A exclusão ainda é simulada em accountService; a sessão é encerrada de
-    // verdade para não deixar o token salvo no navegador.
-    logout()
-    navigate('/login', { replace: true })
+    try {
+      await deleteMyAccount()
+      logout()
+      navigate('/login', { replace: true })
+      showToast('Sua conta foi excluída.')
+    } catch (error) {
+      setIsDeleting(false)
+      showToast(getApiErrorMessage(error, 'Não foi possível excluir a conta. Tente novamente.'), {
+        type: 'error',
+      })
+    }
   }
 
   return (
@@ -47,7 +58,7 @@ function AccountSettingsPage() {
         </p>
       </div>
 
-      <UsernameCard currentUser={currentUser} onSaved={onProfileUpdate} />
+      <UsernameCard currentUser={currentUser} />
 
       <PasswordResetCard id="account-password" />
 

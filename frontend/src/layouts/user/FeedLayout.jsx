@@ -7,7 +7,6 @@ import MainNavigation from '../../components/common/MainNavigation.jsx'
 import PostComposerModal from '../../components/post/PostComposerModal.jsx'
 import ProfileSummary from '../../components/common/ProfileSummary.jsx'
 import { mockPostsResponse } from '../../data/mockPosts.js'
-import { mockSubjects } from '../../data/mockSubjects.js'
 import { mockRepliesByPost } from '../../data/mockPostReplies.js'
 import { useAuth } from '../../hooks/useAuth.js'
 import { useToast } from '../../hooks/useToast.js'
@@ -51,12 +50,10 @@ function authorSummary(user) {
 function FeedLayout() {
   const [isComposerOpen, setIsComposerOpen] = useState(false)
   const { user } = useAuth()
-  // Edições feitas em "Editar perfil" e na troca de username. Essas telas
-  // ainda são simuladas, então as mudanças ficam só aqui e somem no F5.
-  const [profileEdits, setProfileEdits] = useState(null)
-  // Seguidores, seguidos, posts e respostas da conta, para a lateral.
+  // Seguidores, seguidos, posts e respostas da conta, para a lateral. O resto
+  // vem do usuário da sessão, que Editar perfil e Configurações atualizam.
   const [myCounts, setMyCounts] = useState(null)
-  const currentUser = { ...profileCountDefaults, ...user, ...profileEdits, ...myCounts }
+  const currentUser = { ...profileCountDefaults, ...user, ...myCounts }
 
   const userId = user?.id
   useEffect(() => {
@@ -87,8 +84,6 @@ function FeedLayout() {
         : counts,
     )
   }, [])
-  // As disciplinas do usuário chegam com a integração de disciplinas.
-  const [currentUserSubjects, setCurrentUserSubjects] = useState([])
   const [posts, setPosts] = useState(mockPostsResponse.content)
   const [repliesByPost, setRepliesByPost] = useState(mockRepliesByPost)
   const [, setReports] = useState([])
@@ -219,26 +214,6 @@ function FeedLayout() {
     )
   }
 
-  // Atualiza o perfil e a autoria exibida nos posts e respostas da conta.
-  // subjects é opcional (ex.: a troca de username não altera as matérias).
-  function handleProfileUpdate(updatedUser, subjects) {
-    const author = authorSummary(updatedUser)
-    const withAuthor = (item) =>
-      item.author.id === updatedUser.id ? { ...item, author } : item
-
-    setProfileEdits(updatedUser)
-    if (subjects) setCurrentUserSubjects(subjects)
-    setPosts((currentPosts) => currentPosts.map(withAuthor))
-    setRepliesByPost((currentReplies) =>
-      Object.fromEntries(
-        Object.entries(currentReplies).map(([postId, replies]) => [
-          postId,
-          replies.map(withAuthor),
-        ]),
-      ),
-    )
-  }
-
   function handleReport(report) {
     setReports((currentReports) => [report, ...currentReports])
   }
@@ -279,9 +254,6 @@ function FeedLayout() {
                 repliesByPost,
                 currentUser,
                 currentUserId: currentUser.id,
-                currentUserSubjects,
-                subjects: mockSubjects,
-                onProfileUpdate: handleProfileUpdate,
                 reportReasons: REPORT_REASONS,
                 onCreateReply: handleCreateReply,
                 // Ações sobre posts do banco (feed, detalhe e Salvos).

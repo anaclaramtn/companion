@@ -185,18 +185,25 @@ COMPONENTES DE USUÁRIO — src/components/user/
     espaços largos (Editar perfil) e uma só em espaços estreitos (onboarding).
 
   Edição de perfil (src/pages/profile/EditProfilePage.jsx, rota
-  /perfil/editar): usa FormField e SubjectInterestPicker. A foto já usa a
-  API (updateAvatar/removeAvatar do useAuth, ao clicar em Salvar); o resto
-  salva por src/services/accountService.js (mock, só em memória). O FeedLayout guarda
-  currentUser e currentUserSubjects e fornece onProfileUpdate via Outlet
-  context, atualizando também a autoria dos posts e respostas da conta.
+  /perfil/editar): usa FormField e SubjectInterestPicker e salva tudo no
+  banco ao clicar em Salvar, nesta ordem: foto (updateAvatar/removeAvatar
+  do useAuth), nome/bio/curso/semestre (updateProfile do useAuth) e
+  disciplinas (replaceMySubjects). Universidade, curso e semestre são
+  listas do banco; os semestres seguem o totalSemesters do curso, e as
+  disciplinas mostradas são a grade do curso escolhido. Curso e semestre
+  não podem ser apagados, só trocados (o backend mantém o valor atual dos
+  campos não enviados). Nome até 64 e bio até 512 caracteres.
 
   UsernameCard.jsx
     Bloco para trocar o username (em Configurações da conta). Recebe
-    currentUser e onSaved(usuárioAtualizado). Converte para minúsculas e tira
-    o "@" ao digitar, valida o formato e salva por
-    accountService.updateUsername, que recusa username já em uso. Mostra um
-    toast ao salvar. O username não é editado em Editar perfil.
+    currentUser. Converte para minúsculas e tira o "@" ao digitar, aceita só
+    letras e números (3 a 30, como o backend) e salva com updateProfile do
+    useAuth; username em uso volta como erro da API. Mostra um toast ao
+    salvar. O username não é editado em Editar perfil.
+
+  Excluir conta (Configurações da conta): DELETE /api/users/me anonimiza
+  a conta e apaga a foto no Cloudinary; depois a sessão é encerrada.
+  "Alterar senha" ainda é simulado: precisa de servidor de e-mail.
 
   PasswordResetCard.jsx
     Bloco com o botão "Enviar link por e-mail" para alterar a senha com a
