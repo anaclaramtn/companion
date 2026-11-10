@@ -132,7 +132,7 @@ COMPONENTES COMUNS — src/components/common/
 
   FaqItem.jsx
     Pergunta expansível do FAQ, baseada em <details>. Recebe question e
-    answer. A lista de perguntas fica em src/data/mockFaqs.js.
+    answer. A FaqPage busca as perguntas em GET /api/faqs (faqService.js).
 
 COMPONENTES DE USUÁRIO — src/components/user/
 
@@ -200,6 +200,14 @@ COMPONENTES DE USUÁRIO — src/components/user/
     letras e números (3 a 30, como o backend) e salva com updateProfile do
     useAuth; username em uso volta como erro da API. Mostra um toast ao
     salvar. O username não é editado em Editar perfil.
+
+  RegistrationNumberCard.jsx
+    Bloco para cadastrar, trocar ou apagar a matrícula (em Configurações da
+    conta, abaixo do username). Recebe currentUser. Aceita até 30 letras,
+    números, ponto, hífen ou barra, guarda em maiúsculas e salva com
+    updateProfile do useAuth; vazio apaga e matrícula em uso volta como erro
+    da API. As regras ficam em accountService.js (getRegistrationNumberError),
+    usadas também na Etapa 3 do onboarding.
 
   Excluir conta (Configurações da conta): DELETE /api/users/me anonimiza
   a conta e apaga a foto no Cloudinary; depois a sessão é encerrada.
@@ -371,9 +379,9 @@ ROTAS (src/App.jsx)
   ser configurada como rota filha para ser apresentada pelo <Outlet />.
 
 DADOS (src/data/)
-  Só textos fixos das telas continuam aqui: mockFaqs.js (até o FAQ vir do
-  banco), mockSettingsOptions.js, mockSupport.js e mockTerms.js. Posts,
-  respostas, usuários e disciplinas vêm da API (src/services/); os arquivos
+  Só textos fixos das telas continuam aqui: mockSettingsOptions.js,
+  mockSupport.js e mockTerms.js. FAQ, posts, respostas, usuários e
+  disciplinas vêm da API (src/services/); os arquivos
   falsos desses dados foram apagados. Mantenha dados fora dos componentes
   visuais. A lista de motivos de denúncia continua sendo recebida por props
   (REPORT_REASONS em postService.js).
@@ -529,8 +537,9 @@ ARQUIVOS
 
 ONBOARDING INTEGRADO
   Etapa 1: nome e username.  Etapa 2: foto (Cloudinary).
-  Etapa 3: universidade, curso e semestre, vindos do banco; salva courseId e
-           semester. Os selects ficam desabilitados até a escolha anterior.
+  Etapa 3: universidade, curso e semestre, vindos do banco, e a matrícula
+           (opcional); salva courseId, semester e registrationNumber. Os
+           selects ficam desabilitados até a escolha anterior.
   Etapa 4: disciplinas da grade do curso escolhido (sem curso, todas); já
            abre com as que o usuário salvou e salva a lista inteira.
   Etapa 5: bio e conclusão do onboarding.

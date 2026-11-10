@@ -3,6 +3,7 @@ import { useNavigate, useOutletContext } from 'react-router'
 import BackLink from '../../components/common/BackLink.jsx'
 import ConfirmDialog from '../../components/common/ConfirmDialog.jsx'
 import PasswordResetCard from '../../components/user/PasswordResetCard.jsx'
+import RegistrationNumberCard from '../../components/user/RegistrationNumberCard.jsx'
 import UsernameCard from '../../components/user/UsernameCard.jsx'
 import { useAuth } from '../../hooks/useAuth.js'
 import { useToast } from '../../hooks/useToast.js'
@@ -54,11 +55,13 @@ function AccountSettingsPage() {
           Configurações da conta
         </h1>
         <p className="mt-1 text-sm text-companion-muted">
-          Gerencie seu username, sua senha e sua conta.
+          Gerencie seu username, sua matrícula, sua senha e sua conta.
         </p>
       </div>
 
       <UsernameCard currentUser={currentUser} />
+
+      <RegistrationNumberCard currentUser={currentUser} />
 
       <PasswordResetCard id="account-password" />
 

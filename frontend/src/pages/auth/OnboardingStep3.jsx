@@ -4,6 +4,11 @@ import AuthForm from '../../features/auth/components/AuthForm.jsx'
 import AuthLayout from '../../layouts/auth/AuthLayout.jsx'
 import { useAuth } from '../../hooks/useAuth.js'
 import { getCourses, getUniversities } from '../../services/academicService.js'
+import {
+  getRegistrationNumberError,
+  normalizeRegistrationNumber,
+  REGISTRATION_MAX_LENGTH,
+} from '../../services/accountService.js'
 import { getApiErrorMessage } from '../../services/apiError.js'
 
 const toFieldValue = (id) => (id == null ? '' : String(id))
@@ -16,6 +21,12 @@ function OnboardingStep3Page() {
   const [universityId, setUniversityId] = useState(toFieldValue(user?.universityId))
   const [courseId, setCourseId] = useState(toFieldValue(user?.courseId))
   const [semester, setSemester] = useState(toFieldValue(user?.semester))
+  const savedRegistration = user?.registrationNumber ?? ''
+  const [registration, setRegistration] = useState(savedRegistration)
+  const [registrationTouched, setRegistrationTouched] = useState(false)
+  const registrationError = registrationTouched
+    ? getRegistrationNumberError(registration)
+    : ''
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState('')
@@ -84,8 +95,19 @@ function OnboardingStep3Page() {
     event.preventDefault()
     if (isSubmitting) return
 
-    // Todos os campos são opcionais; sem curso, não há o que salvar.
-    if (!courseId) {
+    setRegistrationTouched(true)
+    if (getRegistrationNumberError(registration)) return
+
+    // Todos os campos são opcionais: só vai o que foi escolhido ou mudou.
+    // Sem semestre escolhido, o campo não vai e o backend mantém o atual.
+    const newRegistration = normalizeRegistrationNumber(registration)
+    const changes = {
+      ...(courseId && { courseId: Number(courseId) }),
+      ...(courseId && semester && { semester: Number(semester) }),
+      // Texto vazio apaga a matrícula salva.
+      ...(newRegistration !== savedRegistration && { registrationNumber: newRegistration }),
+    }
+    if (Object.keys(changes).length === 0) {
       setDone(true)
       return
     }
@@ -93,11 +115,7 @@ function OnboardingStep3Page() {
     setMessage('')
     setIsSubmitting(true)
     try {
-      await updateProfile({
-        courseId: Number(courseId),
-        // Sem semestre escolhido, o campo não vai e o backend mantém o atual.
-        ...(semester && { semester: Number(semester) }),
-      })
+      await updateProfile(changes)
       setDone(true)
     } catch (error) {
       setMessage(getApiErrorMessage(error, 'Não foi possível salvar seus dados. Tente novamente.'))
@@ -164,6 +182,22 @@ function OnboardingStep3Page() {
             value: semester,
             onChange: setSemester,
             disabled: !selectedCourse,
+          },
+          {
+            id: 'onboarding-registration',
+            name: 'registration',
+            label: 'Matrícula (opcional)',
+            type: 'text',
+            autoComplete: 'off',
+            placeholder: 'Ex.: 2510123',
+            value: registration,
+            error: registrationError,
+            helper: 'Fica visível só para você, em Configurações.',
+            onChange: (value) => {
+              setRegistration(value.slice(0, REGISTRATION_MAX_LENGTH))
+              setMessage('')
+            },
+            onBlur: () => setRegistrationTouched(true),
           },
         ]}
         submitLabel="Avançar"

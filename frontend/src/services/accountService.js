@@ -30,6 +30,27 @@ export async function deleteMyAccount() {
   await api.delete('/users/me')
 }
 
+// Matrícula: opcional, até 30 caracteres (como o backend) e única entre as
+// contas. O backend guarda em maiúsculas.
+export const REGISTRATION_MAX_LENGTH = 30
+
+export function normalizeRegistrationNumber(value) {
+  return value.trim().toUpperCase()
+}
+
+// Devolve a mensagem de erro da matrícula, ou '' se ela for válida (vazia
+// também é válida: a matrícula é opcional).
+export function getRegistrationNumberError(value) {
+  const registration = normalizeRegistrationNumber(value)
+  if (registration.length > REGISTRATION_MAX_LENGTH) {
+    return `A matrícula deve ter no máximo ${REGISTRATION_MAX_LENGTH} caracteres.`
+  }
+  if (registration && !/^[A-Z0-9./-]+$/.test(registration)) {
+    return 'Use só letras, números, ponto, hífen ou barra, sem espaços.'
+  }
+  return ''
+}
+
 // Mesmo formato que o backend guarda: sem "@" e em minúsculas.
 export function normalizeUsername(username) {
   return username.trim().replace(/^@+/, '').toLowerCase()
