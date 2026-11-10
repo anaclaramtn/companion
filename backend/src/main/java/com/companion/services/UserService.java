@@ -40,13 +40,15 @@ public class UserService {
     private final PostCommentRepository postCommentRepository;
     private final FollowRepository followRepository;
     private final CourseRepository courseRepository;
+    private final CloudinaryAvatarService cloudinaryAvatarService;
 
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder,
                        AuthenticatedUserService authenticatedUserService,
                        PostRepository postRepository,
                        PostCommentRepository postCommentRepository,
                        FollowRepository followRepository,
-                       CourseRepository courseRepository) {
+                       CourseRepository courseRepository,
+                       CloudinaryAvatarService cloudinaryAvatarService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.authenticatedUserService = authenticatedUserService;
@@ -54,6 +56,7 @@ public class UserService {
         this.postCommentRepository = postCommentRepository;
         this.followRepository = followRepository;
         this.courseRepository = courseRepository;
+        this.cloudinaryAvatarService = cloudinaryAvatarService;
     }
 
     @Transactional
@@ -124,6 +127,14 @@ public class UserService {
                 course,
                 request.semester()
         );
+        return toAccount(userRepository.save(user));
+    }
+
+    @Transactional
+    public UserAccountResponseDTO uploadOwnAvatar(org.springframework.web.multipart.MultipartFile file) {
+        User user = authenticatedUserService.getCurrentUser();
+        String avatarUrl = cloudinaryAvatarService.uploadAvatar(user.getId(), file);
+        user.updateAvatar(avatarUrl);
         return toAccount(userRepository.save(user));
     }
 

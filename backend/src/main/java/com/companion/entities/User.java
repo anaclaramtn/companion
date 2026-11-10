@@ -108,6 +108,10 @@ public class User {
         this.semester = semester;
     }
 
+    public void updateAvatar(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
+    }
+
     public void completeOnboarding() {
         if (onboardingCompletedAt == null) {
             onboardingCompletedAt = LocalDateTime.now();

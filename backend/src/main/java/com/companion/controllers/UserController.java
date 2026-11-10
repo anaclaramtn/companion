@@ -9,6 +9,8 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.MediaType;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,6 +33,11 @@ public class UserController {
     @PutMapping("/me/profile")
     public UserAccountResponseDTO updateMyProfile(@Valid @RequestBody UserProfileUpdateRequestDTO request) {
         return userService.updateOwnProfile(request);
+    }
+
+    @PutMapping(path = "/me/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public UserAccountResponseDTO uploadMyAvatar(@RequestPart("file") MultipartFile file) {
+        return userService.uploadOwnAvatar(file);
     }
 
     @PostMapping("/me/onboarding/complete")

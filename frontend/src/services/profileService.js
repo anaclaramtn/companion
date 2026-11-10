@@ -10,6 +10,13 @@ export async function updateRequiredProfile(profile) {
   return response.data
 }
 
+export async function uploadProfileAvatar(file) {
+  const formData = new FormData()
+  formData.append('file', file)
+  const response = await api.put('/users/me/avatar', formData)
+  return response.data
+}
+
 export async function completeOnboarding() {
   const response = await api.post('/users/me/onboarding/complete')
   return response.data

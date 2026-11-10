@@ -4,6 +4,7 @@ import { login as loginRequest, register as registerRequest } from '../services/
 import {
   completeOnboarding as completeOnboardingRequest,
   getCurrentUser,
+  uploadProfileAvatar,
   updateRequiredProfile,
 } from '../services/profileService.js'
 import { AuthContext } from './authContext.js'
@@ -109,6 +110,12 @@ export function AuthProvider({ children }) {
     return updatedUser
   }
 
+  async function updateAvatar(file) {
+    const updatedUser = await uploadProfileAvatar(file)
+    setSession((current) => current ? { ...current, user: updatedUser } : current)
+    return updatedUser
+  }
+
   async function completeOnboarding() {
     const updatedUser = await completeOnboardingRequest()
     setSession((current) => current ? { ...current, user: updatedUser } : current)
@@ -129,6 +136,7 @@ export function AuthProvider({ children }) {
     login,
     register,
     updateProfile,
+    updateAvatar,
     completeOnboarding,
     logout,
   }
