@@ -34,12 +34,7 @@ function PostCard({
   reportReasons = [],
   detailsHref,
   currentUserId = 0,
-  // onDelete(postId): mostra o botão de apagar para o autor da dúvida e,
-  // com canModerate, para a moderação. Sem onDelete, o botão não aparece.
-  onDelete,
-  canModerate = false,
 }) {
-  const canDelete = Boolean(onDelete) && (post.ownedByCurrentUser || canModerate)
   const [isLiked, setIsLiked] = useState(post.likedByCurrentUser)
   const [likeCount, setLikeCount] = useState(post.likeCount)
   const [isSaved, setIsSaved] = useState(post.savedByCurrentUser ?? false)
@@ -136,17 +131,6 @@ function PostCard({
               </span>
             )}
             <div className="ml-auto inline-flex items-center gap-4">
-              {canDelete && (
-                <button
-                  type="button"
-                  onClick={() => onDelete(post.id)}
-                  aria-label="Apagar publicação"
-                  title="Apagar publicação"
-                  className="text-companion-muted transition-colors hover:text-red-600"
-                >
-                  <i className="bi bi-trash" aria-hidden="true" />
-                </button>
-              )}
               <button
                 type="button"
                 onClick={toggleSaved}

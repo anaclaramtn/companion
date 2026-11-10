@@ -1,22 +1,18 @@
 import { useEffect, useState } from 'react'
-import { Outlet, useNavigate, useOutletContext, useParams } from 'react-router'
+import { Outlet, useOutletContext, useParams } from 'react-router'
 import BackLink from '../../components/common/BackLink.jsx'
 import { getApiErrorMessage } from '../../services/apiError.js'
-import { getPost, getPostReplies } from '../../services/postService.js'
+import { createReply, getPost, getPostReplies } from '../../services/postService.js'
 
 function PostDetailLayout() {
   const { postId } = useParams()
   const {
-    currentUser,
     reportReasons,
     onLikeChange,
     onSaveChange,
     onReport,
     currentUserId,
-    onDeletePost,
-    canModerate,
   } = useOutletContext()
-  const navigate = useNavigate()
   // A dúvida e as respostas vêm do banco a cada vez que o detalhe é aberto,
   // então o link funciona direto e também depois do F5.
   const [detail, setDetail] = useState({
@@ -56,29 +52,11 @@ function PostDetailLayout() {
   const isCurrent = detail.postId === postId
   const isLoading = !isCurrent || detail.isLoading
 
-  // PROVISÓRIO: a resposta ainda fica só na tela; o envio à API entra na
-  // integração das respostas.
-  function handleCreateReply(replyPostId, content) {
-    setDetail((current) => ({
-      ...current,
-      replies: [
-        {
-          id: `local-${Date.now()}`,
-          postId: replyPostId,
-          author: {
-            id: currentUser.id,
-            name: currentUser.name,
-            username: currentUser.username,
-            avatarUrl: currentUser.avatarUrl,
-          },
-          content,
-          createdAt: new Date().toISOString(),
-          ownedByCurrentUser: true,
-          reportedByCurrentUser: false,
-        },
-        ...current.replies,
-      ],
-    }))
+  // Salva a resposta e a coloca no topo da lista. Erros sobem para o
+  // PostReplyForm, que mostra a mensagem e mantém o texto digitado.
+  async function handleCreateReply(replyPostId, content) {
+    const reply = await createReply(replyPostId, content)
+    setDetail((current) => ({ ...current, replies: [reply, ...current.replies] }))
   }
 
   const post = isCurrent && detail.post
@@ -107,10 +85,6 @@ function PostDetailLayout() {
           onLikeChange,
           onSaveChange,
           onReport,
-          // Depois de apagar, volta ao feed (substituindo o detalhe no histórico).
-          onDelete: (deletedPostId) =>
-            onDeletePost(deletedPostId, () => navigate('/feed', { replace: true })),
-          canModerate,
         }}
       />
     </section>

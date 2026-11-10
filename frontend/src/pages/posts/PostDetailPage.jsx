@@ -15,8 +15,6 @@ function PostDetailPage() {
     currentUserId,
     isLoading,
     error,
-    onDelete,
-    canModerate,
   } = useOutletContext()
 
   if (isLoading || error) {
@@ -52,8 +50,6 @@ function PostDetailPage() {
         onLikeChange={onLikeChange}
         onSaveChange={onSaveChange}
         onReport={onReport}
-        onDelete={onDelete}
-        canModerate={canModerate}
         detailsHref={null}
       />
 

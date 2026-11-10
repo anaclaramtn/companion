@@ -20,8 +20,6 @@ function PostFeed() {
     onSaveChange,
     onReport,
     currentUserId,
-    onDeletePost,
-    canModerate,
   } = useOutletContext()
   const fetchPage = useCallback((page) => getPosts({ page }), [])
   const {
@@ -32,7 +30,6 @@ function PostFeed() {
     hasMore,
     loadMore,
     retry,
-    removePost,
   } = usePaginatedPosts(fetchPage)
   const isFirstLoad = isLoading && posts.length === 0
 
@@ -75,8 +72,6 @@ function PostFeed() {
               onLikeChange={onLikeChange}
               onSaveChange={onSaveChange}
               onReport={onReport}
-              onDelete={(postId) => onDeletePost(postId, () => removePost(postId))}
-              canModerate={canModerate}
               detailsHref={`/feed/posts/${post.id}`}
             />
           ))}

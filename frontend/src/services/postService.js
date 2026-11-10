@@ -27,21 +27,17 @@ export async function createPost({ title, content, subjectIds }) {
   return response.data
 }
 
-// O autor apaga a própria dúvida; moderação e administração apagam qualquer uma.
-export async function deletePost(postId) {
-  await api.delete(`/posts/${postId}`)
-}
-
 export async function getPost(postId) {
   const response = await api.get(`/posts/${postId}`)
   return response.data
 }
 
-// Respostas do post no formato do PostReplyCard, das mais novas para as mais
-// antigas (a API devolve na ordem inversa), como a tela sempre mostrou.
-export async function getPostReplies(postId) {
-  const response = await api.get(`/posts/${postId}/comments`)
-  return [...response.data].reverse().map((comment) => ({
+// Limite igual ao do backend (PostCommentCreateRequestDTO).
+export const REPLY_MAX_LENGTH = 256
+
+// Converte uma resposta da API para o formato do PostReplyCard.
+function toReply(comment) {
+  return {
     id: comment.id,
     postId: comment.postId,
     author: comment.author,
@@ -50,5 +46,17 @@ export async function getPostReplies(postId) {
     ownedByCurrentUser: comment.ownedByCurrentUser,
     // A API ainda não informa denúncias feitas pela conta.
     reportedByCurrentUser: false,
-  }))
+  }
+}
+
+// Respostas do post, das mais novas para as mais antigas (a API devolve na
+// ordem inversa), como a tela sempre mostrou.
+export async function getPostReplies(postId) {
+  const response = await api.get(`/posts/${postId}/comments`)
+  return [...response.data].reverse().map(toReply)
+}
+
+export async function createReply(postId, content) {
+  const response = await api.post(`/posts/${postId}/comments`, { content })
+  return toReply(response.data)
 }

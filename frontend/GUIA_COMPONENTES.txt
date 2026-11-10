@@ -219,10 +219,6 @@ COMPONENTES DE POSTS — src/components/post/
         o conteúdo não navega.
       onLikeChange(postId, liked)
       onSaveChange(postId, saved)
-      onDelete(postId): mostra a lixeira para o autor (post.ownedByCurrentUser)
-        e, com canModerate, para moderação/administração. O FeedLayout
-        fornece onDeletePost(postId, onDeleted), que confirma com o
-        ConfirmDialog, apaga pela API e só então chama onDeleted.
       reportReasons: opções de denúncia disponíveis para essa tela.
       onReport(report): callback após confirmar denúncia.
     As ações de curtir e salvar possuem estado visual local. Quando a
@@ -449,14 +445,20 @@ FLUXO DE CRIAÇÃO DE CONTA
                 -> PostCard.jsx (dúvida principal)
                    -> ReportPopup.jsx (denúncia da dúvida)
                 -> PostReplyForm.jsx (responde somente à dúvida principal;
-                   PROVISÓRIO: a resposta nova ainda fica só na tela)
+                   salva por POST /api/posts/{id}/comments e põe a resposta
+                   no topo; se falhar, mantém o texto e mostra o erro)
                 -> PostReplyCard.jsx (respostas sem opção de responder)
                    -> ReportPopup.jsx (denúncia da resposta)
 
   As chamadas de posts ficam em src/services/postService.js. Ainda usam os
   mocks do FeedLayout (mockPosts.js e mockPostReplies.js): curtir, salvar,
-  denunciar, Salvos, Explorar e as abas dos perfis. Criar e apagar dúvidas
-  já usam a API.
+  denunciar, Salvos, Explorar e as abas dos perfis. Criar dúvidas e
+  respostas já usa a API.
+
+  Apagar dúvidas e respostas não aparece no app, por decisão do projeto. O
+  backend já tem DELETE /api/posts/{id} e DELETE /api/comments/{id} (o autor
+  apaga o que é seu; moderação e administração apagam qualquer um; o item
+  só ganha deleted_at e some das listas) para uma versão futura.
 
   usePaginatedPosts(fetchPage)
     Hook para qualquer lista paginada de posts (feed, salvos, posts de um

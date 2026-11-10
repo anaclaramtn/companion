@@ -2,7 +2,6 @@ import { useCallback, useState } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router'
 import 'bootstrap-icons/font/bootstrap-icons.css'
 import Background from '../../components/common/Background.jsx'
-import ConfirmDialog from '../../components/common/ConfirmDialog.jsx'
 import FeedHeader from '../../components/common/Header.jsx'
 import MainNavigation from '../../components/common/MainNavigation.jsx'
 import PostComposerModal from '../../components/post/PostComposerModal.jsx'
@@ -17,7 +16,7 @@ import { useAuth } from '../../hooks/useAuth.js'
 import { useToast } from '../../hooks/useToast.js'
 import { getAllSubjects, getCourseSubjects } from '../../services/academicService.js'
 import { getApiErrorMessage } from '../../services/apiError.js'
-import { createPost, deletePost } from '../../services/postService.js'
+import { createPost } from '../../services/postService.js'
 import { getMySubjects } from '../../services/profileService.js'
 
 // Contadores do perfil que GET /users/me não devolve. Ficam zerados até a
@@ -66,10 +65,6 @@ function FeedLayout() {
   const [composerSubjectsError, setComposerSubjectsError] = useState('')
   // Muda a cada dúvida publicada para o feed recarregar a primeira página.
   const [feedRefreshKey, setFeedRefreshKey] = useState(0)
-  // Dúvida aguardando confirmação para ser apagada.
-  const [pendingDelete, setPendingDelete] = useState(null)
-  const [isDeleting, setIsDeleting] = useState(false)
-  const canModerate = ['MODERATOR', 'ADMIN'].includes(currentUser.role)
 
   const closeComposer = useCallback(() => {
     setIsComposerOpen(false)
@@ -107,31 +102,6 @@ function FeedLayout() {
     if (location.pathname !== '/feed') navigate('/feed')
   }
 
-  // Pede confirmação antes de apagar. onDeleted roda depois que a API apagar
-  // a dúvida, para a tela que pediu tirá-la da lista ou sair do detalhe.
-  function requestDeletePost(postId, onDeleted) {
-    setPendingDelete({ postId, onDeleted })
-  }
-
-  const cancelDeletePost = useCallback(() => {
-    if (!isDeleting) setPendingDelete(null)
-  }, [isDeleting])
-
-  async function confirmDeletePost() {
-    setIsDeleting(true)
-    try {
-      await deletePost(pendingDelete.postId)
-      showToast('Dúvida apagada.')
-      pendingDelete.onDeleted?.()
-      setPendingDelete(null)
-    } catch (error) {
-      showToast(getApiErrorMessage(error, 'Não foi possível apagar a dúvida.'), {
-        type: 'error',
-      })
-    } finally {
-      setIsDeleting(false)
-    }
-  }
 
   function handleCreateReply(postId, content) {
     const newReply = {
@@ -242,8 +212,6 @@ function FeedLayout() {
                 onSaveChange: handleSaveChange,
                 onReport: handleReport,
                 feedRefreshKey,
-                onDeletePost: requestDeletePost,
-                canModerate,
               }}
             />
           </main>
@@ -256,17 +224,6 @@ function FeedLayout() {
           subjectsError={composerSubjectsError}
           onClose={closeComposer}
           onSubmit={handleCreatePost}
-        />
-      )}
-      {pendingDelete && (
-        <ConfirmDialog
-          title="Apagar dúvida?"
-          description="A dúvida e as respostas dela deixam de aparecer para todos. Essa ação não pode ser desfeita."
-          confirmLabel="Apagar"
-          tone="danger"
-          isConfirming={isDeleting}
-          onConfirm={confirmDeletePost}
-          onCancel={cancelDeletePost}
         />
       )}
     </Background>
