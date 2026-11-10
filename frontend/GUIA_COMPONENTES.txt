@@ -430,18 +430,35 @@ FLUXO DE CRIAÇÃO DE CONTA
           denúncia e callbacks via Outlet context
        -> Outlet
           -> FeedPage.jsx
-             -> posts do Outlet context, inicializados por mockPosts.js
+             -> posts do banco (GET /api/posts), 10 por vez, pelo hook
+                src/hooks/usePaginatedPosts.js; LoadMoreTrigger.jsx carrega
+                a página seguinte ao rolar (ou pelo botão "Carregar mais")
              -> PostCard.jsx (um por publicação; abre o detalhe)
                 -> ReportPopup.jsx (motivos de denúncia fornecidos por props)
           -> PostDetailLayout.jsx
-             -> seleciona post e respostas pelo postId e fornece context
+             -> busca a dúvida (GET /api/posts/{id}) e as respostas
+                (GET /api/posts/{id}/comments) e fornece context
                 -> PostDetailPage.jsx
                 -> PostCard.jsx (dúvida principal)
                    -> ReportPopup.jsx (denúncia da dúvida)
-                -> PostReplyForm.jsx (responde somente à dúvida principal)
+                -> PostReplyForm.jsx (responde somente à dúvida principal;
+                   PROVISÓRIO: a resposta nova ainda fica só na tela)
                 -> PostReplyCard.jsx (respostas sem opção de responder)
                    -> ReportPopup.jsx (denúncia da resposta)
-                -> respostas mockadas em mockPostReplies.js
+
+  As chamadas de posts ficam em src/services/postService.js. Ainda usam os
+  mocks do FeedLayout (mockPosts.js e mockPostReplies.js): criar dúvida,
+  curtir, salvar, denunciar, Salvos, Explorar e as abas dos perfis.
+
+  usePaginatedPosts(fetchPage)
+    Hook para qualquer lista paginada de posts (feed, salvos, posts de um
+    autor). fetchPage(page) devolve a resposta paginada da API e deve vir de
+    useCallback. Devolve posts, totalElements, isLoading, error, hasMore,
+    loadMore e retry. Não repete posts quando as páginas se deslocam.
+
+  LoadMoreTrigger.jsx (src/components/common)
+    Fim de lista paginada: chama onLoadMore ao chegar perto da tela e mostra
+    um botão com o mesmo efeito. Recebe onLoadMore, isLoading e label.
 
 Use esse fluxo como referência para manter a separação entre composição de
 telas, estrutura de layout, componentes reutilizáveis e origem dos dados.

@@ -1,15 +1,23 @@
-import PostCard from '../../components/post/PostCard.jsx'
+import { useCallback } from 'react'
 import { useOutletContext } from 'react-router'
+import LoadMoreTrigger from '../../components/common/LoadMoreTrigger.jsx'
+import PostCard from '../../components/post/PostCard.jsx'
+import { usePaginatedPosts } from '../../hooks/usePaginatedPosts.js'
+import { getPosts } from '../../services/postService.js'
 
 function FeedPage() {
   const {
-    posts,
     reportReasons,
     onLikeChange,
     onSaveChange,
     onReport,
     currentUserId,
   } = useOutletContext()
+  // Feed vindo do banco, 10 dúvidas por vez, das mais novas para as mais antigas.
+  const fetchPage = useCallback((page) => getPosts({ page }), [])
+  const { posts, totalElements, isLoading, error, hasMore, loadMore, retry } =
+    usePaginatedPosts(fetchPage)
+  const isFirstLoad = isLoading && posts.length === 0
 
   return (
     <section aria-labelledby="feed-title">
@@ -20,12 +28,20 @@ function FeedPage() {
         >
           Dúvidas recentes
         </h1>
-        <span className="shrink-0 text-sm text-companion-muted">
-          {posts.length} dúvidas
-        </span>
+        {!isFirstLoad && !error && (
+          <span className="shrink-0 text-sm text-companion-muted">
+            {totalElements} {totalElements === 1 ? 'dúvida' : 'dúvidas'}
+          </span>
+        )}
       </div>
 
-      {posts.length === 0 ? (
+      {isFirstLoad ? (
+        <div className="grid min-h-[60vh] place-items-center text-center">
+          <p role="status" className="text-lg font-semibold text-companion-muted">
+            Carregando dúvidas...
+          </p>
+        </div>
+      ) : posts.length === 0 && !error ? (
         <div className="grid min-h-[60vh] place-items-center text-center">
           <p role="status" className="text-lg font-semibold text-companion-muted">
             Não há nenhum post ainda.
@@ -46,6 +62,27 @@ function FeedPage() {
             />
           ))}
         </div>
+      )}
+
+      {error ? (
+        <div role="alert" className="mt-4 flex flex-col items-center gap-3 py-4 text-center">
+          <p className="text-sm font-semibold text-red-700">{error}</p>
+          <button
+            type="button"
+            onClick={retry}
+            className="rounded-xl bg-companion-orange px-4 py-2 text-sm font-bold text-white transition hover:bg-companion-orange-hover"
+          >
+            Tentar de novo
+          </button>
+        </div>
+      ) : (
+        hasMore && posts.length > 0 && (
+          <LoadMoreTrigger
+            onLoadMore={loadMore}
+            isLoading={isLoading}
+            label="Carregar mais dúvidas"
+          />
+        )
       )}
     </section>
   )
