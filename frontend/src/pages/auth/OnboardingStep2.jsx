@@ -1,23 +1,16 @@
-import {useState} from 'react'
+import {useEffect, useState} from 'react'
 import {Link, Navigate} from 'react-router'
 import AuthForm from '../../features/auth/components/AuthForm.jsx'
 import AuthLayout from '../../layouts/auth/AuthLayout.jsx'
 import { useAuth } from '../../hooks/useAuth.js'
+import { useToast } from '../../hooks/useToast.js'
 import { getApiErrorMessage } from '../../services/apiError.js'
-
-function validatePhoto(file) {
-  if (!file) return ''
-
-  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-    return 'Escolha uma imagem JPG, PNG ou WEBP.'
-  }
-
-  if (file.size > 2 * 1024 * 1024) {
-    return 'A imagem deve ter no máximo 2 MB.'
-  }
-
-  return ''
-}
+import {
+  AVATAR_ACCEPT,
+  AVATAR_SIZE_MESSAGE,
+  getAvatarFileError,
+  isAvatarTooLargeError,
+} from '../../services/profileService.js'
 
 function DefaultAvatar() {
   return (
@@ -33,38 +26,61 @@ function DefaultAvatar() {
 }
 
 function OnboardingStep2Page() {
-  const { updateAvatar } = useAuth()
+  const { user, updateAvatar } = useAuth()
+  const showToast = useToast()
   const [photo, setPhoto] = useState(null)
-  const [preview, setPreview] = useState('')
-  const [submitted, setSubmitted] = useState(false)
+  // Endereço temporário (blob:) da foto escolhida, só para a pré-visualização.
+  const [preview, setPreview] = useState(null)
   const [done, setDone] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState('')
 
-  const photoError = submitted ? validatePhoto(photo) : ''
+  // Libera da memória a pré-visualização anterior ao trocar de foto ou sair.
+  useEffect(() => () => {
+    if (preview) URL.revokeObjectURL(preview)
+  }, [preview])
+
+  // Ao voltar para esta etapa, mostra a foto que já foi enviada.
+  const shownPhoto = preview ?? user?.avatarUrl
 
   function handleChoosePhoto(event) {
-    const file = event.target.files[0]
-
+    const file = event.target.files?.[0]
+    // Limpa o campo para que escolher o mesmo arquivo de novo dispare o onChange.
+    event.target.value = ''
     if (!file) return
 
+    const fileError = getAvatarFileError(file)
+    if (fileError) {
+      showToast(fileError, { type: 'error' })
+      return
+    }
+
+    setMessage('')
     setPhoto(file)
     setPreview(URL.createObjectURL(file))
   }
 
   async function handleSubmit(event) {
     event.preventDefault()
-    setSubmitted(true)
+    if (isSubmitting) return
 
-    if (validatePhoto(photo) || isSubmitting) return
+    // Sem foto nova, mantém a atual (ou a padrão) e segue.
+    if (!photo) {
+      setDone(true)
+      return
+    }
 
     setMessage('')
     setIsSubmitting(true)
     try {
-      if (photo) await updateAvatar(photo)
+      await updateAvatar(photo)
       setDone(true)
     } catch (error) {
-      setMessage(getApiErrorMessage(error, 'Não foi possível enviar sua foto. Tente novamente.'))
+      if (isAvatarTooLargeError(error)) {
+        showToast(AVATAR_SIZE_MESSAGE, { type: 'error' })
+      } else {
+        setMessage(getApiErrorMessage(error, 'Não foi possível enviar sua foto. Tente novamente.'))
+      }
     } finally {
       setIsSubmitting(false)
     }
@@ -122,9 +138,9 @@ function OnboardingStep2Page() {
               border: '4px solid #ffe6cc',
             }}
           >
-            {preview ? (
+            {shownPhoto ? (
               <img
-                src={preview}
+                src={shownPhoto}
                 alt="Sua foto"
                 style={{width: '100%', height: '100%', objectFit: 'cover'}}
               />
@@ -134,21 +150,20 @@ function OnboardingStep2Page() {
           </div>
 
           <label className="text-button" htmlFor="onboarding-photo">
-            Escolher foto
+            {shownPhoto ? 'Trocar foto' : 'Escolher foto'}
           </label>
           <input
             id="onboarding-photo"
             name="photo"
             type="file"
-            accept="image/jpeg,image/png,image/webp"
+            accept={AVATAR_ACCEPT}
             hidden
             onChange={handleChoosePhoto}
           />
 
-          {photoError && <p className="auth-field-error">{photoError}</p>}
-
           <p className="helper" style={{margin: '0.75rem 0 0', color: '#777783', fontSize: '0.85rem'}}>
-            Se você pular esta etapa, usaremos a imagem padrão de usuário.
+            JPG, PNG ou WEBP com até 2 MB. Se você pular esta etapa, usaremos a
+            imagem padrão de usuário.
           </p>
         </div>
       </AuthForm>

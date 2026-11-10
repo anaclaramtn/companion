@@ -97,11 +97,10 @@ public class User {
         updatedAt = LocalDateTime.now();
     }
 
-    public void updateProfile(String name, String username, String avatarUrl, String bio,
+    public void updateProfile(String name, String username, String bio,
                               String registrationNumber, Course course, Integer semester) {
         this.name = name;
         this.username = username;
-        this.avatarUrl = avatarUrl;
         this.bio = bio;
         this.registrationNumber = registrationNumber;
         this.course = course;

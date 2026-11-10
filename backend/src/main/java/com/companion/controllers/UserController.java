@@ -4,6 +4,7 @@ import com.companion.dtos.common.PageResponse;
 import com.companion.dtos.user.UserAccountResponseDTO;
 import com.companion.dtos.user.UserProfileUpdateRequestDTO;
 import com.companion.dtos.user.UserPublicResponseDTO;
+import com.companion.services.UserAvatarService;
 import com.companion.services.UserService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -20,9 +21,11 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserService userService;
+    private final UserAvatarService userAvatarService;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, UserAvatarService userAvatarService) {
         this.userService = userService;
+        this.userAvatarService = userAvatarService;
     }
 
     @GetMapping("/me")
@@ -37,7 +40,12 @@ public class UserController {
 
     @PutMapping(path = "/me/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public UserAccountResponseDTO uploadMyAvatar(@RequestPart("file") MultipartFile file) {
-        return userService.uploadOwnAvatar(file);
+        return userAvatarService.uploadOwnAvatar(file);
+    }
+
+    @DeleteMapping("/me/avatar")
+    public UserAccountResponseDTO removeMyAvatar() {
+        return userAvatarService.removeOwnAvatar();
     }
 
     @PostMapping("/me/onboarding/complete")
@@ -47,7 +55,7 @@ public class UserController {
 
     @DeleteMapping("/me")
     public ResponseEntity<Void> deleteMyAccount() {
-        userService.deleteOwnAccount();
+        userAvatarService.deleteOwnAccount();
         return ResponseEntity.noContent().build();
     }
 

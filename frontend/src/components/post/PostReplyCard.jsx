@@ -37,8 +37,9 @@ function PostReplyCard({
     setIsReportOpen(false)
   }, [])
 
-  function submitReport(report) {
-    onReport?.({
+  // Erros sobem para o ReportPopup, que continua aberto e mostra a mensagem.
+  async function submitReport(report) {
+    await onReport?.({
       ...report,
       targetType: 'reply',
       targetId: reply.id,
@@ -99,26 +100,29 @@ function PostReplyCard({
             {reply.content}
           </p>
 
-          <div className="mt-4 flex items-center justify-end text-sm">
-            <button
-              type="button"
-              onClick={() => setIsReportOpen(true)}
-              aria-label={isReported ? 'Resposta denunciada' : 'Denunciar resposta'}
-              aria-pressed={isReported}
-              disabled={isReported || reportReasons.length === 0}
-              className={`inline-flex items-center gap-2 transition-colors ${
-                isReported
-                  ? 'cursor-default text-companion-orange'
-                  : 'text-companion-muted hover:text-companion-orange'
-              }`}
-            >
-              <i
-                className={`bi ${isReported ? 'bi-flag-fill' : 'bi-flag'}`}
-                aria-hidden="true"
-              />
-              <span>{isReported ? 'Denunciada' : 'Denunciar'}</span>
-            </button>
-          </div>
+          {/* Ninguém denuncia a própria resposta (o backend também recusa). */}
+          {!reply.ownedByCurrentUser && (
+            <div className="mt-4 flex items-center justify-end text-sm">
+              <button
+                type="button"
+                onClick={() => setIsReportOpen(true)}
+                aria-label={isReported ? 'Resposta denunciada' : 'Denunciar resposta'}
+                aria-pressed={isReported}
+                disabled={isReported || reportReasons.length === 0}
+                className={`inline-flex items-center gap-2 transition-colors ${
+                  isReported
+                    ? 'cursor-default text-companion-orange'
+                    : 'text-companion-muted hover:text-companion-orange'
+                }`}
+              >
+                <i
+                  className={`bi ${isReported ? 'bi-flag-fill' : 'bi-flag'}`}
+                  aria-hidden="true"
+                />
+                <span>{isReported ? 'Denunciada' : 'Denunciar'}</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
       </article>

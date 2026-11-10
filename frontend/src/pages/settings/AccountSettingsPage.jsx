@@ -3,33 +3,45 @@ import { useNavigate, useOutletContext } from 'react-router'
 import BackLink from '../../components/common/BackLink.jsx'
 import ConfirmDialog from '../../components/common/ConfirmDialog.jsx'
 import PasswordResetCard from '../../components/user/PasswordResetCard.jsx'
+import RegistrationNumberCard from '../../components/user/RegistrationNumberCard.jsx'
 import UsernameCard from '../../components/user/UsernameCard.jsx'
 import { useAuth } from '../../hooks/useAuth.js'
+import { useToast } from '../../hooks/useToast.js'
 import { deleteMyAccount } from '../../services/accountService.js'
+import { getApiErrorMessage } from '../../services/apiError.js'
 
 const DELETE_CONFIRMATION_TEXT = 'EXCLUIR'
 
 function AccountSettingsPage() {
   const navigate = useNavigate()
-  const { currentUser, onProfileUpdate } = useOutletContext()
+  const { currentUser } = useOutletContext()
   const { logout } = useAuth()
+  const showToast = useToast()
 
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
   const [deleteConfirmation, setDeleteConfirmation] = useState('')
   const [isDeleting, setIsDeleting] = useState(false)
 
   const closeDeleteDialog = useCallback(() => {
+    if (isDeleting) return
     setIsDeleteOpen(false)
     setDeleteConfirmation('')
-  }, [])
+  }, [isDeleting])
 
+  // A API anonimiza a conta; depois a sessão é encerrada e o token apagado.
   async function handleDeleteAccount() {
     setIsDeleting(true)
-    await deleteMyAccount()
-    // A exclusão ainda é simulada em accountService; a sessão é encerrada de
-    // verdade para não deixar o token salvo no navegador.
-    logout()
-    navigate('/login', { replace: true })
+    try {
+      await deleteMyAccount()
+      logout()
+      navigate('/login', { replace: true })
+      showToast('Sua conta foi excluída.')
+    } catch (error) {
+      setIsDeleting(false)
+      showToast(getApiErrorMessage(error, 'Não foi possível excluir a conta. Tente novamente.'), {
+        type: 'error',
+      })
+    }
   }
 
   return (
@@ -43,11 +55,13 @@ function AccountSettingsPage() {
           Configurações da conta
         </h1>
         <p className="mt-1 text-sm text-companion-muted">
-          Gerencie seu username, sua senha e sua conta.
+          Gerencie seu username, sua matrícula, sua senha e sua conta.
         </p>
       </div>
 
-      <UsernameCard currentUser={currentUser} onSaved={onProfileUpdate} />
+      <UsernameCard currentUser={currentUser} />
+
+      <RegistrationNumberCard currentUser={currentUser} />
 
       <PasswordResetCard id="account-password" />
 

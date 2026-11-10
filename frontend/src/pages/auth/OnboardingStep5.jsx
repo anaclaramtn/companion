@@ -5,7 +5,8 @@ import AuthLayout from '../../layouts/auth/AuthLayout.jsx'
 import { useAuth } from '../../hooks/useAuth.js'
 import { getApiErrorMessage } from '../../services/apiError.js'
 
-const MAX_BIO = 200
+// Mesmo limite do backend (UserProfileUpdateRequestDTO).
+const MAX_BIO = 512
 
 function validateBio(value) {
   if (value.length > MAX_BIO) {
@@ -18,7 +19,8 @@ function validateBio(value) {
 function OnboardingStep5Page() {
   const navigate = useNavigate()
   const { user, updateProfile, completeOnboarding } = useAuth()
-  const [bio, setBio] = useState('')
+  // Começa com a bio já salva, para quem volta a esta etapa.
+  const [bio, setBio] = useState(user?.bio ?? '')
   const [bioTouched, setBioTouched] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -32,10 +34,14 @@ function OnboardingStep5Page() {
     setMessage('')
     setIsSubmitting(true)
     try {
-      if (saveBio && bio.trim()) {
-        await updateProfile({ name: user.name, username: user.username, bio: bio.trim() })
+      // Só envia a bio se ela mudou. Texto vazio apaga a bio salva.
+      const newBio = bio.trim()
+      if (saveBio && newBio !== (user?.bio ?? '')) {
+        await updateProfile({ bio: newBio })
       }
       await completeOnboarding()
+      // Fim da criação de perfil: substitui o histórico para que "voltar" no
+      // navegador não leve de novo às etapas depois de entrar no feed.
       navigate('/feed', { replace: true })
     } catch (error) {
       setMessage(getApiErrorMessage(error, 'Não foi possível concluir esta etapa. Tente novamente.'))
@@ -52,9 +58,6 @@ function OnboardingStep5Page() {
 
     finishOnboarding(true)
   }
-
-  // Fim da criação de perfil: substitui o histórico para que "voltar" no
-  // navegador não leve de novo às etapas depois de entrar no feed.
 
   return (
     <AuthLayout>

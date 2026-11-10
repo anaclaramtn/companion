@@ -40,15 +40,13 @@ public class UserService {
     private final PostCommentRepository postCommentRepository;
     private final FollowRepository followRepository;
     private final CourseRepository courseRepository;
-    private final CloudinaryAvatarService cloudinaryAvatarService;
 
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder,
                        AuthenticatedUserService authenticatedUserService,
                        PostRepository postRepository,
                        PostCommentRepository postCommentRepository,
                        FollowRepository followRepository,
-                       CourseRepository courseRepository,
-                       CloudinaryAvatarService cloudinaryAvatarService) {
+                       CourseRepository courseRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.authenticatedUserService = authenticatedUserService;
@@ -56,7 +54,6 @@ public class UserService {
         this.postCommentRepository = postCommentRepository;
         this.followRepository = followRepository;
         this.courseRepository = courseRepository;
-        this.cloudinaryAvatarService = cloudinaryAvatarService;
     }
 
     @Transactional
@@ -95,45 +92,49 @@ public class UserService {
         return PageResponse.from(result);
     }
 
+    /**
+     * Atualização parcial: só muda os campos enviados. Assim cada etapa do
+     * onboarding pode salvar a sua parte sem apagar o que as outras salvaram.
+     */
     @Transactional
     public UserAccountResponseDTO updateOwnProfile(UserProfileUpdateRequestDTO request) {
         User user = authenticatedUserService.getCurrentUser();
-        String username = normalizeUsername(request.username());
-        String registration = normalizeRegistrationNumber(request.registrationNumber());
+        String name = request.name() == null ? user.getName() : request.name().trim();
+        String username = request.username() == null
+                ? user.getUsername()
+                : normalizeUsername(request.username());
+        String bio = request.bio() == null ? user.getBio() : normalizeOptionalText(request.bio());
+        String registration = request.registrationNumber() == null
+                ? user.getRegistrationNumber()
+                : normalizeRegistrationNumber(request.registrationNumber());
 
-        if (userRepository.existsByUsernameIgnoreCaseAndIdNot(username, user.getId())) {
+        if (request.username() != null
+                && userRepository.existsByUsernameIgnoreCaseAndIdNot(username, user.getId())) {
             throw new DuplicateResourceException("O username já está em uso");
         }
-        if (registration != null
+        if (request.registrationNumber() != null && registration != null
                 && userRepository.existsByRegistrationNumberIgnoreCaseAndIdNot(registration, user.getId())) {
             throw new DuplicateResourceException("A matrícula já está em uso");
         }
 
-        Course course = null;
+        Course course = user.getCourse();
         if (request.courseId() != null) {
             course = courseRepository.findById(request.courseId())
                     .orElseThrow(() -> new ResourceNotFoundException("Curso não encontrado"));
-            if (request.semester() != null && request.semester() > course.getTotalSemesters()) {
-                throw new BadRequestException("O curso tem apenas " + course.getTotalSemesters() + " semestres");
-            }
+        }
+        Integer semester = request.semester() == null ? user.getSemester() : request.semester();
+        if (course != null && semester != null && semester > course.getTotalSemesters()) {
+            throw new BadRequestException("O curso tem apenas " + course.getTotalSemesters() + " semestres");
         }
 
-        user.updateProfile(
-                request.name().trim(),
-                username,
-                normalizeOptionalText(request.avatarUrl()),
-                normalizeOptionalText(request.bio()),
-                registration,
-                course,
-                request.semester()
-        );
+        user.updateProfile(name, username, bio, registration, course, semester);
         return toAccount(userRepository.save(user));
     }
 
+    /** Grava (ou apaga, com null) o endereço da foto. O envio da imagem fica em UserAvatarService. */
     @Transactional
-    public UserAccountResponseDTO uploadOwnAvatar(org.springframework.web.multipart.MultipartFile file) {
+    public UserAccountResponseDTO changeOwnAvatarUrl(String avatarUrl) {
         User user = authenticatedUserService.getCurrentUser();
-        String avatarUrl = cloudinaryAvatarService.uploadAvatar(user.getId(), file);
         user.updateAvatar(avatarUrl);
         return toAccount(userRepository.save(user));
     }

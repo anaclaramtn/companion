@@ -10,11 +10,56 @@ export async function updateRequiredProfile(profile) {
   return response.data
 }
 
+// Regras da foto de perfil, iguais às do backend (CloudinaryAvatarService).
+export const AVATAR_MAX_SIZE = 2 * 1024 * 1024
+export const AVATAR_ACCEPT = 'image/jpeg,image/png,image/webp'
+export const AVATAR_SIZE_MESSAGE =
+  'A foto deve ter no máximo 2 MB. Escolha uma imagem menor.'
+
+// Devolve a mensagem de erro do arquivo escolhido, ou '' se ele for válido.
+export function getAvatarFileError(file) {
+  if (!AVATAR_ACCEPT.split(',').includes(file.type)) {
+    return 'Use uma foto JPG, PNG ou WEBP.'
+  }
+  if (file.size > AVATAR_MAX_SIZE) return AVATAR_SIZE_MESSAGE
+  return ''
+}
+
+// A API responde 413 quando o arquivo passa de 2 MB.
+export function isAvatarTooLargeError(error) {
+  return error?.response?.status === 413
+}
+
 export async function uploadProfileAvatar(file) {
   const formData = new FormData()
   formData.append('file', file)
   const response = await api.put('/users/me/avatar', formData)
   return response.data
+}
+
+export async function removeProfileAvatar() {
+  const response = await api.delete('/users/me/avatar')
+  return response.data
+}
+
+// Disciplinas do perfil no formato do SubjectInterestPicker:
+// lista de { subject: { id, name }, interestType }.
+export async function getMySubjects() {
+  const response = await api.get('/users/me/subjects')
+  return response.data.map(({ subject, interestType }) => ({
+    subject: { id: subject.id, name: subject.name },
+    interestType,
+  }))
+}
+
+// Substitui todas as disciplinas do perfil pela lista enviada.
+export async function replaceMySubjects(subjects) {
+  await api.put('/users/me/subjects', {
+    subjects: subjects.map(({ subject, interestType }) => ({
+      subjectId: subject.id,
+      interestType,
+    })),
+  })
 }
 
 export async function completeOnboarding() {

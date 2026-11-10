@@ -15,9 +15,10 @@ function AuthField({
   helper,
   labelAction,
   trailing,
-  options, // para type 'select': lista de textos
+  options, // para type 'select': lista de textos ou de { value, label }
   rows, // para type 'textarea'
   maxLength, // para type 'textarea'
+  disabled = false,
 }) {
   const describedBy = [
     helper && `${id}-helper`,
@@ -29,6 +30,7 @@ function AuthField({
     name,
     value,
     required,
+    disabled,
     onChange: (event) => onChange(event.target.value),
     onBlur,
     'aria-invalid': Boolean(error),
@@ -50,9 +52,12 @@ function AuthField({
         {type === 'select' ? (
           <select {...controlProps}>
             {placeholder && <option value="">{placeholder}</option>}
-            {options.map((item) => (
-              <option key={item} value={item}>{item}</option>
-            ))}
+            {options.map((item) => {
+              const option = typeof item === 'string' ? { value: item, label: item } : item
+              return (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              )
+            })}
           </select>
         ) : type === 'textarea' ? (
           <textarea

@@ -132,7 +132,7 @@ COMPONENTES COMUNS — src/components/common/
 
   FaqItem.jsx
     Pergunta expansível do FAQ, baseada em <details>. Recebe question e
-    answer. A lista de perguntas fica em src/data/mockFaqs.js.
+    answer. A FaqPage busca as perguntas em GET /api/faqs (faqService.js).
 
 COMPONENTES DE USUÁRIO — src/components/user/
 
@@ -150,15 +150,27 @@ COMPONENTES DE USUÁRIO — src/components/user/
 
   ProfileSubjects.jsx
     Matérias do perfil em dois grupos: "Tenho dificuldade" (QUER_APRENDER) e
-    "Posso ajudar" (DOMINA). Recebe subjects no formato de mockUserSubjects.
+    "Posso ajudar" (DOMINA). Recebe subjects como GET /api/users/{id}/subjects
+    devolve: { id, subject: { id, code, name }, interestType }.
     Não renderiza nada quando a lista está vazia.
 
   ProfileActivityTabs.jsx
-    Abas "Posts" e "Respostas" de um perfil. Recebe posts, comments,
-    postCount e commentCount (opcionais; padrão é o tamanho das listas),
-    currentUserId, reportReasons, onLikeChange, onReport, emptyPostsText e
-    emptyCommentsText. Com likedPosts (e emptyLikedText), mostra também a aba
-    "Curtidos"; só o perfil próprio passa essa lista.
+    Abas "Posts" e "Respostas" de um perfil, vindas do banco: cada aba só
+    carrega quando é aberta, de 10 em 10 (GET /api/posts?authorId= e
+    GET /api/users/{id}/comments). Recebe userId, postCount, commentCount,
+    postActions (props repassadas a cada PostCard: currentUserId,
+    reportReasons, onLikeChange, onSaveChange, onReport) e os textos de lista
+    vazia. Com showLiked, mostra também a aba "Curtidos"
+    (GET /api/users/me/liked-posts); só o perfil próprio usa, porque a API
+    só lista as curtidas de quem está logado.
+
+  ProfileView.jsx
+    Tela de perfil completa, vinda do banco: ProfileHeader, ProfileSubjects,
+    ProfileActivityTabs e o UserListPopup de seguidores/seguindo (até 50).
+    Recebe userId; use com key={userId}. No próprio perfil mostra "Editar
+    perfil" e a aba "Curtidos"; nos outros, o botão Seguir, que grava pela
+    API e avisa o FeedLayout (onFollowingChange) para atualizar o "seguindo"
+    da lateral. As chamadas ficam em src/services/publicProfileService.js.
 
   SubjectInterestPicker.jsx
     Seleção das disciplinas do perfil em dois grupos ("Tenho dificuldade" e
@@ -173,17 +185,33 @@ COMPONENTES DE USUÁRIO — src/components/user/
     espaços largos (Editar perfil) e uma só em espaços estreitos (onboarding).
 
   Edição de perfil (src/pages/profile/EditProfilePage.jsx, rota
-  /perfil/editar): usa FormField e SubjectInterestPicker e salva por
-  src/services/accountService.js (mock, só em memória). O FeedLayout guarda
-  currentUser e currentUserSubjects e fornece onProfileUpdate via Outlet
-  context, atualizando também a autoria dos posts e respostas da conta.
+  /perfil/editar): usa FormField e SubjectInterestPicker e salva tudo no
+  banco ao clicar em Salvar, nesta ordem: foto (updateAvatar/removeAvatar
+  do useAuth), nome/bio/curso/semestre (updateProfile do useAuth) e
+  disciplinas (replaceMySubjects). Universidade, curso e semestre são
+  listas do banco; os semestres seguem o totalSemesters do curso, e as
+  disciplinas mostradas são a grade do curso escolhido. Curso e semestre
+  não podem ser apagados, só trocados (o backend mantém o valor atual dos
+  campos não enviados). Nome até 64 e bio até 512 caracteres.
 
   UsernameCard.jsx
     Bloco para trocar o username (em Configurações da conta). Recebe
-    currentUser e onSaved(usuárioAtualizado). Converte para minúsculas e tira
-    o "@" ao digitar, valida o formato e salva por
-    accountService.updateUsername, que recusa username já em uso. Mostra um
-    toast ao salvar. O username não é editado em Editar perfil.
+    currentUser. Converte para minúsculas e tira o "@" ao digitar, aceita só
+    letras e números (3 a 30, como o backend) e salva com updateProfile do
+    useAuth; username em uso volta como erro da API. Mostra um toast ao
+    salvar. O username não é editado em Editar perfil.
+
+  RegistrationNumberCard.jsx
+    Bloco para cadastrar, trocar ou apagar a matrícula (em Configurações da
+    conta, abaixo do username). Recebe currentUser. Aceita até 30 letras,
+    números, ponto, hífen ou barra, guarda em maiúsculas e salva com
+    updateProfile do useAuth; vazio apaga e matrícula em uso volta como erro
+    da API. As regras ficam em accountService.js (getRegistrationNumberError),
+    usadas também na Etapa 3 do onboarding.
+
+  Excluir conta (Configurações da conta): DELETE /api/users/me anonimiza
+  a conta e apaga a foto no Cloudinary; depois a sessão é encerrada.
+  "Alterar senha" ainda é simulado: precisa de servidor de e-mail.
 
   PasswordResetCard.jsx
     Bloco com o botão "Enviar link por e-mail" para alterar a senha com a
@@ -193,19 +221,24 @@ COMPONENTES DE USUÁRIO — src/components/user/
     Aparece em Configurações da conta e em Ajuda e suporte. A tela
     /recuperar-senha fica só para quem não está logado.
 
-  Curtidas e salvos: o FeedLayout guarda likedByCurrentUser/likeCount e
-  savedByCurrentUser no estado dos posts e fornece onLikeChange e
-  onSaveChange via Outlet context. Toda página que mostra PostCard deve
-  repassar os dois callbacks, para que curtir e salvar valham em todas as
-  telas (a tela Salvos, /salvos, lista os posts com savedByCurrentUser).
+  Curtidas, salvos e denúncias: o FeedLayout fornece via Outlet context
+  onLikePost, onSavePost e onReportItem, que gravam no banco e mostram um
+  toast. O PostCard muda a tela na hora do clique e, se a API falhar, volta
+  ao estado anterior; a contagem de curtidas vem da resposta da API. A tela
+  Salvos (/salvos) lista GET /api/users/me/saved-posts e tira da lista a
+  dúvida removida dos salvos. A bandeira de denúncia não aparece no que é
+  da própria conta.
 
   ProfileLink.jsx
     Link para o perfil de um usuário. Para a conta autenticada, leva a
-    /perfil; para os demais, a /feed/users/:userId.
+    /perfil; para os demais, a /feed/users/:userId. Ao clicar, guarda o nome
+    (src/services/userNames.js) para o "Voltar" da tela seguinte mostrar
+    "Perfil de Fulano".
 
   Perfil próprio (src/pages/profile/MyProfilePage.jsx, rota /perfil) e perfil
-  público (PublicProfilePage.jsx, rota /feed/users/:userId) usam os três
-  componentes acima. O perfil próprio pode ser aberto pelo avatar do Header,
+  público (PublicProfilePage.jsx, rota /feed/users/:userId) só renderizam o
+  ProfileView. A lateral (ProfileSummary) mostra os números de
+  GET /api/users/{id} da conta. O perfil próprio pode ser aberto pelo avatar do Header,
   pelo ProfileSummary da lateral (prop "to") e pelo cartão das configurações.
 
 COMPONENTES DE POSTS — src/components/post/
@@ -227,21 +260,27 @@ COMPONENTES DE POSTS — src/components/post/
     envia ao callback um objeto com reasonId, details, targetType e targetId.
 
   PostComposerModal.jsx
-    Formulário modal para criar uma dúvida. Recebe subjects (disciplinas
-    vindas da camada de dados/API), featuredSubjectIds (disciplinas exibidas
-    primeiro; o FeedLayout passa as do perfil), onClose e onSubmit. Cada
-    opção possui id (código, ex.: T390) e name; a seleção permite até 3
-    disciplinas, com busca por nome ou código e "Ver mais" para a lista
-    completa. O callback onSubmit recebe:
-      { title, content, subjectIds }
+    Formulário modal para criar uma dúvida. Recebe subjects (disciplinas do
+    banco; null enquanto carregam), subjectsError, featuredSubjectIds
+    (disciplinas exibidas primeiro; o FeedLayout passa as do perfil), onClose
+    e onSubmit. Cada opção possui id, code (ex.: T390) e name; a seleção
+    permite até 3 disciplinas, com busca por nome ou código e "Ver mais"
+    para a lista completa. Título até 128 e conteúdo até 256 caracteres,
+    como no backend. O callback onSubmit recebe { title, content, subjectIds }
+    e deve devolver uma Promise; se ela falhar, a janela mostra o erro da API
+    e mantém o texto. No FeedLayout, publicar fecha a janela, mostra um toast
+    e recarrega o feed (indo para /feed) com a dúvida nova no topo.
 
   ReportPopup.jsx
     Modal reutilizável de denúncia. Recebe:
-      reasons: lista da tabela auxiliar, com objetos { id, label }.
+      reasons: lista de objetos { id, label }; nas telas integradas é
+        REPORT_REASONS (postService.js), cujo id é o enum ReportReason.
       targetLabel: nome do item denunciado, exibido no título do modal.
       onClose: callback para fechar.
-      onSubmit: callback ao confirmar, recebe { reasonId, details }.
-    O campo de detalhes é opcional. O componente não define a lista de motivos:
+      onSubmit: callback ao confirmar, recebe { reasonId, details }; pode
+        devolver uma Promise, e se ela falhar a janela mostra o erro da API.
+    O campo de detalhes é opcional (até 1024 caracteres, como no backend).
+    O componente não define a lista de motivos:
     cada tela fornece as opções por props, permitindo usar tabelas diferentes
     para posts, respostas, perfis ou outras entidades.
 
@@ -331,30 +370,21 @@ LAYOUTS (src/layouts/)
   MainNavigation e ProfileSummary e renderiza a página da rota com <Outlet />.
   src/layouts/user/PostDetailLayout.jsx organiza a navegação de retorno e
   fornece à tela os dados da dúvida e das respostas via Outlet context. O
-  FeedLayout mantém os mocks e o estado local de posts, respostas e denúncias;
-  os callbacks atualizam esse estado durante o desenvolvimento.
+  FeedLayout fornece a conta (currentUser), as ações sobre dúvidas
+  (onLikePost, onSavePost, onReportItem), a janela "Postar dúvida" e os
+  números da lateral; cada tela busca os próprios dados na API.
 
 ROTAS (src/App.jsx)
   Associam caminhos a páginas e layouts. Uma página dentro de um layout deve
   ser configurada como rota filha para ser apresentada pelo <Outlet />.
 
 DADOS (src/data/)
-  Durante o desenvolvimento, mantenha dados de exemplo fora dos componentes
-  visuais.
-    mockPosts.js:
-      mockPostsResponse: resposta simulada paginada de publicações.
-      mockPostReportReasons: opções de denúncia para publicações e respostas.
-    mockSubjects.js:
-      mockSubjects: todas as disciplinas do curso, com id (código da
-        disciplina, ex.: T390), name e semester (null = optativa). É a única
-        fonte de disciplinas: posts, perfis, Explorar e formulários usam
-        esses códigos. getSubjectById(código) devolve a disciplina.
-    mockPostReplies.js:
-      mockRepliesByPost: respostas agrupadas pelo id da publicação.
-  Ao conectar o backend, substitua os mocks pela chamada apropriada em api/ ou
-  services/, preservando os contratos de dados usados pelos componentes. A
-  lista de motivos deve continuar sendo recebida por props e vir da tabela
-  auxiliar apropriada para cada tipo de alvo.
+  Só textos fixos das telas continuam aqui: mockSettingsOptions.js,
+  mockSupport.js e mockTerms.js. FAQ, posts, respostas, usuários e
+  disciplinas vêm da API (src/services/); os arquivos
+  falsos desses dados foram apagados. Mantenha dados fora dos componentes
+  visuais. A lista de motivos de denúncia continua sendo recebida por props
+  (REPORT_REASONS em postService.js).
 
 
 5. PADRÃO DE CÓDIGO
@@ -425,22 +455,52 @@ FLUXO DE CRIAÇÃO DE CONTA
        -> MainNavigation.jsx
        -> ProfileSummary.jsx
        -> PostComposerModal.jsx (aberto pelo botão "Postar dúvida")
-       -> mantém mocks/estado local e fornece posts, respostas, opções de
-          denúncia e callbacks via Outlet context
+       -> fornece via Outlet context a conta, os motivos de denúncia e as
+          ações onLikePost, onSavePost e onReportItem
        -> Outlet
           -> FeedPage.jsx
-             -> posts do Outlet context, inicializados por mockPosts.js
+             -> posts do banco (GET /api/posts), 10 por vez, pelo hook
+                src/hooks/usePaginatedPosts.js; LoadMoreTrigger.jsx carrega
+                a página seguinte ao rolar (ou pelo botão "Carregar mais")
              -> PostCard.jsx (um por publicação; abre o detalhe)
                 -> ReportPopup.jsx (motivos de denúncia fornecidos por props)
           -> PostDetailLayout.jsx
-             -> seleciona post e respostas pelo postId e fornece context
+             -> busca a dúvida (GET /api/posts/{id}) e as respostas
+                (GET /api/posts/{id}/comments) e fornece context
                 -> PostDetailPage.jsx
                 -> PostCard.jsx (dúvida principal)
                    -> ReportPopup.jsx (denúncia da dúvida)
-                -> PostReplyForm.jsx (responde somente à dúvida principal)
+                -> PostReplyForm.jsx (responde somente à dúvida principal;
+                   salva por POST /api/posts/{id}/comments e põe a resposta
+                   no topo; se falhar, mantém o texto e mostra o erro)
                 -> PostReplyCard.jsx (respostas sem opção de responder)
                    -> ReportPopup.jsx (denúncia da resposta)
-                -> respostas mockadas em mockPostReplies.js
+
+  As chamadas de posts ficam em src/services/postService.js. Feed, detalhe,
+  Salvos, perfis, Explorar, criar dúvidas e respostas, curtir, salvar,
+  denunciar e seguir usam a API.
+
+  Explorar (src/pages/search/ExplorePage.jsx, rota /explorar): o texto busca
+  dúvidas (GET /api/posts?query=) e estudantes (GET /api/users?query=, até
+  5), depois que a pessoa para de digitar; "#matéria" vira filtro por
+  matéria (subjectId; uma de cada vez, a nova substitui a anterior). "Assuntos
+  em alta" vem de GET /api/subjects/trending: as matérias com mais dúvidas
+  publicadas nos últimos 7 dias; clicar em uma filtra a busca por ela.
+
+  Apagar dúvidas e respostas não aparece no app, por decisão do projeto. O
+  backend já tem DELETE /api/posts/{id} e DELETE /api/comments/{id} (o autor
+  apaga o que é seu; moderação e administração apagam qualquer um; o item
+  só ganha deleted_at e some das listas) para uma versão futura.
+
+  usePaginatedPosts(fetchPage)
+    Hook para qualquer lista paginada de posts (feed, salvos, posts de um
+    autor). fetchPage(page) devolve a resposta paginada da API e deve vir de
+    useCallback. Devolve posts, totalElements, isLoading, error, hasMore,
+    loadMore e retry. Não repete posts quando as páginas se deslocam.
+
+  LoadMoreTrigger.jsx (src/components/common)
+    Fim de lista paginada: chama onLoadMore ao chegar perto da tela e mostra
+    um botão com o mesmo efeito. Recebe onLoadMore, isLoading e label.
 
 Use esse fluxo como referência para manter a separação entre composição de
 telas, estrutura de layout, componentes reutilizáveis e origem dos dados.
@@ -458,7 +518,32 @@ ARQUIVOS
   src/contexts/AuthContext.jsx
     Guarda a sessão (token + usuário) e expõe pelo hook useAuth():
       user, isAuthenticated, isRestoring, login, register, updateProfile,
-      completeOnboarding e logout.
+      updateAvatar, removeAvatar, completeOnboarding e logout.
+    updateProfile envia só os campos informados; os que ficam de fora não
+    mudam no backend (cada etapa do onboarding salva só a sua parte).
+  src/services/profileService.js
+    Chamadas de /api/users/me. Também guarda as regras da foto de perfil,
+    iguais às do backend: JPG, PNG ou WEBP com até 2 MB (getAvatarFileError).
+    Arquivo inválido mostra um toast na hora da escolha; se a API ainda assim
+    responder 413, a tela mostra o mesmo toast do limite de 2 MB.
+    getMySubjects e replaceMySubjects leem e substituem de uma vez as
+    disciplinas do perfil (PUT /api/users/me/subjects), no formato
+    { subject, interestType } do SubjectInterestPicker.
+  src/services/academicService.js
+    Catálogo do banco: universidades, cursos (com totalSemesters), grade do
+    curso e todas as disciplinas. Converte para o formato do
+    SubjectInterestPicker: { id, code, name, semester }, com semester null
+    para optativa e undefined quando não há grade (aparece em um só grupo).
+
+ONBOARDING INTEGRADO
+  Etapa 1: nome e username.  Etapa 2: foto (Cloudinary).
+  Etapa 3: universidade, curso e semestre, vindos do banco, e a matrícula
+           (opcional); salva courseId, semester e registrationNumber. Os
+           selects ficam desabilitados até a escolha anterior.
+  Etapa 4: disciplinas da grade do curso escolhido (sem curso, todas); já
+           abre com as que o usuário salvou e salva a lista inteira.
+  Etapa 5: bio e conclusão do onboarding.
+  Cada etapa salva só a sua parte; voltar e avançar não apaga as outras.
   src/components/common/RequireAuth.jsx
     Protege as rotas internas em App.jsx: sem sessão, manda para /login; com
     perfil incompleto, manda para /onboarding/etapa-1; enquanto a sessão está
