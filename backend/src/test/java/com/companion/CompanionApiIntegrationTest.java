@@ -3,7 +3,10 @@ package com.companion;
 import com.companion.entities.PasswordResetToken;
 import com.companion.entities.User;
 import com.companion.enums.UserRole;
+import com.companion.repositories.CourseRepository;
 import com.companion.repositories.PasswordResetTokenRepository;
+import com.companion.repositories.SubjectRepository;
+import com.companion.repositories.UniversityRepository;
 import com.companion.repositories.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +31,9 @@ class CompanionApiIntegrationTest {
     @Autowired MockMvc mockMvc;
     @Autowired UserRepository userRepository;
     @Autowired PasswordResetTokenRepository tokenRepository;
+    @Autowired UniversityRepository universityRepository;
+    @Autowired CourseRepository courseRepository;
+    @Autowired SubjectRepository subjectRepository;
 
     @Test
     void executesCriticalCrudAndSecurityFlows() throws Exception {
@@ -54,34 +60,95 @@ class CompanionApiIntegrationTest {
         userRepository.saveAndFlush(admin);
         String adminToken = login("anaclara", "Senha123");
 
+        // Catálogo acadêmico carregado na inicialização.
+        long universityId = universityRepository.findByAcronymIgnoreCase("UNIFOR").orElseThrow().getId();
+        long courseId = courseRepository.findByUniversityIdOrderByNameAsc(universityId).getFirst().getId();
+        long gradeSubjectId = subjectRepository.findByUniversityIdAndCodeIgnoreCase(universityId, "T390")
+                .orElseThrow().getId();
+        mockMvc.perform(get("/api/universities").header("Authorization", bearer(adminToken)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$[0].acronym").value("UNIFOR"));
+        mockMvc.perform(get("/api/universities/{id}/courses", universityId).header("Authorization", bearer(adminToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].name").value("Ciência da Computação"))
+                .andExpect(jsonPath("$[0].totalSemesters").value(8));
+        mockMvc.perform(get("/api/courses/{id}/subjects", courseId).header("Authorization", bearer(adminToken)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$", hasSize(75)))
+                .andExpect(jsonPath("$[0].semester").value(1))
+                .andExpect(jsonPath("$[74].semester").value(0));
+        mockMvc.perform(get("/api/subjects").header("Authorization", bearer(adminToken)).param("query", "t390"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].name").value("Estrutura de dados"));
+
+        mockMvc.perform(put("/api/users/me/profile").header("Authorization", bearer(adminToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Ana Clara\",\"username\":\"anaclara\",\"courseId\":" + courseId + ",\"semester\":9}"))
+                .andExpect(status().isBadRequest());
+        mockMvc.perform(put("/api/users/me/profile").header("Authorization", bearer(adminToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Ana Clara\",\"username\":\"anaclara\",\"registrationNumber\":\"2510123\","
+                                + "\"courseId\":" + courseId + ",\"semester\":4}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.courseId").value(courseId))
+                .andExpect(jsonPath("$.course").value("Ciência da Computação"))
+                .andExpect(jsonPath("$.university").value("Universidade de Fortaleza"))
+                .andExpect(jsonPath("$.semester").value(4))
+                .andExpect(jsonPath("$.registrationNumber").value("2510123"));
+        mockMvc.perform(put("/api/users/me/profile").header("Authorization", bearer(adminToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"" + "x".repeat(65) + "\",\"username\":\"anaclara\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.fieldErrors.name").value("O nome deve ter no máximo 64 caracteres"));
+
         long subjectId = extractId(mockMvc.perform(post("/api/subjects")
                         .header("Authorization", bearer(adminToken)).contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"Algoritmos\"}"))
-                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString());
+                        .content("{\"universityId\":" + universityId + ",\"code\":\"tst01\",\"name\":\"Algoritmos\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.code").value("TST01"))
+                .andReturn().getResponse().getContentAsString());
 
         mockMvc.perform(post("/api/subjects").header("Authorization", bearer(adminToken))
-                        .contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"ALGORITMOS\"}"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"universityId\":" + universityId + ",\"code\":\"TST01\",\"name\":\"Outra\"}"))
                 .andExpect(status().isConflict());
 
         mockMvc.perform(post("/api/users/me/subjects").header("Authorization", bearer(adminToken))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"subjectId\":" + subjectId + ",\"interestType\":\"DOMINA\",\"proficiency\":\"AVANCADO\"}"))
+                        .content("{\"subjectId\":" + subjectId + ",\"interestType\":\"DOMINA\"}"))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.subject.name").value("Algoritmos"));
+                .andExpect(jsonPath("$.subject.name").value("Algoritmos"))
+                .andExpect(jsonPath("$.proficiency").doesNotExist());
         mockMvc.perform(put("/api/users/me/subjects/{id}", subjectId).header("Authorization", bearer(adminToken))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"interestType\":\"QUER_APRENDER\",\"proficiency\":\"INTERMEDIARIO\"}"))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.proficiency").value("INTERMEDIARIO"));
+                        .content("{\"interestType\":\"QUER_APRENDER\"}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.interestType").value("QUER_APRENDER"));
 
         long postId = extractId(mockMvc.perform(post("/api/posts").header("Authorization", bearer(adminToken))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"subjectId\":" + subjectId + ",\"title\":\"Complexidade\",\"content\":\"Como analisar este algoritmo?\"}"))
-                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString());
+                        .content("{\"subjectIds\":[" + subjectId + "," + gradeSubjectId
+                                + "],\"title\":\"Complexidade\",\"content\":\"Como analisar este algoritmo?\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.subjects", hasSize(2)))
+                .andReturn().getResponse().getContentAsString());
         mockMvc.perform(post("/api/posts").header("Authorization", bearer(adminToken))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"subjectId\":" + subjectId + ",\"title\":\"Limite\",\"content\":\"" + "x".repeat(301) + "\"}"))
+                        .content("{\"subjectIds\":[" + subjectId + "],\"title\":\"Limite\",\"content\":\"" + "x".repeat(257) + "\"}"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.fieldErrors.content").value("O conteúdo deve ter no máximo 300 caracteres"));
+                .andExpect(jsonPath("$.fieldErrors.content").value("O conteúdo deve ter no máximo 256 caracteres"));
+        mockMvc.perform(post("/api/posts").header("Authorization", bearer(adminToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"subjectIds\":[],\"title\":\"Sem matéria\",\"content\":\"Conteúdo\"}"))
+                .andExpect(status().isBadRequest());
+        mockMvc.perform(post("/api/posts").header("Authorization", bearer(adminToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"subjectIds\":[" + subjectId + "],\"title\":\"" + "x".repeat(129) + "\",\"content\":\"Conteúdo\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.fieldErrors.title").value("O título deve ter no máximo 128 caracteres"));
+        mockMvc.perform(get("/api/posts").header("Authorization", bearer(adminToken))
+                        .param("subjectId", String.valueOf(gradeSubjectId)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.content", hasSize(1)));
+        mockMvc.perform(get("/api/posts").header("Authorization", bearer(adminToken))
+                        .param("query", "estrutura de dados"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.content", hasSize(1)));
         mockMvc.perform(get("/api/posts").header("Authorization", bearer(adminToken))
                         .param("query", "algoritmo").param("subjectId", String.valueOf(subjectId)))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.content", hasSize(1)));
@@ -104,9 +171,9 @@ class CompanionApiIntegrationTest {
                         .content("{\"content\":\"Use a notação assintótica.\"}"))
                 .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString());
         mockMvc.perform(post("/api/posts/{id}/comments", postId).header("Authorization", bearer(secondToken))
-                        .contentType(MediaType.APPLICATION_JSON).content("{\"content\":\"" + "x".repeat(301) + "\"}"))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"content\":\"" + "x".repeat(257) + "\"}"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.fieldErrors.content").value("A resposta deve ter no máximo 300 caracteres"));
+                .andExpect(jsonPath("$.fieldErrors.content").value("A resposta deve ter no máximo 256 caracteres"));
 
         mockMvc.perform(post("/api/posts/{id}/likes", postId).header("Authorization", bearer(secondToken)))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.likeCount").value(1));
@@ -114,6 +181,20 @@ class CompanionApiIntegrationTest {
                 .andExpect(status().isConflict());
         mockMvc.perform(delete("/api/posts/{id}/likes", postId).header("Authorization", bearer(secondToken)))
                 .andExpect(status().isNoContent());
+
+        mockMvc.perform(post("/api/posts/{id}/saves", postId).header("Authorization", bearer(secondToken)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.savedByCurrentUser").value(true));
+        mockMvc.perform(post("/api/posts/{id}/saves", postId).header("Authorization", bearer(secondToken)))
+                .andExpect(status().isConflict());
+        mockMvc.perform(get("/api/users/me/saved-posts").header("Authorization", bearer(secondToken)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.content[0].savedByCurrentUser").value(true));
+        mockMvc.perform(get("/api/posts").header("Authorization", bearer(adminToken)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.content[0].savedByCurrentUser").value(false));
+        mockMvc.perform(delete("/api/posts/{id}/saves", postId).header("Authorization", bearer(secondToken)))
+                .andExpect(status().isNoContent());
+        mockMvc.perform(get("/api/users/me/saved-posts").header("Authorization", bearer(secondToken)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.content", hasSize(0)));
 
         mockMvc.perform(post("/api/users/{id}/follow", admin.getId()).header("Authorization", bearer(secondToken)))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.followedByCurrentUser").value(true));

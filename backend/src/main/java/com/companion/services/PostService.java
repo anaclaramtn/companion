@@ -3,10 +3,10 @@ package com.companion.services;
 import com.companion.dtos.common.PageResponse;
 import com.companion.dtos.post.PostCreateRequestDTO;
 import com.companion.dtos.post.PostResponseDTO;
+import com.companion.dtos.subject.SubjectResponseDTO;
 import com.companion.entities.Post;
 import com.companion.entities.User;
 import com.companion.enums.UserRole;
-import com.companion.exceptions.ConflictException;
 import com.companion.exceptions.ForbiddenOperationException;
 import com.companion.exceptions.ResourceNotFoundException;
 import com.companion.repositories.*;
@@ -24,16 +24,19 @@ import java.util.stream.Collectors;
 public class PostService {
     private final PostRepository postRepository;
     private final PostLikeRepository postLikeRepository;
+    private final PostSaveRepository postSaveRepository;
     private final PostCommentRepository postCommentRepository;
     private final SubjectService subjectService;
     private final UserService userService;
     private final AuthenticatedUserService authenticatedUserService;
 
     public PostService(PostRepository postRepository, PostLikeRepository postLikeRepository,
+                       PostSaveRepository postSaveRepository,
                        PostCommentRepository postCommentRepository, SubjectService subjectService,
                        UserService userService, AuthenticatedUserService authenticatedUserService) {
         this.postRepository = postRepository;
         this.postLikeRepository = postLikeRepository;
+        this.postSaveRepository = postSaveRepository;
         this.postCommentRepository = postCommentRepository;
         this.subjectService = subjectService;
         this.userService = userService;
@@ -43,7 +46,7 @@ public class PostService {
     @Transactional
     public PostResponseDTO create(PostCreateRequestDTO request) {
         User author = authenticatedUserService.getCurrentUserWithCompleteProfile();
-        Post post = new Post(author, subjectService.find(request.subjectId()),
+        Post post = new Post(author, subjectService.findAll(request.subjectIds()),
                 request.title().trim(), request.content().trim());
         return toResponse(postRepository.save(post), author.getId());
     }
@@ -84,11 +87,12 @@ public class PostService {
 
     public PostResponseDTO toResponse(Post post, Long viewerId) {
         return new PostResponseDTO(
-                post.getId(), userService.toSummary(post.getAuthor()), subjectService.toResponse(post.getSubject()),
+                post.getId(), userService.toSummary(post.getAuthor()), subjects(post),
                 post.getTitle(), post.getContent(), post.getCreatedAt(),
                 postLikeRepository.countByPostId(post.getId()),
                 postCommentRepository.countByPostIdAndDeletedAtIsNull(post.getId()),
                 postLikeRepository.existsByUserIdAndPostId(viewerId, post.getId()),
+                postSaveRepository.existsByUserIdAndPostId(viewerId, post.getId()),
                 post.getAuthor().getId().equals(viewerId)
         );
     }
@@ -98,12 +102,18 @@ public class PostService {
         Map<Long, Long> likes = countMap(ids, postLikeRepository::countByPostIds);
         Map<Long, Long> comments = countMap(ids, postCommentRepository::countActiveByPostIds);
         Set<Long> liked = ids.isEmpty() ? Set.of() : new HashSet<>(postLikeRepository.findLikedPostIds(viewerId, ids));
+        Set<Long> saved = ids.isEmpty() ? Set.of() : new HashSet<>(postSaveRepository.findSavedPostIds(viewerId, ids));
         Page<PostResponseDTO> mapped = posts.map(post -> new PostResponseDTO(
-                post.getId(), userService.toSummary(post.getAuthor()), subjectService.toResponse(post.getSubject()),
+                post.getId(), userService.toSummary(post.getAuthor()), subjects(post),
                 post.getTitle(), post.getContent(), post.getCreatedAt(),
                 likes.getOrDefault(post.getId(), 0L), comments.getOrDefault(post.getId(), 0L),
-                liked.contains(post.getId()), post.getAuthor().getId().equals(viewerId)));
+                liked.contains(post.getId()), saved.contains(post.getId()),
+                post.getAuthor().getId().equals(viewerId)));
         return PageResponse.from(mapped);
+    }
+
+    private List<SubjectResponseDTO> subjects(Post post) {
+        return post.getSubjects().stream().map(subjectService::toResponse).toList();
     }
 
     private Map<Long, Long> countMap(List<Long> ids,

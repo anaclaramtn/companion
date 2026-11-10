@@ -2,6 +2,7 @@ package com.companion.services;
 
 import com.companion.dtos.user.UserRegistrationRequestDTO;
 import com.companion.exceptions.DuplicateResourceException;
+import com.companion.repositories.CourseRepository;
 import com.companion.repositories.FollowRepository;
 import com.companion.repositories.PostCommentRepository;
 import com.companion.repositories.PostRepository;
@@ -24,12 +25,13 @@ class UserServiceTest {
     @Mock PostRepository postRepository;
     @Mock PostCommentRepository commentRepository;
     @Mock FollowRepository followRepository;
+    @Mock CourseRepository courseRepository;
 
     @Test
     void rejectsCaseInsensitiveDuplicateEmailBeforeEncodingPassword() {
         when(userRepository.existsByEmailIgnoreCase("ana@unifor.br")).thenReturn(true);
         UserService service = new UserService(userRepository, passwordEncoder, authenticatedUserService,
-                postRepository, commentRepository, followRepository);
+                postRepository, commentRepository, followRepository, courseRepository);
 
         assertThrows(DuplicateResourceException.class, () -> service.register(
                 new UserRegistrationRequestDTO("ANA@UNIFOR.BR", "Senha123")));

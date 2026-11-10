@@ -19,7 +19,7 @@ public interface PostCommentRepository extends JpaRepository<PostComment, Long> 
     @EntityGraph(attributePaths = {"author", "post"})
     List<PostComment> findByPostIdAndDeletedAtIsNullOrderByCreatedAtAsc(Long postId);
 
-    @EntityGraph(attributePaths = {"author", "post", "post.subject"})
+    @EntityGraph(attributePaths = {"author", "post"})
     Page<PostComment> findByAuthorIdAndDeletedAtIsNull(Long authorId, Pageable pageable);
 
     long countByPostIdAndDeletedAtIsNull(Long postId);

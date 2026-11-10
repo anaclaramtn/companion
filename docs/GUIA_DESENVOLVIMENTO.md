@@ -61,49 +61,70 @@ permanecem em `security`.
 ## B) Modelo de domínio vigente
 
 `Post` e pergunta representam a mesma funcionalidade. Todo post é uma dúvida
-acadêmica associada a uma matéria. `PostComment` representa somente uma resposta
+acadêmica associada a uma a três matérias. `PostComment` representa somente uma resposta
 direta ao post; não existem `Question`, `Answer` nem respostas em thread na
 primeira versão.
 
 Entidades previstas:
 
 ```text
-User
+University
+Course
 Subject
+CourseSubject
+User
 UserSubject
 Post
 PostComment
 PostLike
+PostSave
 Follow
 Report
 Faq
 PasswordResetToken
+EmailVerificationToken
 ```
 
 Relacionamentos principais:
 
 ```text
+University 1:N Course
+University 1:N Subject
+Course N:N Subject, por CourseSubject (com o semestre)
+Course 1:N User
 User 1:N Post
-Subject 1:N Post
+Post N:N Subject, por post_subjects
 Post 1:N PostComment
 User 1:N PostComment
 User N:N Subject, por UserSubject
 User N:N Post, por PostLike
+User N:N Post, por PostSave
 User N:N User, por Follow
 User 1:N Report, como denunciante
 User 1:N Report, como revisor
 Post 1:N Report, quando o post é o alvo
 PostComment 1:N Report, quando a resposta é o alvo
 User 1:N PasswordResetToken
+User 1:N EmailVerificationToken
 ```
 
 Regras estruturais importantes:
 
 - `User` reúne conta, autenticação e perfil essencial; não existe entidade
   `Profile` sem ciclo de vida independente.
-- `UserSubject` guarda `interestType` (`DOMINA` ou `QUER_APRENDER`) e
-  `proficiency` (`INICIANTE`, `INTERMEDIARIO` ou `AVANCADO`), com uma combinação
-  única de usuário e matéria.
+- `Subject` pertence a uma universidade e tem código único nela (ex.: `T390`).
+- `CourseSubject` é a grade do curso: liga curso e matéria e guarda o semestre
+  em que ela é cursada normalmente; `0` indica optativa. A mesma matéria em dois
+  cursos gera duas linhas.
+- `User.course_id` aponta para o curso escolhido em lista; a universidade do
+  usuário vem do curso.
+- `UserSubject` guarda apenas `interestType` (`DOMINA` ou `QUER_APRENDER`), com
+  uma combinação única de usuário e matéria. Quem não domina nem quer aprender a
+  matéria não tem linha.
+- Cada post tem de 1 a 3 matérias, com uma linha por matéria em `post_subjects`.
+- `PostSave` guarda os posts salvos, com unicidade para `user_id` e `post_id`.
+- `EmailVerificationToken` e `users.email_verified_at` estão reservados para a
+  confirmação de e-mail e ainda não são usados.
 - `PostLike` representa curtidas em posts, com unicidade para `user_id` e
   `post_id`. Respostas não recebem curtidas nesta versão.
 - `Follow` é direcionado, não permite auto-seguimento e mantém uma combinação
@@ -165,9 +186,17 @@ Arquivos e responsabilidades esperados:
   responsabilidades claras.
 
 O cadastro recebe apenas e-mail e senha. Nome e username começam nulos e devem
-ser definidos antes do acesso ao feed. Matrícula e curso são opcionais;
-matrícula só é mantida quando informada. Semestre é opcional no perfil, mas
-obrigatório quando a pessoa optar por informá-lo/exibi-lo.
+ser definidos antes do acesso ao feed. Matrícula, curso e semestre são
+opcionais; matrícula só é mantida quando informada. O curso é enviado como
+`courseId` e o semestre não pode passar de `totalSemesters` do curso.
+
+Limites: nome 64, bio 512, título do post 128, conteúdo de post e resposta 256,
+detalhes da denúncia 1024 caracteres.
+
+Universidades, cursos e grade são lidos em `GET /api/universities`,
+`GET /api/universities/{id}/courses` e `GET /api/courses/{id}/subjects`. Na
+inicialização, `AcademicCatalogSeeder` cadastra a Unifor, o curso de Ciência da
+Computação e as 75 disciplinas da grade, apenas se não houver universidade.
 
 E-mail e username são comparados sem diferença entre maiúsculas e minúsculas;
 username é armazenado em minúsculas e sem `@`. Senhas usam BCrypt e nunca são
@@ -249,9 +278,9 @@ mais simples e reduz risco de recursão na serialização.
   vez; remover a curtida pode apagar fisicamente `PostLike`.
 - Não existe resposta aceita automática nem selo por proficiência nesta versão.
 - Respostas são diretas ao post e não formam threads.
-- Posts e respostas usam `TEXT`, com limite de 300 caracteres para cada
+- Posts e respostas usam `TEXT`, com limite de 256 caracteres para cada
   conteúdo; `Ver mais` é apenas comportamento visual.
-- Uma matéria associada a qualquer usuário ou post não pode ser excluída.
+- Uma matéria associada a qualquer curso, usuário ou post não pode ser excluída.
 - Denúncias de posts e respostas são mantidas. O autor não denuncia o próprio
   conteúdo e cada usuário denuncia o mesmo alvo uma única vez.
 - Denunciar não oculta nem exclui o alvo. Moderador ou administrador analisa a
@@ -283,8 +312,8 @@ A primeira versão usa busca parcial sem diferenciação de maiúsculas e
 minúsculas. Busca semântica, recomendação e ranking avançado ficam fora do
 escopo.
 
-O perfil público apresenta avatar, nome, username, biografia, matérias,
-proficiência autodeclarada, posts e atividade de respostas. Quantidades de
+O perfil público apresenta avatar, nome, username, biografia, curso, matérias
+que domina ou quer aprender, posts e atividade de respostas. Quantidades de
 posts, respostas, seguidores e seguidos são calculadas pela API. Dados privados
 da conta usam um DTO separado.
 
@@ -418,6 +447,11 @@ arquivos ou pastas das etapas seguintes.
 - O perfil `demo` usa H2 em memória para demonstração; dados são descartados ao
   encerrar a aplicação.
 - Testes não devem depender do MySQL nem de segredos de desenvolvimento.
+- O MySQL usa `ddl-auto=update`, que cria tabelas e colunas mas não apaga
+  colunas antigas nem muda tamanhos. Depois de mudanças estruturais (como a
+  troca de `users.course` por `course_id` e de `posts.subject_id` por
+  `post_subjects`), recrie o banco local:
+  `docker compose exec mysql mysql -u root -p -e "DROP DATABASE companion; CREATE DATABASE companion;"`
 - São obrigatórios testes unitários de Services, integração de Repositories,
   API/Controllers, frontend e fluxos principais de ponta a ponta.
 
@@ -468,7 +502,7 @@ testar, decisões ou migrações necessárias e aguarde a revisão antes do merg
 - respostas em thread e `parent_comment_id`;
 - curtidas em respostas, resposta aceita e selo por proficiência;
 - login/cadastro com Google e contas de provedor externo;
-- imagens em posts, tags livres, itens salvos e persistência de compartilhamento;
+- imagens em posts, tags livres e persistência de compartilhamento;
 - trabalho, empregador, redes sociais, pontuação, sequência de login, verificação
   acadêmica e algoritmo de reputação no perfil;
 - chat, notificações, bloqueios, grupos, chamadas e compartilhamento de tela;
@@ -478,13 +512,13 @@ testar, decisões ou migrações necessárias e aguarde a revisão antes do merg
 
 ## P) Decisões confirmadas pela equipe
 
-- Matrícula e curso são campos opcionais; matrícula só é mantida quando
-  informada. Semestre é opcional, mas obrigatório quando a pessoa optar por
-  informá-lo/exibi-lo no perfil. Não há verificação acadêmica.
+- Matrícula, curso e semestre são campos opcionais; matrícula só é mantida
+  quando informada. O curso é escolhido em lista. Não há verificação acadêmica
+  nem validação do domínio do e-mail.
 - Google OAuth não será implementado na versão 1.0.
-- Posts e respostas usam `TEXT`, com limite de validação de 300 caracteres
+- Posts e respostas usam `TEXT`, com limite de validação de 256 caracteres
   para ambos.
-- Matéria associada a qualquer usuário ou post não pode ser excluída.
+- Matéria associada a qualquer curso, usuário ou post não pode ser excluída.
 - Motivos iniciais de denúncia: `SPAM`, `FORA_DO_TEMA`,
   `CONTEUDO_INADEQUADO` e `OUTRO`.
 

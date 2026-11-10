@@ -44,7 +44,7 @@ public class Report {
     @Column(nullable = false, length = 30)
     private ReportReason reason;
 
-    @Column(length = 500)
+    @Column(length = 1024)
     private String details;
 
     @Enumerated(EnumType.STRING)
