@@ -13,7 +13,22 @@ function PostDetailPage() {
     onSaveChange,
     onReport,
     currentUserId,
+    isLoading,
+    error,
   } = useOutletContext()
+
+  if (isLoading || error) {
+    return (
+      <div className="rounded-2xl border border-companion-border/70 bg-companion-surface p-8 text-center">
+        <p
+          role={error ? 'alert' : 'status'}
+          className={`font-semibold ${error ? 'text-red-700' : 'text-companion-muted'}`}
+        >
+          {error || 'Carregando dúvida...'}
+        </p>
+      </div>
+    )
+  }
 
   if (!post) {
     return (
@@ -28,6 +43,7 @@ function PostDetailPage() {
   return (
     <div className="space-y-4">
       <PostCard
+        key={post.id}
         post={post}
         currentUserId={currentUserId}
         reportReasons={reportReasons}

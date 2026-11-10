@@ -1,22 +1,23 @@
 import { useState } from 'react'
 import FormField from '../common/FormField.jsx'
+import { useAuth } from '../../hooks/useAuth.js'
 import { useToast } from '../../hooks/useToast.js'
-import {
-  normalizeUsername,
-  updateUsername,
-} from '../../services/accountService.js'
+import { normalizeUsername } from '../../services/accountService.js'
+import { getApiErrorMessage } from '../../services/apiError.js'
 
+// Mesma regra do backend (UserProfileUpdateRequestDTO).
 function validateUsername(username) {
   if (!username) return 'Informe um username.'
-  if (!/^[a-z0-9._]{3,30}$/.test(username)) {
-    return 'Use de 3 a 30 caracteres: letras minúsculas, números, ponto ou sublinhado.'
+  if (!/^[a-z0-9]{3,30}$/.test(username)) {
+    return 'Use de 3 a 30 caracteres: só letras e números.'
   }
   return ''
 }
 
-// Bloco para trocar o username da conta (Configurações da conta).
-// onSaved recebe o usuário atualizado.
-function UsernameCard({ currentUser, onSaved }) {
+// Bloco para trocar o username da conta (Configurações da conta). Salva
+// pela API (PUT /users/me/profile só com o username) e atualiza a sessão.
+function UsernameCard({ currentUser }) {
+  const { updateProfile } = useAuth()
   const showToast = useToast()
   const [username, setUsername] = useState(currentUser.username)
   const [error, setError] = useState('')
@@ -31,11 +32,11 @@ function UsernameCard({ currentUser, onSaved }) {
 
     setIsSaving(true)
     try {
-      const user = await updateUsername(currentUser, username)
-      onSaved(user)
+      const user = await updateProfile({ username })
       showToast(`Username alterado para @${user.username}.`)
     } catch (saveError) {
-      setError(saveError.message || 'Não foi possível alterar o username.')
+      // Ex.: 409 "O username já está em uso".
+      setError(getApiErrorMessage(saveError, 'Não foi possível alterar o username.'))
     } finally {
       setIsSaving(false)
     }
@@ -64,7 +65,7 @@ function UsernameCard({ currentUser, onSaved }) {
             prefix="@"
             value={username}
             error={error}
-            hint="Letras minúsculas, números, ponto ou sublinhado. Também serve para entrar."
+            hint="Só letras e números. Também serve para entrar."
             autoComplete="username"
             onChange={(event) => {
               setUsername(normalizeUsername(event.target.value))

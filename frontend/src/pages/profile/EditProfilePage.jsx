@@ -1,23 +1,41 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useOutletContext } from 'react-router'
 import BackLink from '../../components/common/BackLink.jsx'
 import FormField from '../../components/common/FormField.jsx'
 import SubjectInterestPicker from '../../components/user/SubjectInterestPicker.jsx'
-import { updateMyProfile } from '../../services/accountService.js'
+import { useAuth } from '../../hooks/useAuth.js'
+import { useToast } from '../../hooks/useToast.js'
+import {
+  getAllSubjects,
+  getCourses,
+  getCourseSubjects,
+  getUniversities,
+} from '../../services/academicService.js'
+import { getApiErrorMessage } from '../../services/apiError.js'
+import {
+  AVATAR_ACCEPT,
+  AVATAR_SIZE_MESSAGE,
+  getAvatarFileError,
+  getMySubjects,
+  isAvatarTooLargeError,
+  replaceMySubjects,
+} from '../../services/profileService.js'
 
-const MAX_NAME_LENGTH = 60
-const MAX_BIO_LENGTH = 160
-const MAX_COURSE_LENGTH = 80
-const MAX_AVATAR_SIZE = 2 * 1024 * 1024
-const SEMESTERS = Array.from({ length: 12 }, (_, index) => index + 1)
-const LAST_GRADE_SEMESTER = 8
+// Limites iguais aos do backend (UserProfileUpdateRequestDTO).
+const MAX_NAME_LENGTH = 64
+const MAX_BIO_LENGTH = 512
+
+const selectClassName =
+  'w-full rounded-xl border border-companion-border bg-white/80 px-4 py-3 text-sm text-companion-text outline-none transition focus:border-companion-orange focus:ring-4 focus:ring-companion-orange/15 disabled:cursor-not-allowed disabled:opacity-60'
+
+const toFieldValue = (id) => (id == null ? '' : String(id))
 
 // Sugere as disciplinas do semestre atual e do anterior (sem semestre
-// informado, as do 1º). Semestres além da grade usam os dois últimos.
-function getFeaturedSubjectIds(subjects, semester) {
-  const current = Math.min(Number(semester) || 1, LAST_GRADE_SEMESTER)
+// informado, as do 1º).
+function getFeaturedSubjectIds(catalog, semester) {
+  const current = Number(semester) || 1
   const semesters = [current, Math.max(current - 1, 1)]
-  return subjects
+  return catalog
     .filter((subject) => semesters.includes(subject.semester))
     .map((subject) => subject.id)
 }
@@ -32,35 +50,138 @@ function initials(name) {
 
 function validate(form) {
   const errors = {}
+  const name = form.name.trim()
 
-  if (!form.name.trim()) {
+  if (!name) {
     errors.name = 'Informe seu nome.'
+  } else if (name.length > MAX_NAME_LENGTH) {
+    errors.name = `O nome deve ter no máximo ${MAX_NAME_LENGTH} caracteres.`
   }
 
   return errors
 }
 
 function EditProfilePage() {
-  const { currentUser, currentUserSubjects, subjects, onProfileUpdate } =
-    useOutletContext()
+  const { currentUser } = useOutletContext()
+  const { updateAvatar, removeAvatar, updateProfile } = useAuth()
+  const showToast = useToast()
   const [form, setForm] = useState(() => ({
-    name: currentUser.name,
+    name: currentUser.name ?? '',
     avatarUrl: currentUser.avatarUrl,
     bio: currentUser.bio ?? '',
-    course: currentUser.course ?? '',
-    semester: currentUser.semester ? String(currentUser.semester) : '',
-    subjects: currentUserSubjects.map(({ subject, interestType }) => ({
-      subject,
-      interestType,
-    })),
+    universityId: toFieldValue(currentUser.universityId),
+    courseId: toFieldValue(currentUser.courseId),
+    semester: toFieldValue(currentUser.semester),
+    subjects: [],
   }))
+  // Opções vindas do banco.
+  const [universities, setUniversities] = useState([])
+  const [courses, setCourses] = useState([])
+  const [catalog, setCatalog] = useState({ courseId: null, subjects: [] })
+  const [isLoading, setIsLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
+  // Foto escolhida e ainda não enviada; sobe para a API só ao salvar.
+  const [avatarFile, setAvatarFile] = useState(null)
   const [errors, setErrors] = useState({})
   const [status, setStatus] = useState({ type: 'idle', message: '' })
   const isSaving = status.type === 'saving'
 
+  // Universidades e disciplinas já salvas no perfil.
+  useEffect(() => {
+    let active = true
+    Promise.all([getUniversities(), getMySubjects()])
+      .then(([universityList, mySubjects]) => {
+        if (!active) return
+        setUniversities(universityList)
+        setForm((current) => ({
+          ...current,
+          subjects: mySubjects,
+          // Com uma só universidade cadastrada, ela já vem escolhida.
+          universityId:
+            current.universityId ||
+            (universityList.length === 1 ? String(universityList[0].id) : ''),
+        }))
+      })
+      .catch((error) => {
+        if (active) setLoadError(getApiErrorMessage(error, 'Não foi possível carregar seu perfil.'))
+      })
+      .finally(() => {
+        if (active) setIsLoading(false)
+      })
+    return () => {
+      active = false
+    }
+  }, [])
+
+  // Cursos da universidade escolhida.
+  const { universityId, courseId } = form
+  useEffect(() => {
+    if (!universityId) return undefined
+    let active = true
+    getCourses(universityId)
+      .then((list) => {
+        if (active) setCourses(list)
+      })
+      .catch((error) => {
+        if (active) setLoadError(getApiErrorMessage(error, 'Não foi possível carregar os cursos.'))
+      })
+    return () => {
+      active = false
+    }
+  }, [universityId])
+
+  // Disciplinas que podem ser escolhidas: a grade do curso ou, sem curso, todas.
+  useEffect(() => {
+    let active = true
+    const request = courseId ? getCourseSubjects(courseId) : getAllSubjects()
+    request
+      .then((subjects) => {
+        if (active) setCatalog({ courseId, subjects })
+      })
+      .catch((error) => {
+        if (active) setLoadError(getApiErrorMessage(error, 'Não foi possível carregar as disciplinas.'))
+      })
+    return () => {
+      active = false
+    }
+  }, [courseId])
+
+  // A pré-visualização da foto nova usa um endereço temporário (blob:), que
+  // precisa ser liberado da memória ao trocar de foto ou sair da tela.
+  useEffect(() => {
+    const previewUrl = form.avatarUrl
+    if (!previewUrl?.startsWith('blob:')) return undefined
+    return () => URL.revokeObjectURL(previewUrl)
+  }, [form.avatarUrl])
+
+  const visibleCourses = form.universityId ? courses : []
+  const selectedCourse = visibleCourses.find((course) => String(course.id) === form.courseId)
+  const semesterOptions = Array.from(
+    { length: selectedCourse?.totalSemesters ?? 0 },
+    (_, index) => index + 1,
+  )
+  const isCatalogCurrent = catalog.courseId === form.courseId
+
   function updateField(field, value) {
     setForm((current) => ({ ...current, [field]: value }))
     setErrors((current) => ({ ...current, [field]: undefined }))
+    setStatus({ type: 'idle', message: '' })
+  }
+
+  function handleUniversityChange(value) {
+    setCourses([])
+    setForm((current) => ({ ...current, universityId: value, courseId: '', semester: '' }))
+    setStatus({ type: 'idle', message: '' })
+  }
+
+  function handleCourseChange(value) {
+    const course = courses.find((item) => String(item.id) === value)
+    setForm((current) => ({
+      ...current,
+      courseId: value,
+      // Descarta um semestre que não existe no curso novo.
+      semester: course && Number(current.semester) <= course.totalSemesters ? current.semester : '',
+    }))
     setStatus({ type: 'idle', message: '' })
   }
 
@@ -69,26 +190,33 @@ function EditProfilePage() {
     event.target.value = ''
     if (!file) return
 
-    if (!file.type.startsWith('image/')) {
-      setErrors((current) => ({ ...current, avatar: 'Escolha um arquivo de imagem.' }))
-      return
-    }
-    if (file.size > MAX_AVATAR_SIZE) {
-      setErrors((current) => ({ ...current, avatar: 'A imagem deve ter até 2 MB.' }))
+    const fileError = getAvatarFileError(file)
+    if (fileError) {
+      showToast(fileError, { type: 'error' })
       return
     }
 
-    // Sem API de upload, a imagem fica em memória como data URL.
-    const reader = new FileReader()
-    reader.onload = () => {
-      updateField('avatarUrl', reader.result)
-      setErrors((current) => ({ ...current, avatar: undefined }))
+    setAvatarFile(file)
+    updateField('avatarUrl', URL.createObjectURL(file))
+  }
+
+  function handleAvatarRemove() {
+    setAvatarFile(null)
+    updateField('avatarUrl', null)
+  }
+
+  // Envia a foto nova ou remove a atual pela API e devolve o endereço final.
+  async function saveAvatar() {
+    if (avatarFile) return (await updateAvatar(avatarFile)).avatarUrl
+    if (!form.avatarUrl && currentUser.avatarUrl) {
+      return (await removeAvatar()).avatarUrl
     }
-    reader.readAsDataURL(file)
+    return currentUser.avatarUrl
   }
 
   async function handleSubmit(event) {
     event.preventDefault()
+    if (isSaving) return
     const validationErrors = validate(form)
     setErrors(validationErrors)
     if (Object.keys(validationErrors).length > 0) {
@@ -98,19 +226,52 @@ function EditProfilePage() {
 
     setStatus({ type: 'saving', message: '' })
     try {
-      const { user, subjects: savedSubjects } = await updateMyProfile(
-        currentUser,
-        currentUserSubjects,
-        form,
-      )
-      onProfileUpdate(user, savedSubjects)
+      const avatarUrl = await saveAvatar()
+      setAvatarFile(null)
+      setForm((current) => ({ ...current, avatarUrl }))
+
+      // Bio vazia apaga a bio. Curso e semestre só vão quando escolhidos:
+      // o backend mantém o valor atual dos campos que não são enviados.
+      await updateProfile({
+        name: form.name.trim(),
+        bio: form.bio.trim(),
+        ...(form.courseId && { courseId: Number(form.courseId) }),
+        ...(form.semester && { semester: Number(form.semester) }),
+      })
+      await replaceMySubjects(form.subjects)
       setStatus({ type: 'success', message: 'Perfil atualizado com sucesso.' })
     } catch (saveError) {
+      if (isAvatarTooLargeError(saveError)) {
+        showToast(AVATAR_SIZE_MESSAGE, { type: 'error' })
+        setStatus({ type: 'idle', message: '' })
+        return
+      }
       setStatus({
         type: 'error',
-        message: saveError.message || 'Não foi possível salvar as alterações.',
+        message: getApiErrorMessage(saveError, 'Não foi possível salvar as alterações.'),
       })
     }
+  }
+
+  if (isLoading || loadError) {
+    return (
+      <section className="mx-auto max-w-4xl rounded-2xl border border-companion-border/70 bg-companion-surface p-8 text-center">
+        <p
+          role={loadError ? 'alert' : 'status'}
+          className={`text-sm font-semibold ${loadError ? 'text-red-700' : 'text-companion-muted'}`}
+        >
+          {loadError || 'Carregando seu perfil…'}
+        </p>
+        {loadError && (
+          <Link
+            to="/perfil"
+            className="mt-4 inline-block rounded-xl border border-companion-border bg-white px-4 py-2 text-sm font-bold text-companion-text transition hover:bg-companion-orange/5"
+          >
+            Voltar ao perfil
+          </Link>
+        )}
+      </section>
+    )
   }
 
   return (
@@ -144,7 +305,7 @@ function EditProfilePage() {
               aria-hidden="true"
               className="grid size-20 place-items-center rounded-full bg-companion-orange/10 text-xl font-bold text-companion-brand"
             >
-              {initials(form.name || currentUser.name)}
+              {initials(form.name || currentUser.name || '')}
             </div>
           )}
           <div>
@@ -155,7 +316,7 @@ function EditProfilePage() {
               Foto de perfil
             </h2>
             <p className="mt-0.5 text-xs text-companion-muted">
-              JPG, PNG ou GIF com até 2 MB.
+              JPG, PNG ou WEBP com até 2 MB.
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
               <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-companion-orange px-4 py-2 text-sm font-bold text-white transition hover:bg-companion-orange-hover focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-companion-orange">
@@ -163,7 +324,7 @@ function EditProfilePage() {
                 Escolher foto
                 <input
                   type="file"
-                  accept="image/*"
+                  accept={AVATAR_ACCEPT}
                   onChange={handleAvatarChange}
                   className="sr-only"
                 />
@@ -171,18 +332,13 @@ function EditProfilePage() {
               {form.avatarUrl && (
                 <button
                   type="button"
-                  onClick={() => updateField('avatarUrl', null)}
+                  onClick={handleAvatarRemove}
                   className="rounded-xl border border-companion-border bg-white px-4 py-2 text-sm font-bold text-companion-text transition hover:bg-companion-orange/5"
                 >
                   Remover
                 </button>
               )}
             </div>
-            {errors.avatar && (
-              <p role="alert" className="mt-2 text-xs text-red-700">
-                {errors.avatar}
-              </p>
-            )}
           </div>
         </section>
 
@@ -215,14 +371,50 @@ function EditProfilePage() {
             placeholder="Conte um pouco sobre você e o que está estudando..."
             onChange={(event) => updateField('bio', event.target.value)}
           />
-          <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_200px]">
-            <FormField
-              id="profile-course"
-              label="Curso"
-              value={form.course}
-              maxLength={MAX_COURSE_LENGTH}
-              onChange={(event) => updateField('course', event.target.value)}
-            />
+          <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_180px]">
+            <div>
+              <label
+                htmlFor="profile-university"
+                className="mb-2 block text-sm font-semibold text-companion-text"
+              >
+                Universidade
+              </label>
+              <select
+                id="profile-university"
+                value={form.universityId}
+                onChange={(event) => handleUniversityChange(event.target.value)}
+                className={selectClassName}
+              >
+                {!form.universityId && <option value="">Selecionar universidade</option>}
+                {universities.map((university) => (
+                  <option key={university.id} value={university.id}>
+                    {university.acronym} ({university.name})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label
+                htmlFor="profile-course"
+                className="mb-2 block text-sm font-semibold text-companion-text"
+              >
+                Curso
+              </label>
+              <select
+                id="profile-course"
+                value={form.courseId}
+                onChange={(event) => handleCourseChange(event.target.value)}
+                disabled={!form.universityId}
+                className={selectClassName}
+              >
+                {!selectedCourse && <option value="">Selecionar curso</option>}
+                {visibleCourses.map((course) => (
+                  <option key={course.id} value={course.id}>
+                    {course.name}
+                  </option>
+                ))}
+              </select>
+            </div>
             <div>
               <label
                 htmlFor="profile-semester"
@@ -234,10 +426,11 @@ function EditProfilePage() {
                 id="profile-semester"
                 value={form.semester}
                 onChange={(event) => updateField('semester', event.target.value)}
-                className="w-full rounded-xl border border-companion-border bg-white/80 px-4 py-3 text-sm text-companion-text outline-none transition focus:border-companion-orange focus:ring-4 focus:ring-companion-orange/15"
+                disabled={!selectedCourse}
+                className={selectClassName}
               >
-                <option value="">Não informar</option>
-                {SEMESTERS.map((semester) => (
+                {!form.semester && <option value="">Selecionar</option>}
+                {semesterOptions.map((semester) => (
                   <option key={semester} value={semester}>
                     {semester}º semestre
                   </option>
@@ -262,12 +455,18 @@ function EditProfilePage() {
             disciplina pode estar em apenas um grupo. Mostramos as do seu
             semestre; use “Ver mais” para escolher qualquer outra.
           </p>
-          <SubjectInterestPicker
-            subjects={subjects}
-            value={form.subjects}
-            featuredIds={getFeaturedSubjectIds(subjects, form.semester)}
-            onChange={(value) => updateField('subjects', value)}
-          />
+          {isCatalogCurrent ? (
+            <SubjectInterestPicker
+              subjects={catalog.subjects}
+              value={form.subjects}
+              featuredIds={getFeaturedSubjectIds(catalog.subjects, form.semester)}
+              onChange={(value) => updateField('subjects', value)}
+            />
+          ) : (
+            <p role="status" className="text-sm text-companion-muted">
+              Carregando disciplinas…
+            </p>
+          )}
         </section>
 
         <div className="flex flex-wrap items-center justify-end gap-3">

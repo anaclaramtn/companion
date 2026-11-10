@@ -25,17 +25,26 @@ function normalize(text) {
     .toLocaleLowerCase('pt-BR')
 }
 
-// Agrupa as disciplinas por semestre da grade; optativas ficam no fim.
+// Código exibido da disciplina. Na API, id é numérico e o código vem em
+// "code"; nos mocks, o próprio id é o código.
+function subjectCode(subject) {
+  return subject.code ?? subject.id
+}
+
+// Agrupa as disciplinas por semestre da grade; optativas (semester null)
+// ficam no fim. Sem grade (semester undefined), tudo fica em um só grupo.
 function groupBySemester(subjects) {
   const sections = new Map()
   for (const subject of subjects) {
-    const key = subject.semester ?? 'optativas'
+    const key =
+      subject.semester === undefined ? 'todas' : (subject.semester ?? 'optativas')
     if (!sections.has(key)) sections.set(key, [])
     sections.get(key).push(subject)
   }
+  const titles = { optativas: 'Optativas', todas: 'Disciplinas' }
   return [...sections.entries()].map(([key, items]) => ({
     key,
-    title: key === 'optativas' ? 'Optativas' : `${key}º semestre`,
+    title: titles[key] ?? `${key}º semestre`,
     items,
   }))
 }
@@ -102,7 +111,7 @@ function SubjectInterestPicker({ subjects, value, onChange, featuredIds = [] }) 
     (subject) =>
       !normalizedSearch ||
       normalize(subject.name).includes(normalizedSearch) ||
-      normalize(subject.id).includes(normalizedSearch),
+      normalize(String(subjectCode(subject))).includes(normalizedSearch),
   )
 
   return (
@@ -206,7 +215,7 @@ function SubjectInterestPicker({ subjects, value, onChange, featuredIds = [] }) 
                         className="flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-companion-border/40 px-4 py-2"
                       >
                         <span className="min-w-0 grow basis-full text-sm text-companion-text @md:basis-0">
-                          <span className="text-companion-muted">{subject.id}</span>
+                          <span className="text-companion-muted">{subjectCode(subject)}</span>
                           {' · '}
                           {subject.name}
                         </span>

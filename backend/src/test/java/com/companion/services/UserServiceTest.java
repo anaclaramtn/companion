@@ -31,8 +31,7 @@ class UserServiceTest {
     void rejectsCaseInsensitiveDuplicateEmailBeforeEncodingPassword() {
         when(userRepository.existsByEmailIgnoreCase("ana@unifor.br")).thenReturn(true);
         UserService service = new UserService(userRepository, passwordEncoder, authenticatedUserService,
-                postRepository, commentRepository, followRepository, courseRepository,
-                new CloudinaryAvatarService("", "", ""));
+                postRepository, commentRepository, followRepository, courseRepository);
 
         assertThrows(DuplicateResourceException.class, () -> service.register(
                 new UserRegistrationRequestDTO("ANA@UNIFOR.BR", "Senha123")));

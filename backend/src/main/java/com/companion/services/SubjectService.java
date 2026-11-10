@@ -2,6 +2,7 @@ package com.companion.services;
 
 import com.companion.dtos.subject.SubjectRequestDTO;
 import com.companion.dtos.subject.SubjectResponseDTO;
+import com.companion.dtos.subject.TrendingSubjectResponseDTO;
 import com.companion.entities.Subject;
 import com.companion.entities.University;
 import com.companion.enums.UserRole;
@@ -14,9 +15,11 @@ import com.companion.repositories.PostRepository;
 import com.companion.repositories.SubjectRepository;
 import com.companion.repositories.UniversityRepository;
 import com.companion.repositories.UserSubjectRepository;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -25,6 +28,8 @@ import java.util.Set;
 
 @Service
 public class SubjectService {
+    public static final int TRENDING_DAYS = 7;
+
     private final SubjectRepository subjectRepository;
     private final UniversityRepository universityRepository;
     private final UserSubjectRepository userSubjectRepository;
@@ -58,6 +63,16 @@ public class SubjectService {
 
     @Transactional(readOnly = true)
     public SubjectResponseDTO get(Long id) { return toResponse(find(id)); }
+
+    /** Matérias com mais dúvidas publicadas nos últimos {@value #TRENDING_DAYS} dias. */
+    @Transactional(readOnly = true)
+    public List<TrendingSubjectResponseDTO> trending(int limit) {
+        LocalDateTime since = LocalDateTime.now().minusDays(TRENDING_DAYS);
+        return postRepository.findTrendingSubjects(since, PageRequest.of(0, limit)).stream()
+                .map(item -> new TrendingSubjectResponseDTO(
+                        item.getSubjectId(), item.getCode(), item.getName(), item.getPostCount()))
+                .toList();
+    }
 
     @Transactional(readOnly = true)
     public List<SubjectResponseDTO> list(String query) {

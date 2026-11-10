@@ -128,6 +128,7 @@ function AccountInfoPage() {
                 label: 'Matrícula',
                 value: account.enrollment,
                 icon: 'bi-person-vcard',
+                hint: 'Para cadastrar ou trocar, vá em Configurações da conta.',
               },
               {
                 id: 'course',

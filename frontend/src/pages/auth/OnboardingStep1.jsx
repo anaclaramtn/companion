@@ -5,6 +5,9 @@ import AuthLayout from '../../layouts/auth/AuthLayout.jsx'
 import { useAuth } from '../../hooks/useAuth.js'
 import { getApiErrorMessage } from '../../services/apiError.js'
 
+// Mesmo limite do backend (UserProfileUpdateRequestDTO).
+const MAX_NAME = 64
+
 function validateFullName(value) {
   const name = value.trim()
 
@@ -15,8 +18,8 @@ function validateFullName(value) {
   if (name.length < 3) {
     return 'O nome deve ter pelo menos 3 caracteres.'
   }
-  if (name.length > 120) {
-    return 'O nome deve ter no máximo 120 caracteres.'
+  if (name.length > MAX_NAME) {
+    return `O nome deve ter no máximo ${MAX_NAME} caracteres.`
   }
 
   return ''
@@ -92,7 +95,7 @@ function OnboardingStep1Page() {
             type: 'text',
             autoComplete: 'name',
             placeholder: 'Como você quer ser chamado',
-            maxLength: 120,
+            maxLength: MAX_NAME,
             value: fullName,
             required: true,
             error: fullNameError,

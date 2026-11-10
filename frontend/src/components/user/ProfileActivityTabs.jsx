@@ -1,7 +1,11 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { Link } from 'react-router'
+import LoadMoreTrigger from '../common/LoadMoreTrigger.jsx'
 import PostCard from '../post/PostCard.jsx'
 import ProfileLink from './ProfileLink.jsx'
+import { usePaginatedPosts } from '../../hooks/usePaginatedPosts.js'
+import { getLikedPosts, getPosts } from '../../services/postService.js'
+import { getUserComments } from '../../services/publicProfileService.js'
 
 function initials(name) {
   return name
@@ -40,78 +44,170 @@ function UserAvatar({ user }) {
   )
 }
 
-function PostList({
-  id,
-  posts,
-  emptyText,
-  currentUserId,
-  reportReasons,
-  onLikeChange,
-  onSaveChange,
-  onReport,
-}) {
+// Carregando, vazio, erro e "carregar mais" de uma aba paginada.
+function PanelStatus({ list, emptyText, loadMoreLabel }) {
+  const { items, isLoading, error, hasMore, loadMore, retry } = list
+
+  if (isLoading && items.length === 0) {
+    return (
+      <p role="status" className="px-5 py-8 text-center text-sm text-companion-muted">
+        Carregando...
+      </p>
+    )
+  }
+  if (error) {
+    return (
+      <div role="alert" className="flex flex-col items-center gap-3 px-5 py-6 text-center">
+        <p className="text-sm font-semibold text-red-700">{error}</p>
+        <button
+          type="button"
+          onClick={retry}
+          className="rounded-xl bg-companion-orange px-4 py-2 text-sm font-bold text-white transition hover:bg-companion-orange-hover"
+        >
+          Tentar de novo
+        </button>
+      </div>
+    )
+  }
+  if (items.length === 0) {
+    return (
+      <p className="px-5 py-8 text-center text-sm text-companion-muted">{emptyText}</p>
+    )
+  }
+  return hasMore ? (
+    <LoadMoreTrigger onLoadMore={loadMore} isLoading={isLoading} label={loadMoreLabel} />
+  ) : null
+}
+
+function PostsPanel({ id, fetchPage, emptyText, postActions }) {
+  const { posts, ...list } = usePaginatedPosts(fetchPage)
+
   return (
     <div
       id={`profile-${id}-panel`}
       role="tabpanel"
       aria-labelledby={`profile-${id}-tab`}
-      className="divide-y divide-companion-border/70"
     >
-      {posts.length > 0 ? (
-        posts.map((post) => (
+      <div className="divide-y divide-companion-border/70">
+        {posts.map((post) => (
           <div key={post.id} className="p-4 sm:p-5">
             <PostCard
               post={post}
-              currentUserId={currentUserId}
               detailsHref={`/feed/posts/${post.id}`}
-              reportReasons={reportReasons}
-              onLikeChange={onLikeChange}
-              onSaveChange={onSaveChange}
-              onReport={onReport}
+              {...postActions}
             />
           </div>
-        ))
-      ) : (
-        <p className="px-5 py-8 text-center text-sm text-companion-muted">
-          {emptyText}
-        </p>
-      )}
+        ))}
+      </div>
+      <PanelStatus
+        list={{ ...list, items: posts }}
+        emptyText={emptyText}
+        loadMoreLabel="Carregar mais dúvidas"
+      />
     </div>
   )
 }
 
-// Abas de posts e respostas de um perfil. Com likedPosts, mostra também a aba
-// "Curtidos" (usada apenas no perfil da própria conta).
+function CommentsPanel({ userId, emptyText, currentUserId }) {
+  const fetchPage = useCallback((page) => getUserComments(userId, { page }), [userId])
+  const { posts: comments, ...list } = usePaginatedPosts(
+    fetchPage,
+    'Não foi possível carregar as respostas.',
+  )
+
+  return (
+    <div
+      id="profile-comments-panel"
+      role="tabpanel"
+      aria-labelledby="profile-comments-tab"
+    >
+      {comments.length > 0 && (
+        <ul>
+          {comments.map((comment) => (
+            <li
+              key={comment.id}
+              className="border-b border-companion-border/60 px-5 py-5 last:border-b-0 sm:px-6"
+            >
+              <p className="text-xs font-semibold text-companion-muted">
+                Respondeu a{' '}
+                <Link
+                  to={`/feed/posts/${comment.postId}`}
+                  className="text-companion-brand hover:underline"
+                >
+                  {comment.postTitle}
+                </Link>
+              </p>
+              <div className="mt-3 flex gap-3">
+                <ProfileLink
+                  user={comment.author}
+                  currentUserId={currentUserId}
+                  className="h-fit shrink-0 rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-companion-orange"
+                >
+                  <UserAvatar user={comment.author} />
+                </ProfileLink>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-companion-text">
+                    <ProfileLink
+                      user={comment.author}
+                      currentUserId={currentUserId}
+                      className="hover:text-companion-brand"
+                    >
+                      {comment.author.name}
+                    </ProfileLink>{' '}
+                    <span className="font-normal text-companion-muted">
+                      @{comment.author.username}
+                    </span>
+                  </p>
+                  <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-companion-text">
+                    {comment.content}
+                  </p>
+                  <time
+                    dateTime={comment.createdAt}
+                    className="mt-2 block text-xs text-companion-muted"
+                  >
+                    {new Date(comment.createdAt).toLocaleDateString('pt-BR')}
+                  </time>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+      <PanelStatus
+        list={{ ...list, items: comments }}
+        emptyText={emptyText}
+        loadMoreLabel="Carregar mais respostas"
+      />
+    </div>
+  )
+}
+
+// Abas de posts e respostas de um perfil, vindas do banco. Cada aba só
+// carrega quando é aberta, de 10 em 10. Com showLiked, mostra também a aba
+// "Curtidos" (só no perfil da própria conta, pois a API só lista as
+// curtidas de quem está logado). postActions vai para cada PostCard:
+// { currentUserId, reportReasons, onLikeChange, onSaveChange, onReport }.
 function ProfileActivityTabs({
-  posts,
-  comments,
-  likedPosts,
-  postCount = posts.length,
-  commentCount = comments.length,
-  currentUserId,
-  reportReasons,
-  onLikeChange,
-  onSaveChange,
-  onReport,
+  userId,
+  postCount,
+  commentCount,
+  showLiked = false,
+  postActions,
   emptyPostsText,
   emptyCommentsText,
   emptyLikedText,
 }) {
   const [activeTab, setActiveTab] = useState('posts')
+  const fetchUserPosts = useCallback(
+    (page) => getPosts({ page, authorId: userId }),
+    [userId],
+  )
+  const fetchLikedPosts = useCallback((page) => getLikedPosts({ page }), [])
   const tabs = [
     { id: 'posts', label: `Posts (${postCount})` },
     { id: 'comments', label: `Respostas (${commentCount})` },
-    ...(likedPosts
-      ? [{ id: 'liked', label: `Curtidos (${likedPosts.length})` }]
-      : []),
+    ...(showLiked ? [{ id: 'liked', label: 'Curtidos' }] : []),
   ]
-  const postListProps = {
-    currentUserId,
-    reportReasons,
-    onLikeChange,
-    onSaveChange,
-    onReport,
-  }
 
   return (
     <div className="mt-4 overflow-hidden rounded-2xl border border-companion-border/70 bg-companion-surface shadow-sm">
@@ -137,84 +233,27 @@ function ProfileActivityTabs({
       </div>
 
       {activeTab === 'posts' && (
-        <PostList
+        <PostsPanel
           id="posts"
-          posts={posts}
+          fetchPage={fetchUserPosts}
           emptyText={emptyPostsText}
-          {...postListProps}
+          postActions={postActions}
         />
       )}
-      {activeTab === 'liked' && likedPosts && (
-        <PostList
+      {activeTab === 'liked' && showLiked && (
+        <PostsPanel
           id="liked"
-          posts={likedPosts}
+          fetchPage={fetchLikedPosts}
           emptyText={emptyLikedText}
-          {...postListProps}
+          postActions={postActions}
         />
       )}
       {activeTab === 'comments' && (
-        <div
-          id="profile-comments-panel"
-          role="tabpanel"
-          aria-labelledby="profile-comments-tab"
-        >
-          {comments.length > 0 ? (
-            <ul>
-              {comments.map((comment) => (
-                <li
-                  key={comment.id}
-                  className="border-b border-companion-border/60 px-5 py-5 last:border-b-0 sm:px-6"
-                >
-                  <p className="text-xs font-semibold text-companion-muted">
-                    Respondeu a{' '}
-                    <Link
-                      to={`/feed/posts/${comment.postId}`}
-                      className="text-companion-brand hover:underline"
-                    >
-                      {comment.postTitle}
-                    </Link>
-                  </p>
-                  <div className="mt-3 flex gap-3">
-                    <ProfileLink
-                      user={comment.author}
-                      currentUserId={currentUserId}
-                      className="h-fit shrink-0 rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-companion-orange"
-                    >
-                      <UserAvatar user={comment.author} />
-                    </ProfileLink>
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-companion-text">
-                        <ProfileLink
-                          user={comment.author}
-                          currentUserId={currentUserId}
-                          className="hover:text-companion-brand"
-                        >
-                          {comment.author.name}
-                        </ProfileLink>{' '}
-                        <span className="font-normal text-companion-muted">
-                          @{comment.author.username}
-                        </span>
-                      </p>
-                      <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-companion-text">
-                        {comment.content}
-                      </p>
-                      <time
-                        dateTime={comment.createdAt}
-                        className="mt-2 block text-xs text-companion-muted"
-                      >
-                        {new Date(comment.createdAt).toLocaleDateString('pt-BR')}
-                      </time>
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="px-5 py-8 text-center text-sm text-companion-muted">
-              {emptyCommentsText}
-            </p>
-          )}
-        </div>
+        <CommentsPanel
+          userId={userId}
+          emptyText={emptyCommentsText}
+          currentUserId={postActions.currentUserId}
+        />
       )}
     </div>
   )

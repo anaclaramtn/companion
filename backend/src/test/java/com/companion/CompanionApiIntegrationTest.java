@@ -12,7 +12,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import com.companion.exceptions.ServiceUnavailableException;
+import com.companion.services.CloudinaryAvatarService;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.nio.charset.StandardCharsets;
@@ -21,6 +26,12 @@ import java.time.LocalDateTime;
 import java.util.HexFormat;
 
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.matchesPattern;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -34,6 +45,7 @@ class CompanionApiIntegrationTest {
     @Autowired UniversityRepository universityRepository;
     @Autowired CourseRepository courseRepository;
     @Autowired SubjectRepository subjectRepository;
+    @MockitoBean CloudinaryAvatarService cloudinaryAvatarService;
 
     @Test
     void executesCriticalCrudAndSecurityFlows() throws Exception {
@@ -128,7 +140,20 @@ class CompanionApiIntegrationTest {
                                 + "],\"title\":\"Complexidade\",\"content\":\"Como analisar este algoritmo?\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.subjects", hasSize(2)))
+                // O frontend lê a data como texto ISO (ex.: 2026-11-10T14:30:00).
+                .andExpect(jsonPath("$.createdAt").value(matchesPattern("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}.*")))
                 .andReturn().getResponse().getContentAsString());
+        // Matérias em alta: as duas do post acabado de criar, empatadas, em ordem alfabética.
+        mockMvc.perform(get("/api/subjects/trending").header("Authorization", bearer(adminToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].name").value("Algoritmos"))
+                .andExpect(jsonPath("$[0].code").value("TST01"))
+                .andExpect(jsonPath("$[0].postCount").value(1))
+                .andExpect(jsonPath("$[1].name").value("Estrutura de dados"));
+        mockMvc.perform(get("/api/subjects/trending").header("Authorization", bearer(adminToken))
+                        .param("limit", "1"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$", hasSize(1)));
         mockMvc.perform(post("/api/posts").header("Authorization", bearer(adminToken))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"subjectIds\":[" + subjectId + "],\"title\":\"Limite\",\"content\":\"" + "x".repeat(257) + "\"}"))
@@ -280,6 +305,132 @@ class CompanionApiIntegrationTest {
         mockMvc.perform(get("/api/posts")).andExpect(status().isUnauthorized());
         mockMvc.perform(get("/api/admin/users").header("Authorization", bearer(secondToken)))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void keepsUnsentProfileFieldsAndManagesAvatar() throws Exception {
+        String token = register("carla@unifor.br", "Senha123");
+        long userId = userRepository.findByEmailIgnoreCase("carla@unifor.br").orElseThrow().getId();
+        long universityId = universityRepository.findByAcronymIgnoreCase("UNIFOR").orElseThrow().getId();
+        long courseId = courseRepository.findByUniversityIdOrderByNameAsc(universityId).getFirst().getId();
+        String avatarUrl = "https://res.cloudinary.com/demo/image/upload/v1/companion/avatars/user-" + userId;
+
+        mockMvc.perform(put("/api/users/me/profile").header("Authorization", bearer(token))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Carla\",\"username\":\"carla\",\"bio\":\"Gosto de cálculo\","
+                                + "\"courseId\":" + courseId + ",\"semester\":3}"))
+                .andExpect(status().isOk());
+
+        when(cloudinaryAvatarService.uploadAvatar(eq(userId), any())).thenReturn(avatarUrl);
+        mockMvc.perform(multipart(HttpMethod.PUT, "/api/users/me/avatar").file(avatarFile())
+                        .header("Authorization", bearer(token)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.avatarUrl").value(avatarUrl));
+
+        // Voltar à Etapa 1 e salvar só nome e username não apaga o resto do perfil.
+        mockMvc.perform(put("/api/users/me/profile").header("Authorization", bearer(token))
+                        .contentType(MediaType.APPLICATION_JSON).content(profileJson("Carla Souza", "carla")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Carla Souza"))
+                .andExpect(jsonPath("$.avatarUrl").value(avatarUrl))
+                .andExpect(jsonPath("$.bio").value("Gosto de cálculo"))
+                .andExpect(jsonPath("$.courseId").value(courseId))
+                .andExpect(jsonPath("$.semester").value(3));
+
+        // Texto vazio limpa a biografia; o perfil não aceita mais URL de avatar.
+        mockMvc.perform(put("/api/users/me/profile").header("Authorization", bearer(token))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"bio\":\"\",\"avatarUrl\":\"https://exemplo.com/outra.png\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.bio").doesNotExist())
+                .andExpect(jsonPath("$.avatarUrl").value(avatarUrl))
+                .andExpect(jsonPath("$.name").value("Carla Souza"));
+        mockMvc.perform(put("/api/users/me/profile").header("Authorization", bearer(token))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"   \"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.fieldErrors.name").value("O nome não pode ficar em branco"));
+        mockMvc.perform(put("/api/users/me/profile").header("Authorization", bearer(token))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"semester\":9}"))
+                .andExpect(status().isBadRequest());
+
+        // Erros do envio chegam com mensagem própria, e não como erro interno.
+        mockMvc.perform(multipart(HttpMethod.PUT, "/api/users/me/avatar").header("Authorization", bearer(token)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Selecione uma imagem para enviar"));
+        when(cloudinaryAvatarService.uploadAvatar(eq(userId), any()))
+                .thenThrow(new ServiceUnavailableException("Envio indisponível"));
+        mockMvc.perform(multipart(HttpMethod.PUT, "/api/users/me/avatar").file(avatarFile())
+                        .header("Authorization", bearer(token)))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.message").value("Envio indisponível"));
+
+        mockMvc.perform(delete("/api/users/me/avatar").header("Authorization", bearer(token)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.avatarUrl").doesNotExist());
+        verify(cloudinaryAvatarService).deleteAvatar(userId);
+
+        // Excluir a conta também apaga a foto guardada no Cloudinary.
+        mockMvc.perform(delete("/api/users/me").header("Authorization", bearer(token)))
+                .andExpect(status().isNoContent());
+        verify(cloudinaryAvatarService, times(2)).deleteAvatar(userId);
+    }
+
+    @Test
+    void replacesProfileSubjectsAtOnce() throws Exception {
+        String token = register("dani@unifor.br", "Senha123");
+        mockMvc.perform(put("/api/users/me/profile").header("Authorization", bearer(token))
+                        .contentType(MediaType.APPLICATION_JSON).content(profileJson("Dani", "dani")))
+                .andExpect(status().isOk());
+        long universityId = universityRepository.findByAcronymIgnoreCase("UNIFOR").orElseThrow().getId();
+        long[] ids = java.util.stream.Stream.of("T105", "T161", "T099", "T100", "T096", "T160", "T390")
+                .mapToLong(code -> subjectRepository.findByUniversityIdAndCodeIgnoreCase(universityId, code)
+                        .orElseThrow().getId())
+                .toArray();
+
+        mockMvc.perform(put("/api/users/me/subjects").header("Authorization", bearer(token))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(subjectsJson(ids[0], "DOMINA", ids[1], "QUER_APRENDER")))
+                .andExpect(status().isOk()).andExpect(jsonPath("$", hasSize(2)));
+
+        // T105 sai, T161 muda de grupo e T390 entra.
+        mockMvc.perform(put("/api/users/me/subjects").header("Authorization", bearer(token))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(subjectsJson(ids[1], "DOMINA", ids[6], "QUER_APRENDER")))
+                .andExpect(status().isOk()).andExpect(jsonPath("$", hasSize(2)));
+        mockMvc.perform(get("/api/users/me/subjects/{id}", ids[0]).header("Authorization", bearer(token)))
+                .andExpect(status().isNotFound());
+        mockMvc.perform(get("/api/users/me/subjects/{id}", ids[1]).header("Authorization", bearer(token)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.interestType").value("DOMINA"));
+
+        mockMvc.perform(put("/api/users/me/subjects").header("Authorization", bearer(token))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(subjectsJson(ids[0], "DOMINA", ids[1], "DOMINA", ids[2], "DOMINA",
+                                ids[3], "DOMINA", ids[4], "DOMINA", ids[5], "DOMINA")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Escolha no máximo 5 matérias em cada grupo"));
+        mockMvc.perform(put("/api/users/me/subjects").header("Authorization", bearer(token))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(subjectsJson(ids[0], "DOMINA", ids[0], "QUER_APRENDER")))
+                .andExpect(status().isBadRequest());
+
+        mockMvc.perform(put("/api/users/me/subjects").header("Authorization", bearer(token))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"subjects\":[]}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$", hasSize(0)));
+    }
+
+    // Pares (id, interesse) para PUT /api/users/me/subjects.
+    private String subjectsJson(Object... pairs) {
+        StringBuilder json = new StringBuilder("{\"subjects\":[");
+        for (int i = 0; i < pairs.length; i += 2) {
+            if (i > 0) json.append(',');
+            json.append("{\"subjectId\":").append(pairs[i])
+                    .append(",\"interestType\":\"").append(pairs[i + 1]).append("\"}");
+        }
+        return json.append("]}").toString();
+    }
+
+    private MockMultipartFile avatarFile() {
+        return new MockMultipartFile("file", "foto.jpg", "image/jpeg", new byte[]{(byte) 0xFF, (byte) 0xD8, (byte) 0xFF});
     }
 
     private String register(String email, String password) throws Exception {

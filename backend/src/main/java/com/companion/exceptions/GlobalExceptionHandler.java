@@ -1,7 +1,13 @@
 package com.companion.exceptions;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +29,8 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiErrorDTO> handleNotFound(
@@ -89,8 +97,35 @@ public class GlobalExceptionHandler {
         );
     }
 
+    // Arquivo maior que spring.servlet.multipart.max-file-size (2 MB). Hoje o
+    // único upload é a foto de perfil, por isso a mensagem fala em imagem.
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiErrorDTO> handleUploadTooLarge(Exception exception, HttpServletRequest request) {
+        return buildError(HttpStatus.CONTENT_TOO_LARGE, "A imagem deve ter até 2 MB",
+                request.getRequestURI(), Map.of());
+    }
+
+    @ExceptionHandler({MissingServletRequestPartException.class, MultipartException.class})
+    public ResponseEntity<ApiErrorDTO> handleMissingFile(Exception exception, HttpServletRequest request) {
+        return buildError(HttpStatus.BAD_REQUEST, "Selecione uma imagem para enviar",
+                request.getRequestURI(), Map.of());
+    }
+
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<ApiErrorDTO> handleUnsupportedMediaType(Exception exception, HttpServletRequest request) {
+        return buildError(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Formato de envio não suportado",
+                request.getRequestURI(), Map.of());
+    }
+
+    @ExceptionHandler(ServiceUnavailableException.class)
+    public ResponseEntity<ApiErrorDTO> handleServiceUnavailable(ServiceUnavailableException exception,
+                                                                HttpServletRequest request) {
+        return buildError(HttpStatus.SERVICE_UNAVAILABLE, exception.getMessage(), request.getRequestURI(), Map.of());
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorDTO> handleUnexpected(Exception exception, HttpServletRequest request) {
+        log.error("Erro inesperado em {} {}", request.getMethod(), request.getRequestURI(), exception);
         return buildError(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "Ocorreu um erro interno inesperado",
