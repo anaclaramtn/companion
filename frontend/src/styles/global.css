@@ -183,6 +183,12 @@ body {
   background-color: var(--color-background);
   line-height: var(--line-height-normal);
   -webkit-font-smoothing: antialiased;
+  /* Palavras longas sem espaço (ex.: "aaaaaa…", links) quebram de linha em
+     vez de sair da caixa. "anywhere" só quebra no meio da palavra quando ela
+     não cabe inteira e, ao contrário de "break-word", também vale dentro de
+     itens flex/grid (títulos, respostas, nomes e bios nos cards). Vale para
+     o app todo por herança; textos com "truncate" continuam cortados com "…". */
+  overflow-wrap: anywhere;
 }
 
 button,

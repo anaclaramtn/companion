@@ -185,6 +185,10 @@ Arquivos e responsabilidades esperados:
   (`{"subjects": [{"subjectId", "interestType"}]}`) e deixa o perfil
   exatamente com ela. Cada grupo (`DOMINA` e `QUER_APRENDER`) aceita até 5
   matérias, limite também conferido nos endpoints de uma matéria só.
+- `GET /api/subjects/trending?limit=6`: matérias em alta do Explorar, isto é,
+  as que aparecem em mais dúvidas (não apagadas) publicadas nos últimos 7 dias
+  (`SubjectService.TRENDING_DAYS`), com `postCount`; empates em ordem
+  alfabética.
 - `dtos/user/UserPublicResponseDTO.java`: somente dados visíveis no perfil de
   outro estudante.
 - `dtos/user/UserAccountResponseDTO.java`: dados privados necessários ao titular.

@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.Collection;
 import java.util.List;
@@ -39,6 +40,18 @@ public interface PostRepository extends JpaRepository<Post, Long> {
                             @Param("subjectId") Long subjectId,
                             @Param("authorId") Long authorId,
                             Pageable pageable);
+
+    // Matérias com mais dúvidas (não apagadas) publicadas desde "since". Em
+    // empate, ordem alfabética. O Pageable só limita a quantidade.
+    @Query("""
+            select s.id as subjectId, s.code as code, s.name as name, count(p) as postCount
+            from Post p join p.subjects s
+            where p.deletedAt is null and p.createdAt >= :since
+            group by s.id, s.code, s.name
+            order by count(p) desc, s.name asc
+            """)
+    List<TrendingSubjectProjection> findTrendingSubjects(@Param("since") LocalDateTime since,
+                                                         Pageable pageable);
 
     boolean existsBySubjectsId(Long subjectId);
     long countByAuthorIdAndDeletedAtIsNull(Long authorId);

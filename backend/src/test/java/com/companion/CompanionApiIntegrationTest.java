@@ -143,6 +143,17 @@ class CompanionApiIntegrationTest {
                 // O frontend lê a data como texto ISO (ex.: 2026-11-10T14:30:00).
                 .andExpect(jsonPath("$.createdAt").value(matchesPattern("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}.*")))
                 .andReturn().getResponse().getContentAsString());
+        // Matérias em alta: as duas do post acabado de criar, empatadas, em ordem alfabética.
+        mockMvc.perform(get("/api/subjects/trending").header("Authorization", bearer(adminToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].name").value("Algoritmos"))
+                .andExpect(jsonPath("$[0].code").value("TST01"))
+                .andExpect(jsonPath("$[0].postCount").value(1))
+                .andExpect(jsonPath("$[1].name").value("Estrutura de dados"));
+        mockMvc.perform(get("/api/subjects/trending").header("Authorization", bearer(adminToken))
+                        .param("limit", "1"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$", hasSize(1)));
         mockMvc.perform(post("/api/posts").header("Authorization", bearer(adminToken))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"subjectIds\":[" + subjectId + "],\"title\":\"Limite\",\"content\":\"" + "x".repeat(257) + "\"}"))

@@ -61,7 +61,7 @@ function ReportPopup({ reasons, targetLabel = 'conteúdo', onClose, onSubmit }) 
         type="button"
         aria-label="Fechar janela de denúncia"
         onClick={onClose}
-        className="absolute inset-0 cursor-default bg-[#21170f]/55 backdrop-blur-sm"
+        className="fixed inset-0 cursor-default bg-[#21170f]/55 backdrop-blur-sm"
       />
 
       <section

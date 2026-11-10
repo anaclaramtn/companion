@@ -132,7 +132,7 @@ function PostComposerModal({
         type="button"
         aria-label="Fechar janela de publicação"
         onClick={onClose}
-        className="absolute inset-0 cursor-default bg-[#21170f]/55 backdrop-blur-sm"
+        className="fixed inset-0 cursor-default bg-[#21170f]/55 backdrop-blur-sm"
       />
 
       <section

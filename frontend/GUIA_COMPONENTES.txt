@@ -219,8 +219,7 @@ COMPONENTES DE USUÁRIO — src/components/user/
   ao estado anterior; a contagem de curtidas vem da resposta da API. A tela
   Salvos (/salvos) lista GET /api/users/me/saved-posts e tira da lista a
   dúvida removida dos salvos. A bandeira de denúncia não aparece no que é
-  da própria conta. PROVISÓRIO: Explorar ainda usa onLikeChange,
-  onSaveChange e onReport, que só mexem nos posts falsos.
+  da própria conta.
 
   ProfileLink.jsx
     Link para o perfil de um usuário. Para a conta autenticada, leva a
@@ -363,30 +362,21 @@ LAYOUTS (src/layouts/)
   MainNavigation e ProfileSummary e renderiza a página da rota com <Outlet />.
   src/layouts/user/PostDetailLayout.jsx organiza a navegação de retorno e
   fornece à tela os dados da dúvida e das respostas via Outlet context. O
-  FeedLayout mantém os mocks e o estado local de posts, respostas e denúncias;
-  os callbacks atualizam esse estado durante o desenvolvimento.
+  FeedLayout fornece a conta (currentUser), as ações sobre dúvidas
+  (onLikePost, onSavePost, onReportItem), a janela "Postar dúvida" e os
+  números da lateral; cada tela busca os próprios dados na API.
 
 ROTAS (src/App.jsx)
   Associam caminhos a páginas e layouts. Uma página dentro de um layout deve
   ser configurada como rota filha para ser apresentada pelo <Outlet />.
 
 DADOS (src/data/)
-  Durante o desenvolvimento, mantenha dados de exemplo fora dos componentes
-  visuais.
-    mockPosts.js:
-      mockPostsResponse: resposta simulada paginada de publicações.
-      mockPostReportReasons: opções de denúncia para publicações e respostas.
-    mockSubjects.js:
-      mockSubjects: todas as disciplinas do curso, com id (código da
-        disciplina, ex.: T390), name e semester (null = optativa). É a única
-        fonte de disciplinas: posts, perfis, Explorar e formulários usam
-        esses códigos. getSubjectById(código) devolve a disciplina.
-    mockPostReplies.js:
-      mockRepliesByPost: respostas agrupadas pelo id da publicação.
-  Ao conectar o backend, substitua os mocks pela chamada apropriada em api/ ou
-  services/, preservando os contratos de dados usados pelos componentes. A
-  lista de motivos deve continuar sendo recebida por props e vir da tabela
-  auxiliar apropriada para cada tipo de alvo.
+  Só textos fixos das telas continuam aqui: mockFaqs.js (até o FAQ vir do
+  banco), mockSettingsOptions.js, mockSupport.js e mockTerms.js. Posts,
+  respostas, usuários e disciplinas vêm da API (src/services/); os arquivos
+  falsos desses dados foram apagados. Mantenha dados fora dos componentes
+  visuais. A lista de motivos de denúncia continua sendo recebida por props
+  (REPORT_REASONS em postService.js).
 
 
 5. PADRÃO DE CÓDIGO
@@ -457,8 +447,8 @@ FLUXO DE CRIAÇÃO DE CONTA
        -> MainNavigation.jsx
        -> ProfileSummary.jsx
        -> PostComposerModal.jsx (aberto pelo botão "Postar dúvida")
-       -> mantém mocks/estado local e fornece posts, respostas, opções de
-          denúncia e callbacks via Outlet context
+       -> fornece via Outlet context a conta, os motivos de denúncia e as
+          ações onLikePost, onSavePost e onReportItem
        -> Outlet
           -> FeedPage.jsx
              -> posts do banco (GET /api/posts), 10 por vez, pelo hook
@@ -478,10 +468,16 @@ FLUXO DE CRIAÇÃO DE CONTA
                 -> PostReplyCard.jsx (respostas sem opção de responder)
                    -> ReportPopup.jsx (denúncia da resposta)
 
-  As chamadas de posts ficam em src/services/postService.js. Ainda usam os
-  mocks do FeedLayout (mockPosts.js e mockPostReplies.js) só em Explorar.
-  Feed, detalhe, Salvos, perfis, criar dúvidas e respostas, curtir, salvar,
-  denunciar e seguir já usam a API.
+  As chamadas de posts ficam em src/services/postService.js. Feed, detalhe,
+  Salvos, perfis, Explorar, criar dúvidas e respostas, curtir, salvar,
+  denunciar e seguir usam a API.
+
+  Explorar (src/pages/search/ExplorePage.jsx, rota /explorar): o texto busca
+  dúvidas (GET /api/posts?query=) e estudantes (GET /api/users?query=, até
+  5), depois que a pessoa para de digitar; "#matéria" vira filtro por
+  matéria (subjectId; uma de cada vez, a nova substitui a anterior). "Assuntos
+  em alta" vem de GET /api/subjects/trending: as matérias com mais dúvidas
+  publicadas nos últimos 7 dias; clicar em uma filtra a busca por ela.
 
   Apagar dúvidas e respostas não aparece no app, por decisão do projeto. O
   backend já tem DELETE /api/posts/{id} e DELETE /api/comments/{id} (o autor

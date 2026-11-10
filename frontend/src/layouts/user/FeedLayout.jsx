@@ -6,8 +6,6 @@ import FeedHeader from '../../components/common/Header.jsx'
 import MainNavigation from '../../components/common/MainNavigation.jsx'
 import PostComposerModal from '../../components/post/PostComposerModal.jsx'
 import ProfileSummary from '../../components/common/ProfileSummary.jsx'
-import { mockPostsResponse } from '../../data/mockPosts.js'
-import { mockRepliesByPost } from '../../data/mockPostReplies.js'
 import { useAuth } from '../../hooks/useAuth.js'
 import { useToast } from '../../hooks/useToast.js'
 import { getAllSubjects, getCourseSubjects } from '../../services/academicService.js'
@@ -37,15 +35,6 @@ const navigationItems = [
   { to: '/salvos', label: 'Salvos', icon: 'bi-bookmark' },
   { to: '/configuracoes', label: 'Configurações', icon: 'bi-gear' },
 ]
-
-function authorSummary(user) {
-  return {
-    id: user.id,
-    name: user.name,
-    username: user.username,
-    avatarUrl: user.avatarUrl,
-  }
-}
 
 function FeedLayout() {
   const [isComposerOpen, setIsComposerOpen] = useState(false)
@@ -84,9 +73,6 @@ function FeedLayout() {
         : counts,
     )
   }, [])
-  const [posts, setPosts] = useState(mockPostsResponse.content)
-  const [repliesByPost, setRepliesByPost] = useState(mockRepliesByPost)
-  const [, setReports] = useState([])
   const navigate = useNavigate()
   const location = useLocation()
   const showToast = useToast()
@@ -133,48 +119,7 @@ function FeedLayout() {
     if (location.pathname !== '/feed') navigate('/feed')
   }
 
-
-  function handleCreateReply(postId, content) {
-    const newReply = {
-      id: Date.now(),
-      postId,
-      author: authorSummary(currentUser),
-      content,
-      createdAt: new Date().toISOString(),
-      reportedByCurrentUser: false,
-    }
-
-    setRepliesByPost((currentReplies) => ({
-      ...currentReplies,
-      [postId]: [newReply, ...(currentReplies[postId] ?? [])],
-    }))
-  }
-
-  // Guarda a curtida no estado compartilhado para que ela apareça em todas as
-  // telas (inclusive na aba "Curtidos" do perfil).
-  function handleLikeChange(postId, liked) {
-    setPosts((currentPosts) =>
-      currentPosts.map((post) =>
-        post.id === postId
-          ? {
-              ...post,
-              likedByCurrentUser: liked,
-              likeCount: post.likeCount + (liked ? 1 : -1),
-            }
-          : post,
-      ),
-    )
-  }
-
-  function handleSaveChange(postId, saved) {
-    setPosts((currentPosts) =>
-      currentPosts.map((post) =>
-        post.id === postId ? { ...post, savedByCurrentUser: saved } : post,
-      ),
-    )
-  }
-
-  // Ações das telas que já usam o banco (feed, detalhe e Salvos). Erros
+  // Ações sobre as dúvidas, usadas em todas as telas que mostram PostCard. Erros
   // mostram um toast e voltam para quem chamou, que desfaz a mudança na tela
   // (ou, na denúncia, mantém a janela aberta com a mensagem).
   async function likePost(postId, liked) {
@@ -214,17 +159,6 @@ function FeedLayout() {
     )
   }
 
-  function handleReport(report) {
-    setReports((currentReports) => [report, ...currentReports])
-  }
-
-  // A quantidade de respostas é sempre calculada a partir das respostas
-  // existentes, para nunca divergir do que aparece no detalhe do post.
-  const postsWithCounts = posts.map((post) => ({
-    ...post,
-    commentCount: repliesByPost[post.id]?.length ?? 0,
-  }))
-
   return (
     <Background>
       <div className="mx-auto min-h-dvh w-full max-w-[1600px] px-4 py-4 sm:px-6 lg:px-8">
@@ -250,21 +184,13 @@ function FeedLayout() {
           <main className="min-w-0">
             <Outlet
               context={{
-                posts: postsWithCounts,
-                repliesByPost,
                 currentUser,
                 currentUserId: currentUser.id,
                 reportReasons: REPORT_REASONS,
-                onCreateReply: handleCreateReply,
-                // Ações sobre posts do banco (feed, detalhe e Salvos).
+                // Curtir, salvar e denunciar dúvidas e respostas (gravam no banco).
                 onLikePost: likePost,
                 onSavePost: savePost,
                 onReportItem: reportItem,
-                // PROVISÓRIO: ações sobre os posts falsos de Explorar; saem
-                // quando essa tela for integrada.
-                onLikeChange: handleLikeChange,
-                onSaveChange: handleSaveChange,
-                onReport: handleReport,
                 feedRefreshKey,
                 onFollowingChange: handleFollowingChange,
               }}

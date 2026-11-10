@@ -25,6 +25,13 @@ export async function getCourseSubjects(courseId) {
   }))
 }
 
+// Matérias com mais dúvidas publicadas nos últimos 7 dias: lista de
+// { id, code, name, postCount }, da mais citada para a menos citada.
+export async function getTrendingSubjects({ limit = 6 } = {}) {
+  const response = await api.get('/subjects/trending', { params: { limit } })
+  return response.data
+}
+
 // Todas as disciplinas cadastradas, para quem ainda não escolheu o curso.
 // Sem grade, não há semestre (semester undefined).
 export async function getAllSubjects() {
