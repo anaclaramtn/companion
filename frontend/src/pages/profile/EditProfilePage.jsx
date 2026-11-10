@@ -15,7 +15,7 @@ import {
 } from '../../services/profileService.js'
 
 const MAX_NAME_LENGTH = 60
-const MAX_BIO_LENGTH = 160
+const MAX_BIO_LENGTH = 512
 const MAX_COURSE_LENGTH = 80
 const SEMESTERS = Array.from({ length: 12 }, (_, index) => index + 1)
 const LAST_GRADE_SEMESTER = 8
