@@ -1,28 +1,77 @@
-import {useState} from 'react'
+import {useEffect, useState} from 'react'
 import {Link, Navigate} from 'react-router'
 import AuthForm from '../../features/auth/components/AuthForm.jsx'
 import AuthLayout from '../../layouts/auth/AuthLayout.jsx'
 import SubjectInterestPicker from '../../components/user/SubjectInterestPicker.jsx'
-import { mockSubjects } from '../../data/mockSubjects.js'
+import { useAuth } from '../../hooks/useAuth.js'
+import { getAllSubjects, getCourseSubjects } from '../../services/academicService.js'
+import { getApiErrorMessage } from '../../services/apiError.js'
+import { getMySubjects, replaceMySubjects } from '../../services/profileService.js'
 
-// Mesmo catálogo e seletor usados no Editar perfil. Como o semestre da
-// Etapa 3 ainda não é guardado entre as etapas, sugerimos as disciplinas do
-// 1º semestre (o mesmo que o Editar perfil faz sem semestre informado);
-// "Ver mais" abre a lista completa com busca.
-const featuredSubjectIds = mockSubjects
-  .filter((subject) => subject.semester === 1)
-  .map((subject) => subject.id)
+// Sugere as disciplinas do semestre atual e do anterior (sem semestre
+// informado, as do 1º), como no Editar perfil. "Ver mais" abre a lista
+// completa com busca.
+function getFeaturedSubjectIds(catalog, semester) {
+  const current = Number(semester) || 1
+  const semesters = [current, Math.max(current - 1, 1)]
+  return catalog
+    .filter((subject) => semesters.includes(subject.semester))
+    .map((subject) => subject.id)
+}
 
 function OnboardingStep4Page() {
+  const { user } = useAuth()
+  const courseId = user?.courseId
+  // Disciplinas que podem ser escolhidas: a grade do curso da Etapa 3 ou,
+  // sem curso, todas as cadastradas.
+  const [catalog, setCatalog] = useState([])
   // Lista de { subject, interestType }, no mesmo formato do Editar perfil.
   const [subjects, setSubjects] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [loadFailed, setLoadFailed] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [message, setMessage] = useState('')
   const [done, setDone] = useState(false)
 
-  function handleSubmit(event) {
-    event.preventDefault()
+  useEffect(() => {
+    let active = true
+    Promise.all([
+      courseId ? getCourseSubjects(courseId) : getAllSubjects(),
+      getMySubjects(),
+    ])
+      .then(([catalogList, mySubjects]) => {
+        if (!active) return
+        setCatalog(catalogList)
+        setSubjects(mySubjects)
+      })
+      .catch((error) => {
+        if (!active) return
+        setLoadFailed(true)
+        setMessage(getApiErrorMessage(error, 'Não foi possível carregar as disciplinas.'))
+      })
+      .finally(() => {
+        if (active) setIsLoading(false)
+      })
+    return () => {
+      active = false
+    }
+  }, [courseId])
 
-    // Os dois grupos são opcionais. O envio à API ainda precisa ser conectado.
-    setDone(true)
+  async function handleSubmit(event) {
+    event.preventDefault()
+    if (isSubmitting) return
+
+    setMessage('')
+    setIsSubmitting(true)
+    try {
+      // Os dois grupos são opcionais; a lista vazia também é salva.
+      await replaceMySubjects(subjects)
+      setDone(true)
+    } catch (error) {
+      setMessage(getApiErrorMessage(error, 'Não foi possível salvar suas disciplinas. Tente novamente.'))
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   if (done) return <Navigate to="/onboarding/etapa-5" />
@@ -46,8 +95,11 @@ function OnboardingStep4Page() {
         description="Você poderá completar ou alterar essas informações depois."
         fields={[]}
         submitLabel="Avançar"
-        canSubmit
+        canSubmit={!isLoading && !loadFailed}
+        isSubmitting={isSubmitting}
         onSubmit={handleSubmit}
+        message={message}
+        messageType="error"
         actions={{
           start: (
             <Link className="text-button" to="/onboarding/etapa-3">
@@ -61,12 +113,24 @@ function OnboardingStep4Page() {
           ),
         }}
       >
-        <SubjectInterestPicker
-          subjects={mockSubjects}
-          value={subjects}
-          featuredIds={featuredSubjectIds}
-          onChange={setSubjects}
-        />
+        {isLoading && <p className="helper">Carregando disciplinas...</p>}
+
+        {!isLoading && !loadFailed && (
+          <>
+            {!courseId && (
+              <p className="helper" style={{margin: '0 0 0.75rem', color: '#777783', fontSize: '0.85rem'}}>
+                Escolha seu curso na etapa anterior para ver as disciplinas da
+                sua grade separadas por semestre.
+              </p>
+            )}
+            <SubjectInterestPicker
+              subjects={catalog}
+              value={subjects}
+              featuredIds={getFeaturedSubjectIds(catalog, user?.semester)}
+              onChange={setSubjects}
+            />
+          </>
+        )}
       </AuthForm>
     </AuthLayout>
   )

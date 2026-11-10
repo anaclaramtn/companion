@@ -181,6 +181,10 @@ Arquivos e responsabilidades esperados:
   `DELETE /api/users/me/avatar`. O envio ao Cloudinary acontece fora de
   transação; erros do Cloudinary viram 400 (imagem inválida) ou 503
   (serviço indisponível ou sem configuração), e arquivo grande demais vira 413.
+- `PUT /api/users/me/subjects`: recebe a lista completa de matérias do perfil
+  (`{"subjects": [{"subjectId", "interestType"}]}`) e deixa o perfil
+  exatamente com ela. Cada grupo (`DOMINA` e `QUER_APRENDER`) aceita até 5
+  matérias, limite também conferido nos endpoints de uma matéria só.
 - `dtos/user/UserPublicResponseDTO.java`: somente dados visíveis no perfil de
   outro estudante.
 - `dtos/user/UserAccountResponseDTO.java`: dados privados necessários ao titular.

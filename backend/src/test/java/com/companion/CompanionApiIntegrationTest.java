@@ -355,6 +355,60 @@ class CompanionApiIntegrationTest {
         verify(cloudinaryAvatarService).deleteAvatar(userId);
     }
 
+    @Test
+    void replacesProfileSubjectsAtOnce() throws Exception {
+        String token = register("dani@unifor.br", "Senha123");
+        mockMvc.perform(put("/api/users/me/profile").header("Authorization", bearer(token))
+                        .contentType(MediaType.APPLICATION_JSON).content(profileJson("Dani", "dani")))
+                .andExpect(status().isOk());
+        long universityId = universityRepository.findByAcronymIgnoreCase("UNIFOR").orElseThrow().getId();
+        long[] ids = java.util.stream.Stream.of("T105", "T161", "T099", "T100", "T096", "T160", "T390")
+                .mapToLong(code -> subjectRepository.findByUniversityIdAndCodeIgnoreCase(universityId, code)
+                        .orElseThrow().getId())
+                .toArray();
+
+        mockMvc.perform(put("/api/users/me/subjects").header("Authorization", bearer(token))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(subjectsJson(ids[0], "DOMINA", ids[1], "QUER_APRENDER")))
+                .andExpect(status().isOk()).andExpect(jsonPath("$", hasSize(2)));
+
+        // T105 sai, T161 muda de grupo e T390 entra.
+        mockMvc.perform(put("/api/users/me/subjects").header("Authorization", bearer(token))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(subjectsJson(ids[1], "DOMINA", ids[6], "QUER_APRENDER")))
+                .andExpect(status().isOk()).andExpect(jsonPath("$", hasSize(2)));
+        mockMvc.perform(get("/api/users/me/subjects/{id}", ids[0]).header("Authorization", bearer(token)))
+                .andExpect(status().isNotFound());
+        mockMvc.perform(get("/api/users/me/subjects/{id}", ids[1]).header("Authorization", bearer(token)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.interestType").value("DOMINA"));
+
+        mockMvc.perform(put("/api/users/me/subjects").header("Authorization", bearer(token))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(subjectsJson(ids[0], "DOMINA", ids[1], "DOMINA", ids[2], "DOMINA",
+                                ids[3], "DOMINA", ids[4], "DOMINA", ids[5], "DOMINA")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Escolha no máximo 5 matérias em cada grupo"));
+        mockMvc.perform(put("/api/users/me/subjects").header("Authorization", bearer(token))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(subjectsJson(ids[0], "DOMINA", ids[0], "QUER_APRENDER")))
+                .andExpect(status().isBadRequest());
+
+        mockMvc.perform(put("/api/users/me/subjects").header("Authorization", bearer(token))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"subjects\":[]}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$", hasSize(0)));
+    }
+
+    // Pares (id, interesse) para PUT /api/users/me/subjects.
+    private String subjectsJson(Object... pairs) {
+        StringBuilder json = new StringBuilder("{\"subjects\":[");
+        for (int i = 0; i < pairs.length; i += 2) {
+            if (i > 0) json.append(',');
+            json.append("{\"subjectId\":").append(pairs[i])
+                    .append(",\"interestType\":\"").append(pairs[i + 1]).append("\"}");
+        }
+        return json.append("]}").toString();
+    }
+
     private MockMultipartFile avatarFile() {
         return new MockMultipartFile("file", "foto.jpg", "image/jpeg", new byte[]{(byte) 0xFF, (byte) 0xD8, (byte) 0xFF});
     }

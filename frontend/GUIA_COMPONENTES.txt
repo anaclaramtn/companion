@@ -467,6 +467,23 @@ ARQUIVOS
     iguais às do backend: JPG, PNG ou WEBP com até 2 MB (getAvatarFileError).
     Arquivo inválido mostra um toast na hora da escolha; se a API ainda assim
     responder 413, a tela mostra o mesmo toast do limite de 2 MB.
+    getMySubjects e replaceMySubjects leem e substituem de uma vez as
+    disciplinas do perfil (PUT /api/users/me/subjects), no formato
+    { subject, interestType } do SubjectInterestPicker.
+  src/services/academicService.js
+    Catálogo do banco: universidades, cursos (com totalSemesters), grade do
+    curso e todas as disciplinas. Converte para o formato do
+    SubjectInterestPicker: { id, code, name, semester }, com semester null
+    para optativa e undefined quando não há grade (aparece em um só grupo).
+
+ONBOARDING INTEGRADO
+  Etapa 1: nome e username.  Etapa 2: foto (Cloudinary).
+  Etapa 3: universidade, curso e semestre, vindos do banco; salva courseId e
+           semester. Os selects ficam desabilitados até a escolha anterior.
+  Etapa 4: disciplinas da grade do curso escolhido (sem curso, todas); já
+           abre com as que o usuário salvou e salva a lista inteira.
+  Etapa 5: bio e conclusão do onboarding.
+  Cada etapa salva só a sua parte; voltar e avançar não apaga as outras.
   src/components/common/RequireAuth.jsx
     Protege as rotas internas em App.jsx: sem sessão, manda para /login; com
     perfil incompleto, manda para /onboarding/etapa-1; enquanto a sessão está

@@ -21,6 +21,11 @@ public class UserSubjectController {
         return ResponseEntity.created(URI.create("/api/users/me/subjects/" + response.subject().id())).body(response);
     }
     @GetMapping("/users/me/subjects") public List<UserSubjectResponseDTO> mine() { return service.listMine(); }
+    // Substitui todas as matérias do perfil de uma vez (onboarding e Editar perfil).
+    @PutMapping("/users/me/subjects")
+    public List<UserSubjectResponseDTO> replace(@Valid @RequestBody UserSubjectsReplaceRequestDTO request) {
+        return service.replaceMine(request);
+    }
     @GetMapping("/users/me/subjects/{subjectId}") public UserSubjectResponseDTO get(@PathVariable Long subjectId) {
         return service.getMine(subjectId);
     }

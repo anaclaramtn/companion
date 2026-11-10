@@ -42,6 +42,26 @@ export async function removeProfileAvatar() {
   return response.data
 }
 
+// Disciplinas do perfil no formato do SubjectInterestPicker:
+// lista de { subject: { id, name }, interestType }.
+export async function getMySubjects() {
+  const response = await api.get('/users/me/subjects')
+  return response.data.map(({ subject, interestType }) => ({
+    subject: { id: subject.id, name: subject.name },
+    interestType,
+  }))
+}
+
+// Substitui todas as disciplinas do perfil pela lista enviada.
+export async function replaceMySubjects(subjects) {
+  await api.put('/users/me/subjects', {
+    subjects: subjects.map(({ subject, interestType }) => ({
+      subjectId: subject.id,
+      interestType,
+    })),
+  })
+}
+
 export async function completeOnboarding() {
   const response = await api.post('/users/me/onboarding/complete')
   return response.data
