@@ -12,6 +12,8 @@ public record UserAccountResponseDTO(
         String username,
         String avatarUrl,
         String bio,
+        String bannerStyle,
+        String bannerColor,
         String registrationNumber,
         Long courseId,
         String course,

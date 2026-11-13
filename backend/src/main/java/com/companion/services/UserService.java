@@ -128,6 +128,9 @@ public class UserService {
         }
 
         user.updateProfile(name, username, bio, registration, course, semester);
+        if (request.bannerStyle() != null) {
+            user.updateBanner(request.bannerStyle(), request.bannerColor());
+        }
         return toAccount(userRepository.save(user));
     }
 
@@ -209,7 +212,7 @@ public class UserService {
     public UserAccountResponseDTO toAccount(User user) {
         return new UserAccountResponseDTO(
                 user.getId(), user.getEmail(), user.getName(), user.getUsername(), user.getAvatarUrl(),
-                user.getBio(), user.getRegistrationNumber(),
+                user.getBio(), user.getBannerStyle(), user.getBannerColor(), user.getRegistrationNumber(),
                 courseId(user), courseName(user), universityId(user), universityName(user), user.getSemester(),
                 user.getRole(), user.getStatus(), user.isProfileComplete(), user.getOnboardingCompletedAt(),
                 user.getCreatedAt(), user.getUpdatedAt()
@@ -246,6 +249,7 @@ public class UserService {
     private UserPublicResponseDTO toPublic(User user, long posts, long comments, long followers, long following) {
         return new UserPublicResponseDTO(
                 user.getId(), user.getName(), user.getUsername(), user.getAvatarUrl(), user.getBio(),
+                user.getBannerStyle(), user.getBannerColor(),
                 courseId(user), courseName(user), universityId(user), universityName(user), user.getSemester(),
                 posts, comments, followers, following,
                 user.getCreatedAt()

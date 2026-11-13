@@ -1,3 +1,5 @@
+import ProfileBanner from './ProfileBanner.jsx'
+
 function initials(name) {
   return name
     .split(' ')
@@ -22,9 +24,10 @@ function ProfileHeader({
 }) {
   return (
     <article className="overflow-hidden rounded-2xl border border-companion-border/70 bg-companion-surface shadow-sm">
-      <div
-        aria-hidden="true"
-        className="profile-banner h-32 sm:h-40"
+      <ProfileBanner
+        style={user.bannerStyle}
+        color={user.bannerColor}
+        className="h-32 sm:h-40"
       />
       <div className="px-5 pb-6 sm:px-7">
         <div className="-mt-12 flex flex-wrap items-end justify-between gap-4 sm:-mt-14">

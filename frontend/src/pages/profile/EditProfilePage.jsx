@@ -2,6 +2,11 @@ import { useEffect, useState } from 'react'
 import { Link, useOutletContext } from 'react-router'
 import BackLink from '../../components/common/BackLink.jsx'
 import FormField from '../../components/common/FormField.jsx'
+import ProfileBanner, {
+  BANNER_STYLES,
+  DEFAULT_BANNER_COLOR,
+  DEFAULT_BANNER_STYLE,
+} from '../../components/user/ProfileBanner.jsx'
 import SubjectInterestPicker from '../../components/user/SubjectInterestPicker.jsx'
 import { useAuth } from '../../hooks/useAuth.js'
 import { useToast } from '../../hooks/useToast.js'
@@ -69,6 +74,8 @@ function EditProfilePage() {
     name: currentUser.name ?? '',
     avatarUrl: currentUser.avatarUrl,
     bio: currentUser.bio ?? '',
+    bannerStyle: currentUser.bannerStyle ?? DEFAULT_BANNER_STYLE,
+    bannerColor: currentUser.bannerColor ?? DEFAULT_BANNER_COLOR,
     universityId: toFieldValue(currentUser.universityId),
     courseId: toFieldValue(currentUser.courseId),
     semester: toFieldValue(currentUser.semester),
@@ -235,6 +242,8 @@ function EditProfilePage() {
       await updateProfile({
         name: form.name.trim(),
         bio: form.bio.trim(),
+        bannerStyle: form.bannerStyle,
+        ...(form.bannerStyle === 'SOLID' && { bannerColor: form.bannerColor }),
         ...(form.courseId && { courseId: Number(form.courseId) }),
         ...(form.semester && { semester: Number(form.semester) }),
       })
@@ -340,6 +349,55 @@ function EditProfilePage() {
               )}
             </div>
           </div>
+        </section>
+
+        <section
+          aria-labelledby="edit-profile-banner-title"
+          className="space-y-4 rounded-2xl border border-companion-border/70 bg-companion-surface p-5 shadow-sm sm:p-6"
+        >
+          <h2
+            id="edit-profile-banner-title"
+            className="text-[0.65rem] font-bold uppercase tracking-wide text-companion-brand"
+          >
+            Banner do perfil
+          </h2>
+          <ProfileBanner
+            style={form.bannerStyle}
+            color={form.bannerColor}
+            className="h-24 rounded-xl sm:h-28"
+          />
+          <div role="radiogroup" aria-labelledby="edit-profile-banner-title" className="flex flex-wrap gap-2">
+            {BANNER_STYLES.map((option) => {
+              const selected = form.bannerStyle === option.value
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  onClick={() => updateField('bannerStyle', option.value)}
+                  className={`rounded-xl border px-4 py-2 text-sm font-bold transition ${
+                    selected
+                      ? 'border-companion-orange bg-companion-orange/10 text-companion-brand'
+                      : 'border-companion-border bg-companion-panel text-companion-text hover:bg-companion-orange/5'
+                  }`}
+                >
+                  {option.label}
+                </button>
+              )
+            })}
+          </div>
+          {form.bannerStyle === 'SOLID' && (
+            <label className="flex items-center gap-3 text-sm font-semibold text-companion-text">
+              Cor
+              <input
+                type="color"
+                value={form.bannerColor}
+                onChange={(event) => updateField('bannerColor', event.target.value)}
+                className="h-10 w-14 cursor-pointer rounded-lg border border-companion-border bg-companion-panel p-1"
+              />
+            </label>
+          )}
         </section>
 
         <section

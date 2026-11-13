@@ -8,6 +8,8 @@ public record UserPublicResponseDTO(
         String username,
         String avatarUrl,
         String bio,
+        String bannerStyle,
+        String bannerColor,
         Long courseId,
         String course,
         Long universityId,

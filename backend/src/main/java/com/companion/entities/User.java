@@ -46,6 +46,14 @@ public class User {
     @Column(length = 512)
     private String bio;
 
+    /** Estilo do banner do perfil: GRADIENT, WAVES, WAVES_2, WAVES_3 ou SOLID (null = GRADIENT). */
+    @Column(name = "banner_style", length = 20)
+    private String bannerStyle;
+
+    /** Cor (#rrggbb) usada pelo banner SOLID; null usa a cor do tema. */
+    @Column(name = "banner_color", length = 7)
+    private String bannerColor;
+
     @Column(name = "registration_number", length = 30)
     private String registrationNumber;
 
@@ -107,6 +115,11 @@ public class User {
         this.semester = semester;
     }
 
+    public void updateBanner(String bannerStyle, String bannerColor) {
+        this.bannerStyle = bannerStyle;
+        this.bannerColor = bannerColor;
+    }
+
     public void updateAvatar(String avatarUrl) {
         this.avatarUrl = avatarUrl;
     }
@@ -136,6 +149,8 @@ public class User {
         passwordHash = unusablePasswordHash;
         avatarUrl = null;
         bio = null;
+        bannerStyle = null;
+        bannerColor = null;
         registrationNumber = null;
         course = null;
         semester = null;
@@ -156,6 +171,8 @@ public class User {
     public String getUsername() { return username; }
     public String getAvatarUrl() { return avatarUrl; }
     public String getBio() { return bio; }
+    public String getBannerStyle() { return bannerStyle; }
+    public String getBannerColor() { return bannerColor; }
     public String getRegistrationNumber() { return registrationNumber; }
     public LocalDateTime getEmailVerifiedAt() { return emailVerifiedAt; }
     public Course getCourse() { return course; }

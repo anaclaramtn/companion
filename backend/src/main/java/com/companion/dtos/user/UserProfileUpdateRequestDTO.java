@@ -19,6 +19,10 @@ public record UserProfileUpdateRequestDTO(
         String registrationNumber,
         Long courseId,
         @Min(value = 1, message = "O semestre deve ser maior ou igual a 1")
-        Integer semester
+        Integer semester,
+        @Pattern(regexp = "GRADIENT|WAVES|WAVES_2|WAVES_3|SOLID", message = "Estilo de banner inválido")
+        String bannerStyle,
+        @Pattern(regexp = "^#[0-9A-Fa-f]{6}$", message = "A cor do banner deve estar no formato #rrggbb")
+        String bannerColor
 ) {
 }
