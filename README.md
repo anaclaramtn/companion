@@ -66,10 +66,3 @@ UPDATE users SET role = 'ADMIN' WHERE id = X;
 ```
 
 Entre de novo para o papel valer no token.
-
-## Testes
-
-```powershell
-cd backend
-.\gradlew.bat test
-```

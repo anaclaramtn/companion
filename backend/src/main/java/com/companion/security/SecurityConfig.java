@@ -35,8 +35,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
                                                    RestAuthenticationEntryPoint authenticationEntryPoint,
                                                    RestAccessDeniedHandler accessDeniedHandler,
-                                                   JwtAuthenticationConverter jwtAuthenticationConverter,
-                                                   @Value("${spring.h2.console.enabled:false}") boolean h2ConsoleEnabled) throws Exception {
+                                                   JwtAuthenticationConverter jwtAuthenticationConverter) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> { })
@@ -44,9 +43,6 @@ public class SecurityConfig {
                 .exceptionHandling(errors -> errors.authenticationEntryPoint(authenticationEntryPoint)
                         .accessDeniedHandler(accessDeniedHandler))
                 .authorizeHttpRequests(auth -> {
-                    if (h2ConsoleEnabled) {
-                        auth.requestMatchers("/h2-console/**").permitAll();
-                    }
                     auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                             .requestMatchers("/api/test", "/api/auth/register", "/api/auth/login",
                                     "/api/auth/password/**").permitAll()
@@ -55,7 +51,6 @@ public class SecurityConfig {
                             .requestMatchers("/api/admin/**").hasRole("ADMIN")
                             .anyRequest().authenticated();
                 })
-                .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
                 .oauth2ResourceServer(oauth -> oauth
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter))
                         .authenticationEntryPoint(authenticationEntryPoint));
