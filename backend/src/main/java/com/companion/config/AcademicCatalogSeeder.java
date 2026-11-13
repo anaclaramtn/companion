@@ -10,6 +10,7 @@ import com.companion.repositories.SubjectRepository;
 import com.companion.repositories.UniversityRepository;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +21,7 @@ import java.util.List;
 // Só roda quando ainda não há nenhuma universidade cadastrada, então não
 // duplica dados ao reiniciar o backend.
 @Component
+@Order(10)
 public class AcademicCatalogSeeder implements ApplicationRunner {
 
     private record SeedSubject(String code, String name, int semester) { }

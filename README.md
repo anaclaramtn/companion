@@ -47,6 +47,17 @@ CREATE USER '<MYSQL_USER>'@'localhost' IDENTIFIED BY '<MYSQL_PASSWORD>';
 GRANT ALL PRIVILEGES ON <MYSQL_DATABASE>.* TO '<MYSQL_USER>'@'localhost';
 ```
 
+## Dados de exemplo (Flyway)
+
+Para popular o banco com 6 usuários, 12 dúvidas, respostas, curtidas e seguidores, suba o backend uma vez com o perfil `seed`:
+
+```powershell
+cd backend
+.\gradlew.bat bootRun --args="--spring.profiles.active=dev,seed"
+```
+
+Todos os usuários de exemplo usam a senha `Senha123` e entram por e-mail (`ana.exemplo@edu.unifor.br`) ou username (`anabeatriz`). O Flyway guarda o que já aplicou em `flyway_schema_history`, então repetir o comando não duplica nada. Os scripts ficam em `backend/src/main/resources/db/seed`; para novos dados, crie `V2__descricao.sql`, `V3__...` e assim por diante, sem editar os já aplicados.
+
 ## Primeiro administrador
 
 Cadastros públicos sempre recebem o papel `USER`. Cadastre a conta por `POST /api/auth/register` e promova-a no Workbench:
