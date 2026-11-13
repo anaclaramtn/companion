@@ -30,13 +30,22 @@ const colorVisionOptions = [
 ]
 
 const optionClassName =
-  'flex cursor-pointer items-center gap-3 rounded-xl border border-companion-border bg-companion-panel/60 px-4 py-3 text-sm transition-colors hover:bg-companion-panel/90 peer-checked:border-companion-orange peer-checked:bg-companion-orange/10 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-companion-orange'
+  'flex h-full cursor-pointer gap-3 rounded-xl border border-companion-border bg-companion-panel/60 px-4 py-3 text-sm transition-colors hover:bg-companion-panel/90 peer-checked:border-companion-orange peer-checked:bg-companion-orange/10 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-companion-orange'
 
-function OptionGroup({ legend, name, options, value, onChange, renderOption }) {
+function OptionGroup({
+  legend,
+  name,
+  options,
+  value,
+  onChange,
+  renderOption,
+  gridClassName = 'sm:grid-cols-2',
+  optionLayoutClassName = 'items-center',
+}) {
   return (
     <fieldset className="min-w-0">
       <legend className="mb-2 text-sm font-bold text-companion-text">{legend}</legend>
-      <div className="grid gap-2 sm:grid-cols-2">
+      <div className={`grid gap-2 ${gridClassName}`}>
         {options.map((option) => (
           <label key={option.value} className="relative block">
             <input
@@ -47,7 +56,9 @@ function OptionGroup({ legend, name, options, value, onChange, renderOption }) {
               onChange={() => onChange(option.value)}
               className="peer sr-only"
             />
-            <span className={optionClassName}>{renderOption(option)}</span>
+            <span className={`${optionClassName} ${optionLayoutClassName}`}>
+              {renderOption(option)}
+            </span>
           </label>
         ))}
       </div>
@@ -90,6 +101,9 @@ function AccessibilitySettings() {
 
         <OptionGroup
           legend="Cores para daltonismo"
+          // As três paletas ficam lado a lado; cada cartão empilha bolinhas e texto.
+          gridClassName="sm:grid-cols-3"
+          optionLayoutClassName="flex-col items-start"
           name="color-vision"
           options={colorVisionOptions}
           value={colorVision}
