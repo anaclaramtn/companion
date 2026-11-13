@@ -69,7 +69,7 @@ function PostReplyForm({ onSubmit }) {
         aria-invalid={Boolean(error)}
         aria-describedby={error ? 'post-reply-error' : undefined}
         className={`w-full resize-none rounded-xl border border-companion-border bg-companion-panel/80 px-4 py-3 text-sm leading-6 text-companion-text outline-none transition-[height,border-color,box-shadow] duration-200 placeholder:text-companion-muted/75 focus:border-companion-orange focus:ring-4 focus:ring-companion-orange/15 ${
-          isExpanded ? 'h-32' : 'h-12 cursor-pointer'
+          isExpanded ? 'h-32' : 'h-12 cursor-pointer overflow-hidden'
         }`}
       />
       {error && (
