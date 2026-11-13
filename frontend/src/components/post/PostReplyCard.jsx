@@ -115,6 +115,7 @@ function PostReplyCard({
                 onClick={() => setIsReportOpen(true)}
                 aria-label={isReported ? 'Resposta denunciada' : 'Denunciar resposta'}
                 aria-pressed={isReported}
+                title={isReported ? 'Resposta denunciada' : 'Denunciar resposta'}
                 disabled={isReported || reportReasons.length === 0}
                 className={`inline-flex items-center gap-2 transition-colors ${
                   isReported
@@ -126,7 +127,6 @@ function PostReplyCard({
                   className={`bi ${isReported ? 'bi-flag-fill' : 'bi-flag'}`}
                   aria-hidden="true"
                 />
-                <span>{isReported ? 'Denunciada' : 'Denunciar'}</span>
               </button>
               )}
               {canDelete && <DeleteReplyButton reply={reply} onDelete={onDelete} />}
