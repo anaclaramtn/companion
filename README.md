@@ -1,72 +1,65 @@
 # Companion
 
-Rede social acadêmica para estudantes de Ciência da Computação da Universidade de Fortaleza. API REST em Java 21/Spring Boot; o escopo funcional da versão 1.0 está em [docs/escopo_v1.md](docs/escopo_v1.md).
+Rede social acadêmica para estudantes de Ciência da Computação da Universidade de Fortaleza. Dúvidas por matéria, respostas, perfis, moderação e painel de denúncias.
 
-## Stack
-
-- Backend: Java 21, Spring Boot 4, Spring Security, JWT, Spring Data JPA e Gradle.
-- Banco: MySQL 8.4 instalado localmente.
-- Testes: JUnit, Spring Test e H2 em modo de compatibilidade MySQL.
+- **Backend:** Java 21, Spring Boot 4, Spring Security (JWT), Spring Data JPA, Gradle.
+- **Frontend:** React 19, Vite, Tailwind.
+- **Banco:** MySQL 8.4 instalado localmente.
 
 ## Requisitos
 
-- JDK 21;
-- MySQL Server 8.4 e MySQL Workbench;
-- Postman ou outro cliente HTTP.
+JDK 21, Node.js 20.19+ e MySQL Server 8.4. O MySQL Workbench é opcional: é só uma interface para o banco.
 
-## Configuração
+## Como rodar
 
-1. Copie `.env.example` para `.env` e preencha todos os valores, inclusive o `JWT_SECRET` (mínimo de 32 caracteres). O `.env` é o único lugar com dados do banco e não é versionado.
-2. Crie o banco e o usuário no MySQL com os mesmos valores do `.env` (veja a seção abaixo).
-3. Inicie a API:
+1. **Variáveis de ambiente:** copie `.env.example` para `.env` na raiz e preencha todos os valores. O `JWT_SECRET` precisa ter pelo menos 32 caracteres. O `.env` não é versionado.
+2. **Banco:** com o MySQL rodando, crie o banco e o usuário com os mesmos valores do `.env`:
 
-```powershell
-cd backend
-.\gradlew.bat bootRun --args="--spring.profiles.active=dev"
-```
+   ```sql
+   CREATE DATABASE <MYSQL_DATABASE> CHARACTER SET utf8mb4;
+   CREATE USER '<MYSQL_USER>'@'localhost' IDENTIFIED BY '<MYSQL_PASSWORD>';
+   GRANT ALL PRIVILEGES ON <MYSQL_DATABASE>.* TO '<MYSQL_USER>'@'localhost';
+   ```
 
-O perfil `dev` registra o link de recuperação de senha no console. Fora dele, configure o SMTP no `.env`. As tabelas são criadas automaticamente pelo Hibernate.
+3. **Backend** (as tabelas são criadas pelo Hibernate):
 
-4. No Postman, use a base `http://localhost:8080/api` e envie o token retornado no login como `Authorization: Bearer <token>`.
+   ```powershell
+   cd backend
+   .\gradlew.bat bootRun --args="--spring.profiles.active=dev"
+   ```
 
-## Abrindo o banco no MySQL Workbench
+   O perfil `dev` mostra o link de recuperação de senha no console; fora dele, configure o SMTP no `.env`. A API fica em `http://localhost:8080/api`.
+4. **Frontend:** crie `frontend/.env.local` com `VITE_API_BASE_URL=http://localhost:8080/api` e rode:
 
-1. Abra o Workbench e clique em **+** ao lado de *MySQL Connections*.
-2. Preencha com os valores do seu `.env`:
-   - **Hostname:** `MYSQL_HOST`
-   - **Port:** `MYSQL_PORT`
-   - **Username:** `MYSQL_USER`
-3. Clique em **Store in Vault…** e informe `MYSQL_PASSWORD`; depois **Test Connection** e **OK**.
-4. Abra a conexão e, no painel *Schemas*, clique duas vezes no banco de `MYSQL_DATABASE` para usá-lo.
+   ```powershell
+   cd frontend
+   npm install
+   npm run dev
+   ```
 
-Se o banco ainda não existe, entre com um usuário administrador (como o `root`) e execute, trocando pelos valores do `.env`:
+   Abra `http://localhost:5173`. Reinicie o `npm run dev` se mudar o `.env.local`.
 
-```sql
-CREATE DATABASE <MYSQL_DATABASE> CHARACTER SET utf8mb4;
-CREATE USER '<MYSQL_USER>'@'localhost' IDENTIFIED BY '<MYSQL_PASSWORD>';
-GRANT ALL PRIVILEGES ON <MYSQL_DATABASE>.* TO '<MYSQL_USER>'@'localhost';
-```
+O passo a passo detalhado, com a instalação do MySQL e do Workbench, está no `companion-local.txt` (arquivo privado, fora do Git).
 
-## Dados de exemplo (Flyway)
+## Dados de exemplo
 
-Para popular o banco com 6 usuários, 12 dúvidas, respostas, curtidas e seguidores, suba o backend uma vez com o perfil `seed`:
+Para ter usuários, dúvidas, respostas, curtidas e seguidores prontos, suba o backend com o perfil `seed` (migração Flyway em `backend/src/main/resources/db/seed`):
 
 ```powershell
-cd backend
 .\gradlew.bat bootRun --args="--spring.profiles.active=dev,seed"
 ```
 
-Todos os usuários de exemplo usam a senha `Senha123` e entram por e-mail (`ana.exemplo@edu.unifor.br`) ou username (`anabeatriz`). O Flyway guarda o que já aplicou em `flyway_schema_history`, então repetir o comando não duplica nada. Os scripts ficam em `backend/src/main/resources/db/seed`; para novos dados, crie `V2__descricao.sql`, `V3__...` e assim por diante, sem editar os já aplicados.
+Os usuários (como `ana.exemplo@edu.unifor.br` ou `anabeatriz`) usam a senha `Senha123`. Repetir o comando não duplica nada.
 
 ## Primeiro administrador
 
-Cadastros públicos sempre recebem o papel `USER`. Cadastre a conta por `POST /api/auth/register` e promova-a no Workbench:
+Cadastros públicos sempre recebem o papel `USER`. Cadastre a conta pelo app e promova-a no banco:
 
 ```sql
 UPDATE users SET role = 'ADMIN' WHERE id = X;
 ```
 
-Autentique novamente para o novo papel entrar no JWT.
+Entre de novo para o papel valer no token.
 
 ## Testes
 
