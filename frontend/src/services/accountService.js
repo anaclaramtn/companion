@@ -1,11 +1,5 @@
 import api from '../api/api.js'
 
-function mockResponse(value) {
-  return new Promise((resolve) => {
-    window.setTimeout(() => resolve(value), 400)
-  })
-}
-
 // Dados privados da conta autenticada, vindos de GET /users/me.
 export async function getMyAccount() {
   const { data } = await api.get('/users/me')
