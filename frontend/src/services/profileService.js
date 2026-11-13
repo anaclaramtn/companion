@@ -10,7 +10,7 @@ export async function updateRequiredProfile(profile) {
   return response.data
 }
 
-// Regras da foto de perfil, iguais às do backend (CloudinaryAvatarService).
+// Regras da foto de perfil, iguais às do backend (AvatarImageService).
 export const AVATAR_MAX_SIZE = 2 * 1024 * 1024
 export const AVATAR_ACCEPT = 'image/jpeg,image/png,image/webp'
 export const AVATAR_SIZE_MESSAGE =

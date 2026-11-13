@@ -12,12 +12,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import com.companion.exceptions.ServiceUnavailableException;
-import com.companion.services.CloudinaryAvatarService;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.nio.charset.StandardCharsets;
@@ -25,13 +22,9 @@ import java.security.MessageDigest;
 import java.time.LocalDateTime;
 import java.util.HexFormat;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.matchesPattern;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -45,7 +38,6 @@ class CompanionApiIntegrationTest {
     @Autowired UniversityRepository universityRepository;
     @Autowired CourseRepository courseRepository;
     @Autowired SubjectRepository subjectRepository;
-    @MockitoBean CloudinaryAvatarService cloudinaryAvatarService;
 
     @Test
     void executesCriticalCrudAndSecurityFlows() throws Exception {
@@ -313,7 +305,6 @@ class CompanionApiIntegrationTest {
         long userId = userRepository.findByEmailIgnoreCase("carla@unifor.br").orElseThrow().getId();
         long universityId = universityRepository.findByAcronymIgnoreCase("UNIFOR").orElseThrow().getId();
         long courseId = courseRepository.findByUniversityIdOrderByNameAsc(universityId).getFirst().getId();
-        String avatarUrl = "https://res.cloudinary.com/demo/image/upload/v1/companion/avatars/user-" + userId;
 
         mockMvc.perform(put("/api/users/me/profile").header("Authorization", bearer(token))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -321,11 +312,18 @@ class CompanionApiIntegrationTest {
                                 + "\"courseId\":" + courseId + ",\"semester\":3}"))
                 .andExpect(status().isOk());
 
-        when(cloudinaryAvatarService.uploadAvatar(eq(userId), any())).thenReturn(avatarUrl);
-        mockMvc.perform(multipart(HttpMethod.PUT, "/api/users/me/avatar").file(avatarFile())
+        String avatarUrl = mockMvc.perform(multipart(HttpMethod.PUT, "/api/users/me/avatar").file(avatarFile())
                         .header("Authorization", bearer(token)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.avatarUrl").value(avatarUrl));
+                .andExpect(jsonPath("$.avatarUrl").value(containsString("/api/users/" + userId + "/avatar?v=")))
+                .andReturn().getResponse().getContentAsString()
+                .replaceAll(".*\"avatarUrl\":\"([^\"]+)\".*", "$1");
+
+        // A foto é servida sem token (o navegador a busca por <img>), com o tipo detectado.
+        mockMvc.perform(get("/api/users/" + userId + "/avatar"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("image/jpeg"))
+                .andExpect(content().bytes(avatarFile().getBytes()));
 
         // Voltar à Etapa 1 e salvar só nome e username não apaga o resto do perfil.
         mockMvc.perform(put("/api/users/me/profile").header("Authorization", bearer(token))
@@ -357,22 +355,24 @@ class CompanionApiIntegrationTest {
         mockMvc.perform(multipart(HttpMethod.PUT, "/api/users/me/avatar").header("Authorization", bearer(token)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Selecione uma imagem para enviar"));
-        when(cloudinaryAvatarService.uploadAvatar(eq(userId), any()))
-                .thenThrow(new ServiceUnavailableException("Envio indisponível"));
-        mockMvc.perform(multipart(HttpMethod.PUT, "/api/users/me/avatar").file(avatarFile())
+        MockMultipartFile fake = new MockMultipartFile("file", "foto.png", "image/png", "nao sou imagem".getBytes());
+        mockMvc.perform(multipart(HttpMethod.PUT, "/api/users/me/avatar").file(fake)
                         .header("Authorization", bearer(token)))
-                .andExpect(status().isServiceUnavailable())
-                .andExpect(jsonPath("$.message").value("Envio indisponível"));
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Use uma imagem JPG, PNG ou WEBP"));
 
         mockMvc.perform(delete("/api/users/me/avatar").header("Authorization", bearer(token)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.avatarUrl").doesNotExist());
-        verify(cloudinaryAvatarService).deleteAvatar(userId);
+        mockMvc.perform(get("/api/users/" + userId + "/avatar")).andExpect(status().isNotFound());
 
-        // Excluir a conta também apaga a foto guardada no Cloudinary.
+        // Excluir a conta também apaga a foto guardada no banco.
+        mockMvc.perform(multipart(HttpMethod.PUT, "/api/users/me/avatar").file(avatarFile())
+                        .header("Authorization", bearer(token)))
+                .andExpect(status().isOk());
         mockMvc.perform(delete("/api/users/me").header("Authorization", bearer(token)))
                 .andExpect(status().isNoContent());
-        verify(cloudinaryAvatarService, times(2)).deleteAvatar(userId);
+        mockMvc.perform(get("/api/users/" + userId + "/avatar")).andExpect(status().isNotFound());
     }
 
     @Test

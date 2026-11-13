@@ -1,46 +1,49 @@
 package com.companion.services;
 
 import com.companion.dtos.user.UserAccountResponseDTO;
+import com.companion.entities.UserAvatar;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-/**
- * Troca e remoção da foto de perfil. Fica fora de transação de propósito: o
- * envio ao Cloudinary pode levar alguns segundos e não deve prender uma
- * conexão do banco. Só a gravação do endereço (UserService) é transacional.
- */
+import java.util.Optional;
+
+/** Troca, leitura e remoção da foto de perfil, guardada no banco (AvatarImageService). */
 @Service
 public class UserAvatarService {
 
     private final AuthenticatedUserService authenticatedUserService;
-    private final CloudinaryAvatarService cloudinaryAvatarService;
+    private final AvatarImageService avatarImageService;
     private final UserService userService;
 
     public UserAvatarService(AuthenticatedUserService authenticatedUserService,
-                             CloudinaryAvatarService cloudinaryAvatarService,
+                             AvatarImageService avatarImageService,
                              UserService userService) {
         this.authenticatedUserService = authenticatedUserService;
-        this.cloudinaryAvatarService = cloudinaryAvatarService;
+        this.avatarImageService = avatarImageService;
         this.userService = userService;
     }
 
     public UserAccountResponseDTO uploadOwnAvatar(MultipartFile file) {
         Long userId = authenticatedUserService.getCurrentUser().getId();
-        String avatarUrl = cloudinaryAvatarService.uploadAvatar(userId, file);
+        String avatarUrl = avatarImageService.store(userId, file);
         return userService.changeOwnAvatarUrl(avatarUrl);
     }
 
-    /** Exclui (anonimiza) a própria conta e apaga a foto guardada no Cloudinary. */
+    public Optional<UserAvatar> findAvatar(Long userId) {
+        return avatarImageService.find(userId);
+    }
+
+    /** Exclui (anonimiza) a própria conta e apaga a foto guardada. */
     public void deleteOwnAccount() {
         Long userId = authenticatedUserService.getCurrentUser().getId();
         userService.deleteOwnAccount();
-        cloudinaryAvatarService.deleteAvatar(userId);
+        avatarImageService.delete(userId);
     }
 
     public UserAccountResponseDTO removeOwnAvatar() {
         Long userId = authenticatedUserService.getCurrentUser().getId();
         UserAccountResponseDTO account = userService.changeOwnAvatarUrl(null);
-        cloudinaryAvatarService.deleteAvatar(userId);
+        avatarImageService.delete(userId);
         return account;
     }
 }

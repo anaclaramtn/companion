@@ -9,11 +9,14 @@ import com.companion.services.UserService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.Duration;
 
 @Validated
 @RestController
@@ -41,6 +44,17 @@ public class UserController {
     @PutMapping(path = "/me/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public UserAccountResponseDTO uploadMyAvatar(@RequestPart("file") MultipartFile file) {
         return userAvatarService.uploadOwnAvatar(file);
+    }
+
+    // Público: o navegador busca a foto por <img>, que não envia o token.
+    @GetMapping("/{id}/avatar")
+    public ResponseEntity<byte[]> avatar(@PathVariable Long id) {
+        return userAvatarService.findAvatar(id)
+                .map(avatar -> ResponseEntity.ok()
+                        .contentType(MediaType.parseMediaType(avatar.getContentType()))
+                        .cacheControl(CacheControl.maxAge(Duration.ofDays(30)).cachePublic())
+                        .body(avatar.getData()))
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/me/avatar")

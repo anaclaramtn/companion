@@ -210,7 +210,7 @@ COMPONENTES DE USUÁRIO — src/components/user/
     usadas também na Etapa 3 do onboarding.
 
   Excluir conta (Configurações da conta): DELETE /api/users/me anonimiza
-  a conta e apaga a foto no Cloudinary; depois a sessão é encerrada.
+  a conta e apaga a foto guardada no banco; depois a sessão é encerrada.
   "Alterar senha" ainda é simulado: precisa de servidor de e-mail.
 
   PasswordResetCard.jsx
@@ -536,7 +536,7 @@ ARQUIVOS
     para optativa e undefined quando não há grade (aparece em um só grupo).
 
 ONBOARDING INTEGRADO
-  Etapa 1: nome e username.  Etapa 2: foto (Cloudinary).
+  Etapa 1: nome e username.  Etapa 2: foto (guardada no banco).
   Etapa 3: universidade, curso e semestre, vindos do banco, e a matrícula
            (opcional); salva courseId, semester e registrationNumber. Os
            selects ficam desabilitados até a escolha anterior.
