@@ -7,7 +7,7 @@ function MainNavigation({ items }) {
   return (
     <nav aria-label="Navegação principal">
       <ul className="flex flex-wrap gap-1 lg:flex-col">
-        {items.map(({ to, label, icon, end }) => (
+        {items.map(({ to, label, icon, end, badge }) => (
           <li key={label} className="min-w-fit flex-1 lg:flex-none">
             {to ? (
               <NavLink
@@ -24,6 +24,12 @@ function MainNavigation({ items }) {
               >
                 <i className={`bi ${icon} text-xl`} aria-hidden="true" />
                 {label}
+                {badge > 0 && (
+                  <span className="ml-auto rounded-md bg-companion-orange px-2 py-0.5 text-xs font-bold text-white">
+                    {badge}
+                    <span className="sr-only"> pendentes</span>
+                  </span>
+                )}
               </NavLink>
             ) : (
               <span

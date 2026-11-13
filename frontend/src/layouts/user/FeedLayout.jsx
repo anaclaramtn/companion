@@ -7,6 +7,7 @@ import MainNavigation from '../../components/common/MainNavigation.jsx'
 import PostComposerModal from '../../components/post/PostComposerModal.jsx'
 import PostDetailModal from '../../components/post/PostDetailModal.jsx'
 import { PostActionsContext } from '../../contexts/postActionsContext.js'
+import { usePendingReports } from '../../hooks/usePendingReports.js'
 import { useAuth } from '../../hooks/useAuth.js'
 import { useToast } from '../../hooks/useToast.js'
 import { getAllSubjects, getCourseSubjects } from '../../services/academicService.js'
@@ -205,6 +206,17 @@ function FeedLayout() {
     [showToast],
   )
 
+  // Denúncias aguardando análise (só administração e moderação): aviso na navegação.
+  const { count: pendingReportCount, refresh: refreshPendingReports } =
+    usePendingReports(canModerate)
+  const navItems = canModerate
+    ? [
+        ...navigationItems.slice(0, 3),
+        { to: '/notificacoes', label: 'Notificações', icon: 'bi-bell', badge: pendingReportCount },
+        ...navigationItems.slice(3),
+      ]
+    : navigationItems
+
   const postActions = useMemo(
     () => ({ canModerate, removedPostIds, deletePost: removePost, deleteReply: removeReply }),
     [canModerate, removedPostIds, removePost, removeReply],
@@ -232,6 +244,7 @@ function FeedLayout() {
           onPostQuestion={openComposer}
           userName={currentUser.name || 'Meu perfil'}
           userAvatarUrl={currentUser.avatarUrl}
+          userRole={currentUser.role}
           followingCount={currentUser.followingCount}
           followersCount={currentUser.followerCount}
           // A busca fica na página Explorar; o campo do cabeçalho não é usado.
@@ -240,7 +253,7 @@ function FeedLayout() {
 
         <div className="mt-6 grid gap-6 lg:grid-cols-[248px_minmax(0,1fr)]">
           <aside className="lg:sticky lg:top-6 lg:self-start">
-            <MainNavigation items={navigationItems} />
+            <MainNavigation items={navItems} />
           </aside>
 
           <main className="min-w-0">
@@ -255,6 +268,7 @@ function FeedLayout() {
                 onReportItem: reportItem,
                 feedRefreshKey,
                 onFollowingChange: handleFollowingChange,
+                onReportsChanged: refreshPendingReports,
               }}
             />
           </main>

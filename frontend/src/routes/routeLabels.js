@@ -5,6 +5,7 @@ import { getRememberedUserName } from '../services/userNames.js'
 const labelsByPath = {
   '/feed': 'Feed',
   '/explorar': 'Explorar',
+  '/notificacoes': 'Notificações',
   '/configuracoes': 'Configurações',
   '/configuracoes/conta': 'Informações da conta',
   '/configuracoes/ajustes': 'Configurações da conta',

@@ -13,6 +13,7 @@ import FeedLayout from './layouts/user/FeedLayout.jsx'
 import FeedPage from './pages/feed/FeedPage.jsx'
 import ExplorePage from './pages/search/ExplorePage.jsx'
 import PublicProfilePage from './pages/profile/PublicProfilePage.jsx'
+import NotificationsPage from './pages/notifications/NotificationsPage.jsx'
 import SettingsPage from './pages/settings/SettingsPage.jsx'
 import AccountInfoPage from './pages/settings/AccountInfoPage.jsx'
 import AccountSettingsPage from './pages/settings/AccountSettingsPage.jsx'
@@ -57,6 +58,10 @@ function App() {
 
         <Route path="/salvos" element={<FeedLayout />}>
           <Route index element={<SavedPage />} />
+        </Route>
+
+        <Route path="/notificacoes" element={<FeedLayout />}>
+          <Route index element={<NotificationsPage />} />
         </Route>
 
         <Route path="/configuracoes" element={<FeedLayout />}>
