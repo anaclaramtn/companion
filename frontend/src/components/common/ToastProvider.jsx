@@ -52,7 +52,7 @@ function ToastProvider({ children }) {
                 type="button"
                 onClick={() => dismissToast(toast.id)}
                 aria-label="Fechar aviso"
-                className="grid size-7 shrink-0 place-items-center rounded-full text-companion-muted transition hover:bg-companion-orange/10 hover:text-companion-brand"
+                className="grid size-7 shrink-0 place-items-center rounded-lg text-companion-muted transition hover:bg-companion-orange/10 hover:text-companion-brand"
               >
                 <i className="bi bi-x-lg" aria-hidden="true" />
               </button>

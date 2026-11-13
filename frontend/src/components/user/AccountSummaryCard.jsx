@@ -54,7 +54,7 @@ function AccountSummaryCard({ user, to }) {
       {to ? (
         <Link
           to={to}
-          className={`${className} transition-colors hover:bg-white/80`}
+          className={`${className} transition-colors hover:bg-companion-panel/80`}
         >
           {content}
         </Link>

@@ -5,7 +5,6 @@ import Background from '../../components/common/Background.jsx'
 import FeedHeader from '../../components/common/Header.jsx'
 import MainNavigation from '../../components/common/MainNavigation.jsx'
 import PostComposerModal from '../../components/post/PostComposerModal.jsx'
-import ProfileSummary from '../../components/common/ProfileSummary.jsx'
 import { useAuth } from '../../hooks/useAuth.js'
 import { useToast } from '../../hooks/useToast.js'
 import { getAllSubjects, getCourseSubjects } from '../../services/academicService.js'
@@ -164,21 +163,17 @@ function FeedLayout() {
       <div className="mx-auto min-h-dvh w-full max-w-[1600px] px-4 py-4 sm:px-6 lg:px-8">
         <FeedHeader
           onPostQuestion={openComposer}
+          userName={currentUser.name || 'Meu perfil'}
           userAvatarUrl={currentUser.avatarUrl}
+          followingCount={currentUser.followingCount}
+          followersCount={currentUser.followerCount}
           // A busca fica na página Explorar; o campo do cabeçalho não é usado.
           showSearch={false}
         />
 
         <div className="mt-6 grid gap-6 lg:grid-cols-[248px_minmax(0,1fr)]">
-          <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start">
+          <aside className="lg:sticky lg:top-6 lg:self-start">
             <MainNavigation items={navigationItems} />
-            <ProfileSummary
-              name={currentUser.name}
-              followingCount={currentUser.followingCount}
-              followersCount={currentUser.followerCount}
-              avatarUrl={currentUser.avatarUrl}
-              to="/perfil"
-            />
           </aside>
 
           <main className="min-w-0">

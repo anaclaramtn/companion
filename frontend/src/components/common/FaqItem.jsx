@@ -2,7 +2,7 @@
 function FaqItem({ question, answer }) {
   return (
     <details className="group border-b border-companion-border/50 last:border-b-0">
-      <summary className="flex cursor-pointer list-none items-center gap-4 px-5 py-4 text-sm font-bold text-companion-text transition-colors hover:bg-white/80 sm:px-6 [&::-webkit-details-marker]:hidden">
+      <summary className="flex cursor-pointer list-none items-center gap-4 px-5 py-4 text-sm font-bold text-companion-text transition-colors hover:bg-companion-panel/80 sm:px-6 [&::-webkit-details-marker]:hidden">
         <span className="min-w-0 flex-1">{question}</span>
         <i
           aria-hidden="true"

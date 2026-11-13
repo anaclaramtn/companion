@@ -50,10 +50,10 @@ function groupBySemester(subjects) {
 }
 
 function chipClassName(isSelected) {
-  return `whitespace-nowrap rounded-full border px-3 py-1 text-xs font-medium transition ${
+  return `whitespace-nowrap rounded-lg border px-3 py-1 text-xs font-medium transition ${
     isSelected
       ? 'border-companion-orange bg-companion-orange text-white'
-      : 'border-companion-orange/40 bg-white/50 text-companion-brand hover:border-companion-orange'
+      : 'border-companion-orange/40 bg-companion-panel/50 text-companion-brand hover:border-companion-orange'
   }`
 }
 
@@ -120,7 +120,7 @@ function SubjectInterestPicker({ subjects, value, onChange, featuredIds = [] }) 
         {groups.map((group) => (
           <fieldset
             key={group.interestType}
-            className="min-w-0 rounded-lg bg-[#faecd8] p-4 sm:p-5"
+            className="min-w-0 rounded-lg bg-companion-tint p-4 sm:p-5"
           >
             <legend className="sr-only">{group.title}</legend>
             <p className="flex items-center justify-between gap-2 text-xs font-bold uppercase tracking-wide text-companion-brand">
@@ -177,7 +177,7 @@ function SubjectInterestPicker({ subjects, value, onChange, featuredIds = [] }) 
           id="subject-picker-full-list"
           className="overflow-hidden rounded-xl border border-companion-border/70"
         >
-          <div className="border-b border-companion-border/60 bg-white/60 p-3">
+          <div className="border-b border-companion-border/60 bg-companion-panel/60 p-3">
             <label htmlFor="subject-picker-search" className="sr-only">
               Buscar disciplina por nome ou código
             </label>
@@ -192,7 +192,7 @@ function SubjectInterestPicker({ subjects, value, onChange, featuredIds = [] }) 
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Buscar por nome ou código (ex.: T390)"
-                className="h-10 w-full rounded-lg border border-companion-border bg-white pl-9 pr-3 text-sm text-companion-text outline-none transition focus:border-companion-orange focus:ring-4 focus:ring-companion-orange/15"
+                className="h-10 w-full rounded-lg border border-companion-border bg-companion-panel pl-9 pr-3 text-sm text-companion-text outline-none transition focus:border-companion-orange focus:ring-4 focus:ring-companion-orange/15"
               />
             </div>
           </div>

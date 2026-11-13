@@ -26,7 +26,7 @@ const MAX_NAME_LENGTH = 64
 const MAX_BIO_LENGTH = 512
 
 const selectClassName =
-  'w-full rounded-xl border border-companion-border bg-white/80 px-4 py-3 text-sm text-companion-text outline-none transition focus:border-companion-orange focus:ring-4 focus:ring-companion-orange/15 disabled:cursor-not-allowed disabled:opacity-60'
+  'w-full rounded-xl border border-companion-border bg-companion-panel/80 px-4 py-3 text-sm text-companion-text outline-none transition focus:border-companion-orange focus:ring-4 focus:ring-companion-orange/15 disabled:cursor-not-allowed disabled:opacity-60'
 
 const toFieldValue = (id) => (id == null ? '' : String(id))
 
@@ -265,7 +265,7 @@ function EditProfilePage() {
         {loadError && (
           <Link
             to="/perfil"
-            className="mt-4 inline-block rounded-xl border border-companion-border bg-white px-4 py-2 text-sm font-bold text-companion-text transition hover:bg-companion-orange/5"
+            className="mt-4 inline-block rounded-xl border border-companion-border bg-companion-panel px-4 py-2 text-sm font-bold text-companion-text transition hover:bg-companion-orange/5"
           >
             Voltar ao perfil
           </Link>
@@ -333,7 +333,7 @@ function EditProfilePage() {
                 <button
                   type="button"
                   onClick={handleAvatarRemove}
-                  className="rounded-xl border border-companion-border bg-white px-4 py-2 text-sm font-bold text-companion-text transition hover:bg-companion-orange/5"
+                  className="rounded-xl border border-companion-border bg-companion-panel px-4 py-2 text-sm font-bold text-companion-text transition hover:bg-companion-orange/5"
                 >
                   Remover
                 </button>
@@ -482,14 +482,14 @@ function EditProfilePage() {
           )}
           <Link
             to="/perfil"
-            className="rounded-xl border border-companion-border bg-white px-5 py-2.5 text-sm font-bold text-companion-text transition hover:bg-companion-orange/5"
+            className="rounded-xl border border-companion-border bg-companion-panel px-5 py-2.5 text-sm font-bold text-companion-text transition hover:bg-companion-orange/5"
           >
             {status.type === 'success' ? 'Ver perfil' : 'Cancelar'}
           </Link>
           <button
             type="submit"
             disabled={isSaving}
-            className="inline-flex items-center gap-2 rounded-xl bg-companion-orange px-5 py-2.5 text-sm font-bold text-white shadow-[0_8px_20px_rgba(255,133,0,0.28)] transition hover:bg-companion-orange-hover disabled:cursor-wait disabled:opacity-60"
+            className="inline-flex items-center gap-2 rounded-xl bg-companion-orange px-5 py-2.5 text-sm font-bold text-white shadow-companion-btn transition hover:bg-companion-orange-hover disabled:cursor-wait disabled:opacity-60"
           >
             <i className="bi bi-check-lg" aria-hidden="true" />
             {isSaving ? 'Salvando…' : 'Salvar alterações'}

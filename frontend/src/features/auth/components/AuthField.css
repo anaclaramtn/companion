@@ -34,7 +34,7 @@
   padding: 0 15px;
   outline: none;
   border: 1px solid var(--color-border);
-  border-radius: 12px;
+  border-radius: 6px;
   color: var(--color-text);
   background: var(--color-surface-solid);
   font-size: 0.94rem;
@@ -84,7 +84,7 @@
   margin: 0;
   padding: 0.65rem 0.8rem;
   border: 1px solid rgb(246 127 0 / 22%);
-  border-radius: 10px;
+  border-radius: 5px;
   color: #8f4300;
   background: #fff3e3;
   font-size: 0.82rem;

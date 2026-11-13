@@ -64,7 +64,7 @@
   margin: 0;
   padding: 12px 14px;
   border: 1px solid var(--color-border);
-  border-radius: 11px;
+  border-radius: 5px;
   color: var(--color-text);
   background: var(--color-surface);
   box-shadow: 0 12px 26px rgb(111 65 27 / 13%);
@@ -76,7 +76,7 @@
   margin: 14px 0 0;
   padding: 11px 13px;
   border: 1px solid #f1b8b5;
-  border-radius: 10px;
+  border-radius: 5px;
   color: #8f1d18;
   background: #fff4f3;
   font-size: 0.88rem;

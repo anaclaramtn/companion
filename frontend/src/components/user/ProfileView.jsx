@@ -200,7 +200,7 @@ function ProfileView({ userId }) {
           isOwnProfile ? (
             <Link
               to="/perfil/editar"
-              className="mb-1 inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-companion-border bg-white px-5 text-sm font-bold text-companion-text transition hover:bg-companion-orange/5"
+              className="mb-1 inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-companion-border bg-companion-panel px-5 text-sm font-bold text-companion-text transition hover:bg-companion-orange/5"
             >
               <i className="bi bi-pencil" aria-hidden="true" />
               Editar perfil
@@ -213,7 +213,7 @@ function ProfileView({ userId }) {
               aria-pressed={followStatus.followedByCurrentUser}
               className={`mb-1 inline-flex min-h-10 items-center justify-center gap-2 rounded-xl px-5 text-sm font-bold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-companion-orange disabled:cursor-wait disabled:opacity-60 ${
                 followStatus.followedByCurrentUser
-                  ? 'border border-companion-border bg-white text-companion-text hover:bg-companion-orange/5'
+                  ? 'border border-companion-border bg-companion-panel text-companion-text hover:bg-companion-orange/5'
                   : 'bg-companion-orange text-white hover:bg-companion-orange-hover'
               }`}
             >

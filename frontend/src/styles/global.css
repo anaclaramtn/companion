@@ -10,7 +10,10 @@
   --color-companion-text: var(--color-text);
   --color-companion-muted: var(--color-text-secondary);
   --color-companion-border: var(--color-border);
-  --color-companion-brand: #d96700;
+  --color-companion-brand: var(--color-brand);
+  --color-companion-panel: var(--color-panel);
+  --color-companion-tint: var(--color-tint);
+  --shadow-companion-btn: var(--shadow-button);
 }
 
 :root {
@@ -43,24 +46,38 @@ input {
      CORES PRINCIPAIS — COMPANION
   ======================================== */
 
+  /* Tudo que é "laranja" deriva de --color-primary. Os modos de daltonismo só
+     trocam essa cor (e a família de erro/sucesso, mais abaixo). */
   --color-primary: #FF8500;
-  --color-primary-hover: #E87500;
-  --color-primary-active: #C95F00;
-  --color-primary-light: #FFF0DE;
-  --color-primary-soft: #FFE2C1;
+  --color-primary-hover: color-mix(in srgb, var(--color-primary) 88%, black);
+  --color-primary-active: color-mix(in srgb, var(--color-primary) 75%, black);
+  --color-primary-light: color-mix(in srgb, var(--color-primary) 14%, white);
+  --color-primary-soft: color-mix(in srgb, var(--color-primary) 24%, white);
+  --color-brand: color-mix(in srgb, var(--color-primary) 85%, black);
 
   /* ========================================
      BACKGROUND
   ======================================== */
 
-  --color-background: #FFF9F1;
-  --color-background-secondary: #F8EEE2;
-  --color-background-glow: #FFD1A3;
+  --color-background: color-mix(in srgb, var(--color-primary) 6%, white);
+  --color-background-secondary: color-mix(in srgb, var(--color-primary) 10%, #f4f0eb);
+  --color-background-glow: color-mix(in srgb, var(--color-primary) 38%, white);
 
   /* Superfícies e cartões */
   --color-surface: rgba(255, 255, 255, 0.68);
-  --color-surface-solid: #FFFCF8;
+  --color-surface-solid: color-mix(in srgb, var(--color-primary) 3%, white);
   --color-surface-hover: rgba(255, 255, 255, 0.85);
+  /* Branco "de papel" (antigo bg-white) e fundo suave de caixas */
+  --color-panel: #ffffff;
+  --color-tint: color-mix(in srgb, var(--color-primary) 13%, white);
+
+  /* Degradê e textura do fundo do app */
+  --bg-from: color-mix(in srgb, var(--color-primary) 6%, white);
+  --bg-mid: color-mix(in srgb, var(--color-primary) 3%, white);
+  --bg-to: color-mix(in srgb, var(--color-primary) 8%, #f4f0eb);
+  --bg-dots: color-mix(in srgb, var(--color-primary) 22%, transparent);
+  --glow-top: 11%;
+  --glow-bottom: 8%;
 
   /* ========================================
      TEXTOS
@@ -75,10 +92,19 @@ input {
      BORDAS E ELEMENTOS GRÁFICOS
   ======================================== */
 
-  --color-border: #F0D5BA;
+  --color-border: color-mix(in srgb, var(--color-primary) 22%, #e8e2dc);
   --color-border-focus: var(--color-primary);
-  --color-network-line: rgba(255, 133, 0, 0.20);
-  --color-network-node: rgba(255, 133, 0, 0.75);
+  --color-network-line: color-mix(in srgb, var(--color-primary) 20%, transparent);
+  --color-network-node: color-mix(in srgb, var(--color-primary) 75%, transparent);
+
+  /* Faixas do cabeçalho */
+  --hw-base: #171615;
+  --hw-panel-a: color-mix(in srgb, var(--color-primary) 6%, white);
+  --hw-panel-b: color-mix(in srgb, var(--color-primary) 22%, white);
+  --hw-panel-c: color-mix(in srgb, var(--color-primary) 52%, white);
+  --hw-peach: color-mix(in srgb, var(--color-primary) 40%, white);
+  --hw-orange-a: color-mix(in srgb, var(--color-primary) 92%, white);
+  --hw-orange-b: color-mix(in srgb, var(--color-primary) 92%, black);
 
   /* ========================================
      TIPOGRAFIA
@@ -134,10 +160,10 @@ input {
     0 20px 60px rgba(114, 72, 32, 0.10);
 
   --shadow-button:
-    0 8px 20px rgba(255, 133, 0, 0.20);
+    0 8px 20px color-mix(in srgb, var(--color-primary) 26%, transparent);
 
   --shadow-focus:
-    0 0 0 3px rgba(255, 133, 0, 0.18);
+    0 0 0 3px color-mix(in srgb, var(--color-primary) 18%, transparent);
 
   /* ========================================
      TRANSIÇÕES
@@ -158,6 +184,108 @@ input {
 
   --z-background: 0;
   --z-content: 1;
+}
+
+/* ========================================
+   TEMAS E ACESSIBILIDADE
+   <html data-theme="light|dark" data-color-vision="default|red-green|blue-yellow">
+   Definidos em src/contexts/ThemeContext.jsx (Configurações > Acessibilidade).
+======================================== */
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  /* Escuro "neutro": cinzas quase sem cor, com só um toque do destaque. O
+     laranja (ou azul/rosa, nos modos de daltonismo) fica para botões, links e
+     o item ativo, em vez de tingir fundos e bordas. */
+  --color-background: color-mix(in srgb, var(--color-primary) 2%, #141414);
+  --color-background-secondary: color-mix(in srgb, var(--color-primary) 3%, #1b1b1b);
+  --color-background-glow: color-mix(in srgb, var(--color-primary) 12%, #141414);
+  --color-surface: rgba(34, 34, 34, 0.72);
+  --color-surface-solid: color-mix(in srgb, var(--color-primary) 2%, #1d1d1d);
+  --color-surface-hover: rgba(48, 48, 48, 0.88);
+  --color-panel: color-mix(in srgb, var(--color-primary) 2%, #262626);
+  --color-tint: color-mix(in srgb, var(--color-primary) 7%, #222222);
+
+  --color-text: #eeeae5;
+  --color-text-secondary: #a9a59f;
+  --color-text-muted: #8f8b85;
+
+  --color-primary-light: color-mix(in srgb, var(--color-primary) 10%, #222222);
+  --color-primary-soft: color-mix(in srgb, var(--color-primary) 16%, #222222);
+  --color-brand: color-mix(in srgb, var(--color-primary) 55%, white);
+  --color-border: color-mix(in srgb, var(--color-primary) 5%, #383838);
+
+  --bg-from: color-mix(in srgb, var(--color-primary) 2%, #141414);
+  --bg-mid: color-mix(in srgb, var(--color-primary) 2%, #161616);
+  --bg-to: color-mix(in srgb, var(--color-primary) 3%, #101010);
+  --bg-dots: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  --glow-top: 4%;
+  --glow-bottom: 3%;
+
+  --hw-panel-a: color-mix(in srgb, var(--color-primary) 3%, #1d1d1d);
+  --hw-panel-b: color-mix(in srgb, var(--color-primary) 7%, #1d1d1d);
+  --hw-panel-c: color-mix(in srgb, var(--color-primary) 16%, #1d1d1d);
+  --hw-peach: color-mix(in srgb, var(--color-primary) 14%, #1d1d1d);
+  --hw-orange-a: color-mix(in srgb, var(--color-primary) 72%, #222222);
+  --hw-orange-b: color-mix(in srgb, var(--color-primary) 58%, #222222);
+}
+
+/* Erros (red-*) e sucesso (green-*) usam as escalas do Tailwind; aqui elas são
+   refeitas em oklch a partir de uma matiz (--danger-h / --ok-h) para que cada
+   modo de daltonismo possa trocá-las sem tocar nos componentes. */
+:root {
+  --danger-h: 27;
+  --ok-h: 150;
+
+  --color-red-50: oklch(0.971 0.015 var(--danger-h));
+  --color-red-100: oklch(0.936 0.032 var(--danger-h));
+  --color-red-200: oklch(0.885 0.062 var(--danger-h));
+  --color-red-300: oklch(0.808 0.114 var(--danger-h));
+  --color-red-400: oklch(0.704 0.191 var(--danger-h));
+  --color-red-500: oklch(0.637 0.237 var(--danger-h));
+  --color-red-600: oklch(0.577 0.245 var(--danger-h));
+  --color-red-700: oklch(0.505 0.213 var(--danger-h));
+  --color-red-800: oklch(0.444 0.177 var(--danger-h));
+
+  --color-green-50: oklch(0.982 0.018 var(--ok-h));
+  --color-green-100: oklch(0.962 0.044 var(--ok-h));
+  --color-green-600: oklch(0.627 0.194 var(--ok-h));
+  --color-green-700: oklch(0.527 0.154 var(--ok-h));
+}
+
+:root[data-theme='dark'] {
+  --color-red-50: oklch(0.26 0.06 var(--danger-h));
+  --color-red-100: oklch(0.3 0.08 var(--danger-h));
+  --color-red-200: oklch(0.4 0.12 var(--danger-h));
+  --color-red-300: oklch(0.5 0.15 var(--danger-h));
+  --color-red-400: oklch(0.65 0.18 var(--danger-h));
+  --color-red-500: oklch(0.7 0.18 var(--danger-h));
+  --color-red-600: oklch(0.74 0.17 var(--danger-h));
+  --color-red-700: oklch(0.78 0.15 var(--danger-h));
+  --color-red-800: oklch(0.82 0.12 var(--danger-h));
+
+  --color-green-50: oklch(0.27 0.05 var(--ok-h));
+  --color-green-100: oklch(0.32 0.07 var(--ok-h));
+  --color-green-600: oklch(0.72 0.17 var(--ok-h));
+  --color-green-700: oklch(0.78 0.15 var(--ok-h));
+}
+
+/* Protanopia / deuteranopia (vermelho-verde): paleta de Okabe-Ito. O azul vira
+   a cor de destaque, o erro vai para o vermelhão-alaranjado e o sucesso para
+   o verde-azulado, que continuam distintos entre si e do azul. */
+:root[data-color-vision='red-green'] {
+  --color-primary: #0072b2;
+  --danger-h: 52;
+  --ok-h: 175;
+}
+
+/* Tritanopia (azul-amarelo): o laranja vira um rosa-carmim e o sucesso fica em
+   um verde mais amarelado, evitando as combinações azul/verde e amarelo/rosa. */
+:root[data-color-vision='blue-yellow'] {
+  --color-primary: #d6336c;
+  --danger-h: 30;
+  --ok-h: 135;
 }
 
 /* ========================================
@@ -226,4 +354,38 @@ a:hover {
     --auth-card-padding: 1.5rem;
     --auth-card-width: 100%;
   }
+}
+
+/* ========================================
+   FUNDO DO APP (components/common/Background.jsx)
+======================================== */
+
+.app-bg-base {
+  background: linear-gradient(145deg, var(--bg-from) 0%, var(--bg-mid) 55%, var(--bg-to) 100%);
+}
+
+.app-bg-glow-top {
+  background: radial-gradient(
+    ellipse at 100% 0%,
+    color-mix(in srgb, var(--color-primary) var(--glow-top), transparent),
+    transparent 30%
+  );
+}
+
+.app-bg-glow-bottom {
+  background: radial-gradient(
+    ellipse at 0% 100%,
+    color-mix(in srgb, var(--color-primary) var(--glow-bottom), transparent),
+    transparent 34%
+  );
+}
+
+.app-bg-dots {
+  background-image: radial-gradient(var(--bg-dots) 0.7px, transparent 0.7px);
+  background-size: 24px 24px;
+}
+
+/* Arcos decorativos: quase somem no tema escuro para não poluir. */
+:root[data-theme='dark'] .app-bg-arc {
+  opacity: 0.3;
 }

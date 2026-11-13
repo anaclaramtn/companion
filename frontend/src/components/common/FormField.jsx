@@ -1,5 +1,5 @@
 const inputClassName =
-  'w-full rounded-xl border bg-white/80 px-4 py-3 text-sm text-companion-text outline-none transition placeholder:text-companion-muted/75 focus:border-companion-orange focus:ring-4 focus:ring-companion-orange/15'
+  'w-full rounded-xl border bg-companion-panel/80 px-4 py-3 text-sm text-companion-text outline-none transition placeholder:text-companion-muted/75 focus:border-companion-orange focus:ring-4 focus:ring-companion-orange/15'
 
 // Campo de formulário com rótulo, dica, contador e mensagem de erro.
 // multiline usa <textarea>; as demais props vão direto para o campo.

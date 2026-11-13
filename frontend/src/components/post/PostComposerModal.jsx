@@ -160,7 +160,7 @@ function PostComposerModal({
             type="button"
             onClick={onClose}
             aria-label="Fechar"
-            className="grid size-10 shrink-0 place-items-center rounded-full text-companion-muted transition hover:bg-companion-orange/10 hover:text-companion-brand"
+            className="grid size-10 shrink-0 place-items-center rounded-lg text-companion-muted transition hover:bg-companion-orange/10 hover:text-companion-brand"
           >
             <i className="bi bi-x-lg" aria-hidden="true" />
           </button>
@@ -184,7 +184,7 @@ function PostComposerModal({
               placeholder="Ex.: Como funcionam as listas encadeadas?"
               maxLength={MAX_TITLE_LENGTH}
               required
-              className="w-full rounded-xl border border-companion-border bg-white/80 px-4 py-3 text-sm text-companion-text outline-none transition placeholder:text-companion-muted/75 focus:border-companion-orange focus:ring-4 focus:ring-companion-orange/15"
+              className="w-full rounded-xl border border-companion-border bg-companion-panel/80 px-4 py-3 text-sm text-companion-text outline-none transition placeholder:text-companion-muted/75 focus:border-companion-orange focus:ring-4 focus:ring-companion-orange/15"
             />
             <p className="mt-1 text-right text-xs text-companion-muted">
               {title.length}/{MAX_TITLE_LENGTH}
@@ -207,7 +207,7 @@ function PostComposerModal({
               rows={5}
               maxLength={MAX_CONTENT_LENGTH}
               required
-              className="w-full resize-y rounded-xl border border-companion-border bg-white/80 px-4 py-3 text-sm leading-6 text-companion-text outline-none transition placeholder:text-companion-muted/75 focus:border-companion-orange focus:ring-4 focus:ring-companion-orange/15"
+              className="w-full resize-y rounded-xl border border-companion-border bg-companion-panel/80 px-4 py-3 text-sm leading-6 text-companion-text outline-none transition placeholder:text-companion-muted/75 focus:border-companion-orange focus:ring-4 focus:ring-companion-orange/15"
             />
             <p className="mt-1 text-right text-xs text-companion-muted">
               {content.length}/{MAX_CONTENT_LENGTH}
@@ -238,7 +238,7 @@ function PostComposerModal({
                 value={subjectSearch}
                 onChange={(event) => setSubjectSearch(event.target.value)}
                 placeholder="Buscar disciplina por nome ou código (ex.: T390)"
-                className="h-10 w-full rounded-xl border border-companion-border bg-white/80 pl-9 pr-3 text-sm text-companion-text outline-none transition placeholder:text-companion-muted/75 focus:border-companion-orange focus:ring-4 focus:ring-companion-orange/15"
+                className="h-10 w-full rounded-xl border border-companion-border bg-companion-panel/80 pl-9 pr-3 text-sm text-companion-text outline-none transition placeholder:text-companion-muted/75 focus:border-companion-orange focus:ring-4 focus:ring-companion-orange/15"
               />
             </div>
             <div className="mt-3 flex max-h-56 flex-wrap gap-2 overflow-y-auto">
@@ -269,10 +269,10 @@ function PostComposerModal({
                     onClick={() => toggleSubject(subject.id)}
                     aria-pressed={isSelected}
                     disabled={isLimitReached}
-                    className={`rounded-full border px-3 py-2 text-sm font-semibold transition-colors ${
+                    className={`rounded-lg border px-3 py-2 text-sm font-semibold transition-colors ${
                       isSelected
                         ? 'border-companion-orange bg-companion-orange text-white'
-                        : 'border-companion-border bg-white/80 text-companion-muted hover:border-companion-orange hover:text-companion-brand'
+                        : 'border-companion-border bg-companion-panel/80 text-companion-muted hover:border-companion-orange hover:text-companion-brand'
                     } disabled:cursor-not-allowed disabled:opacity-45`}
                   >
                     {subject.name}
@@ -306,14 +306,14 @@ function PostComposerModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl border border-companion-border px-5 py-3 text-sm font-semibold text-companion-muted transition hover:bg-white"
+              className="rounded-xl border border-companion-border px-5 py-3 text-sm font-semibold text-companion-muted transition hover:bg-companion-panel"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={isSubmitting || isLoadingSubjects}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-companion-orange px-5 py-3 text-sm font-bold text-white shadow-[0_8px_20px_rgba(255,133,0,0.22)] transition hover:bg-companion-orange-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-companion-orange disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-companion-orange px-5 py-3 text-sm font-bold text-white shadow-companion-btn transition hover:bg-companion-orange-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-companion-orange disabled:cursor-not-allowed disabled:opacity-60"
             >
               <i className="bi bi-send" aria-hidden="true" />
               {isSubmitting ? 'Publicando...' : 'Publicar dúvida'}

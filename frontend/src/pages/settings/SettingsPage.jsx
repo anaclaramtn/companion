@@ -1,5 +1,7 @@
+import { Fragment } from 'react'
 import { useNavigate, useOutletContext } from 'react-router'
 import OptionList from '../../components/common/OptionList.jsx'
+import AccessibilitySettings from '../../components/settings/AccessibilitySettings.jsx'
 import AccountSummaryCard from '../../components/user/AccountSummaryCard.jsx'
 import { mockSettingsSections } from '../../data/mockSettingsOptions.js'
 import { useAuth } from '../../hooks/useAuth.js'
@@ -29,13 +31,16 @@ function SettingsPage() {
       <AccountSummaryCard user={currentUser} to="/perfil" />
 
       {mockSettingsSections.map((section) => (
-        <OptionList
-          key={section.id}
-          id={section.id}
-          title={section.title}
-          items={section.items}
-          onSelect={handleSelect}
-        />
+        <Fragment key={section.id}>
+          <OptionList
+            id={section.id}
+            title={section.title}
+            items={section.items}
+            onSelect={handleSelect}
+          />
+          {/* Logo depois de "Conta" e antes das seções de ajuda e sessão. */}
+          {section.id === 'account' && <AccessibilitySettings />}
+        </Fragment>
       ))}
     </section>
   )

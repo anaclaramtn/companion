@@ -1,6 +1,6 @@
 function SubjectGroup({ title, subjects }) {
   return (
-    <section className="rounded-lg bg-[#faecd8] p-4 sm:p-5">
+    <section className="rounded-lg bg-companion-tint p-4 sm:p-5">
       <h3 className="text-xs font-bold uppercase tracking-wide text-companion-brand">
         {title}
       </h3>
@@ -9,7 +9,7 @@ function SubjectGroup({ title, subjects }) {
           {subjects.map((item) => (
             <li
               key={item.id}
-              className="rounded-full border border-companion-orange bg-white/50 px-3 py-1 text-xs font-medium text-companion-brand"
+              className="rounded-lg border border-companion-orange bg-companion-panel/50 px-3 py-1 text-xs font-medium text-companion-brand"
             >
               {item.subject.name}
             </li>

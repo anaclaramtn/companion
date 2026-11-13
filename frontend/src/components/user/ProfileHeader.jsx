@@ -24,7 +24,7 @@ function ProfileHeader({
     <article className="overflow-hidden rounded-2xl border border-companion-border/70 bg-companion-surface shadow-sm">
       <div
         aria-hidden="true"
-        className="h-32 bg-gradient-to-r from-companion-orange to-[#f26a00] sm:h-40"
+        className="h-32 bg-gradient-to-r from-companion-orange to-companion-orange-hover sm:h-40"
       />
       <div className="px-5 pb-6 sm:px-7">
         <div className="-mt-12 flex flex-wrap items-end justify-between gap-4 sm:-mt-14">
@@ -37,7 +37,7 @@ function ProfileHeader({
           ) : (
             <div
               aria-hidden="true"
-              className="grid size-24 place-items-center rounded-full border-4 border-companion-surface bg-white text-2xl font-bold text-companion-brand sm:size-28"
+              className="grid size-24 place-items-center rounded-full border-4 border-companion-surface bg-companion-panel text-2xl font-bold text-companion-brand sm:size-28"
             >
               {initials(user.name)}
             </div>

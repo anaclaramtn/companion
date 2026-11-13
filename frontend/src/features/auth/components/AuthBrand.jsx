@@ -20,7 +20,7 @@ function AuthBrand({ compact = false }) {
       <span
         className={
           compact
-            ? 'whitespace-nowrap text-sm font-extrabold tracking-[0.14em] text-[#d96700] sm:text-base'
+            ? 'whitespace-nowrap text-sm font-extrabold tracking-[0.14em] text-companion-brand sm:text-base'
             : 'brand-name'
         }
       >

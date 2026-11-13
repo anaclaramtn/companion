@@ -37,7 +37,7 @@
   gap: 10px;
   margin-top: 3px;
   border: 1px solid var(--color-primary);
-  border-radius: 12px;
+  border-radius: 6px;
   color: var(--color-text-on-primary);
   background: var(--color-primary);
   box-shadow: var(--shadow-button);
@@ -135,13 +135,13 @@
 .onboarding-progress {
   height: 6px;
   overflow: hidden;
-  border-radius: 999px;
+  border-radius: var(--radius-lg);
   background: var(--color-primary-soft);
 }
 
 .onboarding-progress-bar {
   height: 100%;
-  border-radius: 999px;
+  border-radius: var(--radius-lg);
   background: var(--color-primary);
   transform-origin: left;
   animation: progressGrow 800ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
@@ -161,7 +161,7 @@
   margin: 0;
   padding: 4px 14px 14px;
   border: 1px solid var(--color-border);
-  border-radius: 12px;
+  border-radius: 6px;
 }
 
 .chip-group legend {
@@ -179,7 +179,7 @@
 .chip {
   padding: 6px 12px;
   border: 1.5px solid transparent;
-  border-radius: 999px;
+  border-radius: var(--radius-lg);
   color: #7a6b5d;
   background: var(--color-background-secondary);
   cursor: pointer;

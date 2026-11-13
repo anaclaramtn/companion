@@ -5,6 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/png" href="/src/assets/icon_companion.png" />
     <title>Companion</title>
+    <script>
+      // Aplica tema e modo de daltonismo salvos antes do React carregar, para a
+      // página não piscar no claro. Mesma regra de src/contexts/ThemeContext.jsx:
+      // telas de acesso e onboarding ficam sempre no padrão.
+      (function () {
+        try {
+          var path = location.pathname
+          var auth =
+            path === '/' ||
+            path === '/login' ||
+            path === '/criar-conta' ||
+            path === '/confirmar-email' ||
+            path === '/recuperar-senha' ||
+            path.indexOf('/onboarding') === 0
+          var saved = JSON.parse(localStorage.getItem('companion.appearance')) || {}
+          var root = document.documentElement
+          root.dataset.theme = !auth && saved.theme === 'dark' ? 'dark' : 'light'
+          root.dataset.colorVision =
+            !auth && (saved.colorVision === 'red-green' || saved.colorVision === 'blue-yellow')
+              ? saved.colorVision
+              : 'default'
+        } catch (e) {}
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

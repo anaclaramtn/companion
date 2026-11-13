@@ -89,7 +89,7 @@ function ReportPopup({ reasons, targetLabel = 'conteúdo', onClose, onSubmit }) 
             type="button"
             onClick={onClose}
             aria-label="Fechar"
-            className="grid size-10 shrink-0 place-items-center rounded-full text-companion-muted transition hover:bg-companion-orange/10 hover:text-companion-brand"
+            className="grid size-10 shrink-0 place-items-center rounded-lg text-companion-muted transition hover:bg-companion-orange/10 hover:text-companion-brand"
           >
             <i className="bi bi-x-lg" aria-hidden="true" />
           </button>
@@ -107,7 +107,7 @@ function ReportPopup({ reasons, targetLabel = 'conteúdo', onClose, onSubmit }) 
                   className={`flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 text-sm transition-colors ${
                     selectedReasonId === String(reason.id)
                       ? 'border-companion-orange bg-companion-orange/10 text-companion-text'
-                      : 'border-companion-border bg-white/70 text-companion-muted hover:border-companion-orange/70'
+                      : 'border-companion-border bg-companion-panel/70 text-companion-muted hover:border-companion-orange/70'
                   }`}
                 >
                   <input
@@ -120,7 +120,7 @@ function ReportPopup({ reasons, targetLabel = 'conteúdo', onClose, onSubmit }) 
                       setSelectedReasonId(event.target.value)
                       setError('')
                     }}
-                    className="size-4 accent-[#FF8500]"
+                    className="size-4 accent-companion-orange"
                   />
                   <span className="font-medium">{reason.label}</span>
                 </label>
@@ -145,7 +145,7 @@ function ReportPopup({ reasons, targetLabel = 'conteúdo', onClose, onSubmit }) 
               placeholder="Conte um pouco mais sobre o motivo da denúncia..."
               rows={4}
               maxLength={MAX_DETAILS_LENGTH}
-              className="w-full resize-y rounded-xl border border-companion-border bg-white/80 px-4 py-3 text-sm leading-6 text-companion-text outline-none transition placeholder:text-companion-muted/75 focus:border-companion-orange focus:ring-4 focus:ring-companion-orange/15"
+              className="w-full resize-y rounded-xl border border-companion-border bg-companion-panel/80 px-4 py-3 text-sm leading-6 text-companion-text outline-none transition placeholder:text-companion-muted/75 focus:border-companion-orange focus:ring-4 focus:ring-companion-orange/15"
             />
             <p className="mt-1 text-right text-xs text-companion-muted">
               {details.length}/{MAX_DETAILS_LENGTH}
@@ -160,14 +160,14 @@ function ReportPopup({ reasons, targetLabel = 'conteúdo', onClose, onSubmit }) 
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl border border-companion-border px-5 py-3 text-sm font-semibold text-companion-muted transition hover:bg-white"
+              className="rounded-xl border border-companion-border px-5 py-3 text-sm font-semibold text-companion-muted transition hover:bg-companion-panel"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-companion-orange px-5 py-3 text-sm font-bold text-white shadow-[0_8px_20px_rgba(255,133,0,0.22)] transition hover:bg-companion-orange-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-companion-orange disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-companion-orange px-5 py-3 text-sm font-bold text-white shadow-companion-btn transition hover:bg-companion-orange-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-companion-orange disabled:cursor-not-allowed disabled:opacity-60"
             >
               <i className="bi bi-flag" aria-hidden="true" />
               {isSubmitting ? 'Enviando...' : 'Enviar denúncia'}

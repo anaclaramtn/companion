@@ -51,7 +51,7 @@ function PostReplyForm({ onSubmit }) {
         required
         aria-invalid={Boolean(error)}
         aria-describedby={error ? 'post-reply-error' : undefined}
-        className="w-full resize-y rounded-xl border border-companion-border bg-white/80 px-4 py-3 text-sm leading-6 text-companion-text outline-none transition placeholder:text-companion-muted/75 focus:border-companion-orange focus:ring-4 focus:ring-companion-orange/15"
+        className="w-full resize-y rounded-xl border border-companion-border bg-companion-panel/80 px-4 py-3 text-sm leading-6 text-companion-text outline-none transition placeholder:text-companion-muted/75 focus:border-companion-orange focus:ring-4 focus:ring-companion-orange/15"
       />
       {error && (
         <p id="post-reply-error" role="alert" className="mt-2 text-sm font-medium text-red-700">

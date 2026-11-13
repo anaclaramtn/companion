@@ -37,7 +37,7 @@ function OptionContent({ label, description, icon, tone, unavailable }) {
       </span>
 
       {unavailable ? (
-        <span className="shrink-0 rounded-full bg-companion-border/50 px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-wide text-companion-muted">
+        <span className="shrink-0 rounded-lg bg-companion-border/50 px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-wide text-companion-muted">
           Em breve
         </span>
       ) : (
@@ -78,7 +78,7 @@ function OptionList({ id, title, items, onSelect }) {
             {item.to ? (
               <Link
                 to={item.to}
-                className={`${itemClassName} hover:bg-white/80`}
+                className={`${itemClassName} hover:bg-companion-panel/80`}
               >
                 <OptionContent {...item} />
               </Link>
@@ -86,7 +86,7 @@ function OptionList({ id, title, items, onSelect }) {
               <button
                 type="button"
                 onClick={() => onSelect?.(item.action)}
-                className={`${itemClassName} hover:bg-white/80`}
+                className={`${itemClassName} hover:bg-companion-panel/80`}
               >
                 <OptionContent {...item} />
               </button>

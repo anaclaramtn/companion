@@ -26,7 +26,7 @@ function LoadMoreTrigger({ onLoadMore, isLoading, label = 'Carregar mais' }) {
         type="button"
         onClick={onLoadMore}
         disabled={isLoading}
-        className="rounded-xl border border-companion-border bg-white px-4 py-2 text-sm font-bold text-companion-text transition hover:bg-companion-orange/5 disabled:cursor-default disabled:opacity-60"
+        className="rounded-xl border border-companion-border bg-companion-panel px-4 py-2 text-sm font-bold text-companion-text transition hover:bg-companion-orange/5 disabled:cursor-default disabled:opacity-60"
       >
         {isLoading ? 'Carregando...' : label}
       </button>

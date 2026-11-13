@@ -178,7 +178,7 @@ function ExplorePage() {
                 <button
                   type="button"
                   onClick={() => setTag(subject)}
-                  className="block w-full px-5 py-3 text-left transition-colors hover:bg-white/80 sm:px-6"
+                  className="block w-full px-5 py-3 text-left transition-colors hover:bg-companion-panel/80 sm:px-6"
                 >
                   <span className="block text-xs text-companion-muted">
                     {index + 1} · Disciplina {subject.code}
@@ -341,7 +341,7 @@ function StudentResults({ text, currentUserId }) {
               <ProfileLink
                 user={user}
                 currentUserId={currentUserId}
-                className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-white/80 sm:px-6"
+                className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-companion-panel/80 sm:px-6"
               >
                 {user.avatarUrl ? (
                   <img src={user.avatarUrl} alt="" className="size-10 shrink-0 rounded-full object-cover" />

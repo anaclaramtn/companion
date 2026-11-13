@@ -52,7 +52,7 @@ function UserListPopup({
             type="button"
             onClick={onClose}
             aria-label="Fechar lista"
-            className="grid size-9 place-items-center rounded-full text-companion-muted transition hover:bg-companion-orange/10 hover:text-companion-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-companion-orange"
+            className="grid size-9 place-items-center rounded-lg text-companion-muted transition hover:bg-companion-orange/10 hover:text-companion-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-companion-orange"
           >
             <i className="bi bi-x-lg" aria-hidden="true" />
           </button>

@@ -86,7 +86,7 @@ function AccountSettingsPage() {
           <button
             type="button"
             onClick={() => setIsDeleteOpen(true)}
-            className="rounded-xl border border-red-300 bg-white px-4 py-2.5 text-sm font-bold text-red-600 transition hover:bg-red-50"
+            className="rounded-xl border border-red-300 bg-companion-panel px-4 py-2.5 text-sm font-bold text-red-600 transition hover:bg-red-50"
           >
             Excluir conta
           </button>
@@ -114,7 +114,7 @@ function AccountSettingsPage() {
             value={deleteConfirmation}
             onChange={(event) => setDeleteConfirmation(event.target.value)}
             placeholder={DELETE_CONFIRMATION_TEXT}
-            className="mt-4 w-full rounded-xl border border-companion-border bg-white/80 px-4 py-3 text-sm text-companion-text outline-none transition focus:border-red-400 focus:ring-4 focus:ring-red-100"
+            className="mt-4 w-full rounded-xl border border-companion-border bg-companion-panel/80 px-4 py-3 text-sm text-companion-text outline-none transition focus:border-red-400 focus:ring-4 focus:ring-red-100"
           />
         </ConfirmDialog>
       )}
