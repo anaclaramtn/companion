@@ -52,7 +52,7 @@ GRANT ALL PRIVILEGES ON <MYSQL_DATABASE>.* TO '<MYSQL_USER>'@'localhost';
 Cadastros públicos sempre recebem o papel `USER`. Cadastre a conta por `POST /api/auth/register` e promova-a no Workbench:
 
 ```sql
-UPDATE users SET role = 'ADMIN' WHERE email = 'seu-email@unifor.br';
+UPDATE users SET role = 'ADMIN' WHERE id = X;
 ```
 
 Autentique novamente para o novo papel entrar no JWT.
