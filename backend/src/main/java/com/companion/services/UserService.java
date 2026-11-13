@@ -12,6 +12,8 @@ import com.companion.exceptions.ResourceNotFoundException;
 import com.companion.entities.Course;
 import com.companion.repositories.CourseRepository;
 import com.companion.repositories.UserRepository;
+import com.companion.repositories.UserSubjectRepository;
+import com.companion.enums.SubjectInterestType;
 import com.companion.repositories.PostRepository;
 import com.companion.repositories.PostCommentRepository;
 import com.companion.repositories.FollowRepository;
@@ -23,6 +25,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.List;
 import java.util.Map;
@@ -40,13 +44,15 @@ public class UserService {
     private final PostCommentRepository postCommentRepository;
     private final FollowRepository followRepository;
     private final CourseRepository courseRepository;
+    private final UserSubjectRepository userSubjectRepository;
 
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder,
                        AuthenticatedUserService authenticatedUserService,
                        PostRepository postRepository,
                        PostCommentRepository postCommentRepository,
                        FollowRepository followRepository,
-                       CourseRepository courseRepository) {
+                       CourseRepository courseRepository,
+                       UserSubjectRepository userSubjectRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.authenticatedUserService = authenticatedUserService;
@@ -54,6 +60,7 @@ public class UserService {
         this.postCommentRepository = postCommentRepository;
         this.followRepository = followRepository;
         this.courseRepository = courseRepository;
+        this.userSubjectRepository = userSubjectRepository;
     }
 
     @Transactional
@@ -76,20 +83,23 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<UserPublicResponseDTO> search(String query, int page, int size) {
+    public PageResponse<UserSearchResultDTO> search(String query, Long subjectId, int page, int size) {
         Page<User> users = userRepository.searchPublic(
                 normalizeQuery(query),
+                subjectId,
                 PageRequest.of(page, Math.min(size, 50), Sort.by("name").ascending()));
-        if (users.isEmpty()) return PageResponse.from(users.map(this::toPublic));
         List<Long> userIds = users.getContent().stream().map(User::getId).toList();
-        Map<Long, Long> postCounts = counts(userIds, postRepository.countActiveByAuthorIds(userIds));
-        Map<Long, Long> commentCounts = counts(userIds, postCommentRepository.countActiveByAuthorIds(userIds));
-        Map<Long, Long> followerCounts = counts(userIds, followRepository.countFollowersForUsers(userIds));
-        Map<Long, Long> followingCounts = counts(userIds, followRepository.countFollowingForUsers(userIds));
-        Page<UserPublicResponseDTO> result = users.map(user -> toPublic(user,
-                postCounts.getOrDefault(user.getId(), 0L), commentCounts.getOrDefault(user.getId(), 0L),
-                followerCounts.getOrDefault(user.getId(), 0L), followingCounts.getOrDefault(user.getId(), 0L)));
-        return PageResponse.from(result);
+        Map<Long, List<String>> dominated = new HashMap<>();
+        if (!userIds.isEmpty()) {
+            userSubjectRepository
+                    .findByUserIdInAndInterestTypeOrderBySubjectNameAsc(userIds, SubjectInterestType.DOMINA)
+                    .forEach(link -> dominated
+                            .computeIfAbsent(link.getUser().getId(), id -> new ArrayList<>())
+                            .add(link.getSubject().getName()));
+        }
+        return PageResponse.from(users.map(user -> new UserSearchResultDTO(
+                user.getId(), user.getName(), user.getUsername(), user.getAvatarUrl(), courseName(user),
+                dominated.getOrDefault(user.getId(), List.of()))));
     }
 
     /**

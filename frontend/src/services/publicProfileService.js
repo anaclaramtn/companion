@@ -12,10 +12,13 @@ export async function getUserById(userId) {
   return response.data
 }
 
-// Busca estudantes por nome, username, bio ou matéria do perfil. Devolve a
-// resposta paginada com perfis públicos (mesmo formato de getUserById).
-export async function searchUsers(query, { page = 0, size = 5 } = {}) {
-  const response = await api.get('/users', { params: { query, page, size } })
+// Busca estudantes por nome, username ou matéria que dominam. Com
+// subjectId, só quem domina aquela matéria. Devolve a resposta paginada com
+// { id, name, username, avatarUrl, course, dominatedSubjects: [nomes] }.
+export async function searchUsers(query, { subjectId, page = 0, size = 20 } = {}) {
+  const response = await api.get('/users', {
+    params: { query: query || undefined, subjectId, page, size },
+  })
   return response.data
 }
 

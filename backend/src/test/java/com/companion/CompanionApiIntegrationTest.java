@@ -171,7 +171,8 @@ class CompanionApiIntegrationTest {
                 .andExpect(status().isOk()).andExpect(jsonPath("$.content", hasSize(1)));
         mockMvc.perform(get("/api/users").header("Authorization", bearer(adminToken))
                         .param("query", "Algoritmos"))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.content", hasSize(1)));
+                // A matéria virou "quer aprender": a busca social só acha quem domina.
+                .andExpect(status().isOk()).andExpect(jsonPath("$.content", hasSize(0)));
 
         String secondToken = register("bruno@unifor.br", "Senha123");
         mockMvc.perform(put("/api/users/me/profile").header("Authorization", bearer(secondToken))

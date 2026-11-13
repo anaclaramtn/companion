@@ -7,6 +7,7 @@ import com.companion.repositories.FollowRepository;
 import com.companion.repositories.PostCommentRepository;
 import com.companion.repositories.PostRepository;
 import com.companion.repositories.UserRepository;
+import com.companion.repositories.UserSubjectRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -26,12 +27,13 @@ class UserServiceTest {
     @Mock PostCommentRepository commentRepository;
     @Mock FollowRepository followRepository;
     @Mock CourseRepository courseRepository;
+    @Mock UserSubjectRepository userSubjectRepository;
 
     @Test
     void rejectsCaseInsensitiveDuplicateEmailBeforeEncodingPassword() {
         when(userRepository.existsByEmailIgnoreCase("ana@unifor.br")).thenReturn(true);
         UserService service = new UserService(userRepository, passwordEncoder, authenticatedUserService,
-                postRepository, commentRepository, followRepository, courseRepository);
+                postRepository, commentRepository, followRepository, courseRepository, userSubjectRepository);
 
         assertThrows(DuplicateResourceException.class, () -> service.register(
                 new UserRegistrationRequestDTO("ANA@UNIFOR.BR", "Senha123")));

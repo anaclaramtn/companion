@@ -4,6 +4,7 @@ import com.companion.dtos.common.PageResponse;
 import com.companion.dtos.user.UserAccountResponseDTO;
 import com.companion.dtos.user.UserProfileUpdateRequestDTO;
 import com.companion.dtos.user.UserPublicResponseDTO;
+import com.companion.dtos.user.UserSearchResultDTO;
 import com.companion.services.UserAvatarService;
 import com.companion.services.UserService;
 import jakarta.validation.Valid;
@@ -79,11 +80,12 @@ public class UserController {
     }
 
     @GetMapping
-    public PageResponse<UserPublicResponseDTO> search(
+    public PageResponse<UserSearchResultDTO> search(
             @RequestParam(required = false) String query,
+            @RequestParam(required = false) Long subjectId,
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "10") @Min(1) @Max(50) int size
     ) {
-        return userService.search(query, page, size);
+        return userService.search(query, subjectId, page, size);
     }
 }

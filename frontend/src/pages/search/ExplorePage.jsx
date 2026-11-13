@@ -3,16 +3,14 @@ import { useOutletContext } from 'react-router'
 import LoadMoreTrigger from '../../components/common/LoadMoreTrigger.jsx'
 import TagSearchInput from '../../components/common/TagSearchInput.jsx'
 import PostCard from '../../components/post/PostCard.jsx'
-import ProfileLink from '../../components/user/ProfileLink.jsx'
+import StudentResults from '../../components/user/StudentResults.jsx'
 import { usePaginatedPosts } from '../../hooks/usePaginatedPosts.js'
 import { useToast } from '../../hooks/useToast.js'
 import { getAllSubjects, getTrendingSubjects } from '../../services/academicService.js'
 import { getApiErrorMessage } from '../../services/apiError.js'
 import { getPosts } from '../../services/postService.js'
-import { searchUsers } from '../../services/publicProfileService.js'
 
 const MAX_SUGGESTIONS = 5
-const MAX_STUDENTS = 5
 // Espera o usuário parar de digitar antes de buscar na API.
 const SEARCH_DELAY_MS = 350
 
@@ -34,13 +32,10 @@ function matchesSubject(subject, tag) {
   )
 }
 
-function initials(name) {
-  return name
-    .split(' ')
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join('')
-}
+const SEARCH_MODES = [
+  { value: 'posts', label: 'Posts', icon: 'bi-chat-left-text' },
+  { value: 'social', label: 'Social', icon: 'bi-people' },
+]
 
 function ExplorePage() {
   const showToast = useToast()
@@ -54,6 +49,9 @@ function ExplorePage() {
   const textQuery = (hashIndex === -1 ? query : query.slice(0, hashIndex)).trim()
   const tagDraft = hashIndex === -1 ? null : normalize(query.slice(hashIndex + 1))
   const [searchedText, setSearchedText] = useState('')
+  // Duas buscas: dúvidas (posts) ou pessoas que dominam um assunto (social).
+  const [mode, setMode] = useState('posts')
+  const isSocial = mode === 'social'
 
   // Disciplinas para as sugestões de "#" e matérias em alta.
   useEffect(() => {
@@ -120,11 +118,40 @@ function ExplorePage() {
         Explorar
       </h1>
 
+      <div role="tablist" aria-label="Tipo de busca" className="flex gap-2">
+        {SEARCH_MODES.map((option) => {
+          const selected = mode === option.value
+          return (
+            <button
+              key={option.value}
+              type="button"
+              role="tab"
+              id={`explore-tab-${option.value}`}
+              aria-selected={selected}
+              aria-controls="explore-panel"
+              onClick={() => setMode(option.value)}
+              className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition ${
+                selected
+                  ? 'border-companion-orange bg-companion-orange/10 text-companion-brand'
+                  : 'border-companion-border bg-companion-surface text-companion-text hover:bg-companion-orange/5'
+              }`}
+            >
+              <i className={`bi ${option.icon}`} aria-hidden="true" />
+              {option.label}
+            </button>
+          )
+        })}
+      </div>
+
       <form role="search" onSubmit={(event) => event.preventDefault()}>
         <TagSearchInput
           id="explore-search"
-          label="Buscar por dúvidas, tags ou usuários"
-          placeholder="Buscar por dúvidas, #matérias ou estudantes..."
+          label={isSocial ? 'Buscar estudantes' : 'Buscar dúvidas'}
+          placeholder={
+            isSocial
+              ? 'Buscar por nome ou #matéria que a pessoa domina...'
+              : 'Buscar dúvidas por palavra ou #matéria...'
+          }
           query={query}
           tags={tag ? [tag.name] : []}
           suggestions={suggestions}
@@ -134,16 +161,39 @@ function ExplorePage() {
         />
       </form>
 
-      {isSearching && (
-        <ExploreResults
-          // Uma busca nova recomeça a lista do zero.
-          key={`${searchedText}|${tag?.id ?? ''}`}
-          text={searchedText}
-          subjectId={tag?.id}
-          searchLabel={searchLabel}
-        />
-      )}
+      <div
+        id="explore-panel"
+        role="tabpanel"
+        aria-labelledby={`explore-tab-${mode}`}
+        className="space-y-5"
+      >
+        {isSocial ? (
+          isSearching ? (
+            <StudentResults
+              // Uma busca nova recomeça a lista do zero.
+              key={`${searchedText}|${tag?.id ?? ''}`}
+              text={searchedText}
+              subjectId={tag?.id}
+            />
+          ) : (
+            <p className="rounded-2xl border border-companion-border/70 bg-companion-surface px-6 py-8 text-sm text-companion-muted shadow-sm">
+              Busque por um assunto (ex.: #Cálculo) para encontrar estudantes que
+              dominam a matéria, ou pelo nome de alguém.
+            </p>
+          )
+        ) : (
+          isSearching && (
+            <ExploreResults
+              key={`${searchedText}|${tag?.id ?? ''}`}
+              text={searchedText}
+              subjectId={tag?.id}
+              searchLabel={searchLabel}
+            />
+          )
+        )}
+      </div>
 
+      {!isSocial && (
       <section
         aria-labelledby="trending-title"
         className="overflow-hidden rounded-2xl border border-companion-border/70 bg-companion-surface shadow-sm"
@@ -199,11 +249,12 @@ function ExplorePage() {
           </p>
         )}
       </section>
+      )}
     </section>
   )
 }
 
-// Resultado de uma busca: estudantes (quando há texto) e dúvidas, do banco.
+// Resultado da busca de dúvidas, do banco.
 function ExploreResults({ text, subjectId, searchLabel }) {
   const { currentUserId, reportReasons, onLikePost, onSavePost, onReportItem } =
     useOutletContext()
@@ -217,8 +268,6 @@ function ExploreResults({ text, subjectId, searchLabel }) {
 
   return (
     <>
-      {text && <StudentResults text={text} currentUserId={currentUserId} />}
-
       <section aria-labelledby="related-posts-title" className="space-y-4">
         <div className="flex items-center justify-between gap-4">
           <h2
@@ -279,95 +328,6 @@ function ExploreResults({ text, subjectId, searchLabel }) {
         )}
       </section>
     </>
-  )
-}
-
-// Até 5 estudantes cujo nome, username, bio ou matérias combinam com o texto.
-function StudentResults({ text, currentUserId }) {
-  const [result, setResult] = useState({ isLoading: true, users: [], total: 0, error: '' })
-
-  useEffect(() => {
-    let active = true
-    searchUsers(text, { size: MAX_STUDENTS })
-      .then((page) => {
-        if (active) {
-          setResult({ isLoading: false, users: page.content, total: page.totalElements, error: '' })
-        }
-      })
-      .catch((error) => {
-        if (!active) return
-        setResult({
-          isLoading: false,
-          users: [],
-          total: 0,
-          error: getApiErrorMessage(error, 'Não foi possível buscar estudantes.'),
-        })
-      })
-    return () => {
-      active = false
-    }
-  }, [text])
-
-  // Sem nenhum estudante encontrado, a seção não aparece.
-  if (!result.isLoading && !result.error && result.users.length === 0) return null
-
-  return (
-    <section
-      aria-labelledby="student-results-title"
-      className="overflow-hidden rounded-2xl border border-companion-border/70 bg-companion-surface shadow-sm"
-    >
-      <header className="flex items-center justify-between gap-4 border-b border-companion-border/60 px-5 py-4 sm:px-6">
-        <h2 id="student-results-title" className="text-lg font-bold text-companion-text">
-          Estudantes
-        </h2>
-        {result.total > MAX_STUDENTS && (
-          <span className="text-sm text-companion-muted">
-            {MAX_STUDENTS} de {result.total}
-          </span>
-        )}
-      </header>
-      {result.isLoading ? (
-        <p role="status" className="px-6 py-6 text-sm text-companion-muted">
-          Buscando estudantes...
-        </p>
-      ) : result.error ? (
-        <p role="alert" className="px-6 py-6 text-sm font-semibold text-red-700">
-          {result.error}
-        </p>
-      ) : (
-        <ul>
-          {result.users.map((user) => (
-            <li key={user.id} className="border-b border-companion-border/50 last:border-b-0">
-              <ProfileLink
-                user={user}
-                currentUserId={currentUserId}
-                className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-companion-panel/80 sm:px-6"
-              >
-                {user.avatarUrl ? (
-                  <img src={user.avatarUrl} alt="" className="size-10 shrink-0 rounded-full object-cover" />
-                ) : (
-                  <span
-                    aria-hidden="true"
-                    className="grid size-10 shrink-0 place-items-center rounded-full bg-companion-orange/10 text-xs font-bold text-companion-brand"
-                  >
-                    {initials(user.name)}
-                  </span>
-                )}
-                <span className="min-w-0">
-                  <span className="block truncate text-sm font-bold text-companion-text">
-                    {user.name}
-                  </span>
-                  <span className="block truncate text-xs text-companion-muted">
-                    @{user.username}
-                    {user.course ? ` · ${user.course}` : ''}
-                  </span>
-                </span>
-              </ProfileLink>
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
   )
 }
 

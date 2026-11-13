@@ -30,21 +30,36 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     boolean existsByRegistrationNumberIgnoreCaseAndIdNot(String registrationNumber, Long id);
 
+    /**
+     * Busca estudantes por nome, username ou matéria que dominam (matérias
+     * em que só querem aprender não contam). Com subjectId, só quem domina a matéria.
+     */
     @Query("""
-            select distinct u from User u
-            left join UserSubject us on us.user = u
-            left join us.subject s
+            select u from User u
             where u.status = com.companion.enums.UserStatus.ACTIVE
               and u.username is not null
+              and (
+                :subjectId is null
+                or exists (
+                  select 1 from UserSubject us
+                  where us.user = u
+                    and us.subject.id = :subjectId
+                    and us.interestType = com.companion.enums.SubjectInterestType.DOMINA
+                )
+              )
               and (
                 :query is null
                 or lower(u.name) like lower(concat('%', :query, '%'))
                 or lower(u.username) like lower(concat('%', :query, '%'))
-                or lower(coalesce(u.bio, '')) like lower(concat('%', :query, '%'))
-                or lower(coalesce(s.name, '')) like lower(concat('%', :query, '%'))
+                or exists (
+                  select 1 from UserSubject us2
+                  where us2.user = u
+                    and us2.interestType = com.companion.enums.SubjectInterestType.DOMINA
+                    and lower(us2.subject.name) like lower(concat('%', :query, '%'))
+                )
               )
             """)
-    Page<User> searchPublic(@Param("query") String query, Pageable pageable);
+    Page<User> searchPublic(@Param("query") String query, @Param("subjectId") Long subjectId, Pageable pageable);
 
     @Query("""
             select u from User u
