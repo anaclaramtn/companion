@@ -430,3 +430,24 @@ a:hover {
 :root[data-theme='dark'] .app-bg-arc {
   opacity: 0.3;
 }
+
+/* ========================================
+   BANNER DO PERFIL (components/user/ProfileHeader.jsx)
+   Degradê diagonal do tom escuro ao claro, com um brilho no canto superior
+   direito e outro bem leve embaixo. As misturas usam só preto e branco para
+   preservar o matiz de --color-primary, então o banner acompanha o tema escuro
+   e as paletas de daltonismo sem ficar acinzentado.
+======================================== */
+
+.profile-banner {
+  background:
+    radial-gradient(70% 150% at 100% 0%, color-mix(in srgb, white 34%, transparent) 0%, transparent 58%),
+    radial-gradient(60% 120% at 30% 130%, color-mix(in srgb, white 16%, transparent) 0%, transparent 70%),
+    linear-gradient(
+      105deg,
+      color-mix(in srgb, var(--color-primary) 60%, black) 0%,
+      color-mix(in srgb, var(--color-primary) 80%, black) 34%,
+      var(--color-primary) 66%,
+      color-mix(in srgb, var(--color-primary) 78%, white) 100%
+    );
+}

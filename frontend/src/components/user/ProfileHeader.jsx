@@ -24,7 +24,7 @@ function ProfileHeader({
     <article className="overflow-hidden rounded-2xl border border-companion-border/70 bg-companion-surface shadow-sm">
       <div
         aria-hidden="true"
-        className="h-32 bg-gradient-to-r from-companion-orange to-companion-orange-hover sm:h-40"
+        className="profile-banner h-32 sm:h-40"
       />
       <div className="px-5 pb-6 sm:px-7">
         <div className="-mt-12 flex flex-wrap items-end justify-between gap-4 sm:-mt-14">
