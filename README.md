@@ -43,13 +43,19 @@ O passo a passo detalhado, com a instalação do MySQL e do Workbench, está no 
 
 ## Dados de exemplo
 
-Para ter usuários, dúvidas, respostas, curtidas e seguidores prontos, suba o backend com o perfil `seed` (migração Flyway em `backend/src/main/resources/db/seed`):
+Para ter usuários, dúvidas, respostas, curtidas e seguidores prontos, suba o backend com o perfil `seed`. Ele aplica as migrações Flyway de `backend/src/main/resources/db/seed`:
 
 ```powershell
+cd backend
 .\gradlew.bat bootRun --args="--spring.profiles.active=seed"
 ```
 
-Os usuários (como `ana.exemplo@edu.unifor.br` ou `anabeatriz`) usam a senha `Senha123`. Repetir o comando não duplica nada.
+| Migração | O que cria |
+|---|---|
+| `V1__usuarios_e_posts_de_exemplo` | 6 usuários, 12 dúvidas, respostas, curtidas e seguidores |
+| `V2__mais_dados_com_fotos` | 8 usuários novos, 20 dúvidas, 37 respostas, 73 curtidas, 39 relações de seguidores e **fotos de perfil** para os 14 usuários |
+
+Todos os usuários (como `ana.exemplo@edu.unifor.br` ou o username `anabeatriz`) usam a senha `Senha123`. Quem já aplicou a V1 recebe só a V2, e repetir o comando não duplica nada. As fotos da V2 são avatares ilustrados gravados no próprio SQL, e o endereço delas usa `http://localhost:8080`.
 
 ## Primeiro administrador
 

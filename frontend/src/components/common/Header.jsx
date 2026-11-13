@@ -82,14 +82,17 @@ function HeaderWaves() {
 }
 
 // Selo ao lado do nome do app e linha no cartão do perfil, só para quem modera.
+// Estudante só aparece no cartão, sem selo no cabeçalho (badge: null).
 const ROLE_DISPLAY = {
-  ADMIN: { badge: 'ADMIN', label: 'Administrador' },
-  MODERATOR: { badge: 'MOD', label: 'Moderador' },
+  ADMIN: { badge: 'ADMIN', label: 'Administrador', icon: 'bi-shield-check' },
+  MODERATOR: { badge: 'MOD', label: 'Moderador', icon: 'bi-shield-check' },
+  USER: { badge: null, label: 'Estudante', icon: 'bi-mortarboard' },
 }
 
 function ProfileMenu({
   name,
   roleLabel,
+  roleIcon,
   avatarUrl,
   href,
   followingCount,
@@ -132,7 +135,7 @@ function ProfileMenu({
           <p className="truncate font-bold text-companion-text">{name}</p>
           {roleLabel && (
             <p className="mt-0.5 flex items-center gap-1.5 text-xs font-semibold text-companion-brand">
-              <i className="bi bi-shield-check" aria-hidden="true" />
+              <i className={`bi ${roleIcon}`} aria-hidden="true" />
               {roleLabel}
             </p>
           )}
@@ -198,7 +201,7 @@ function FeedHeader({
         >
           <AuthBrand compact />
         </Link>
-        {role && (
+        {role?.badge && (
           <span className="shrink-0 rounded-md border border-companion-orange/40 bg-companion-orange/10 px-2 py-0.5 text-[0.65rem] font-extrabold tracking-wider text-companion-brand">
             {role.badge}
           </span>
@@ -258,6 +261,7 @@ function FeedHeader({
         <ProfileMenu
           name={userName}
           roleLabel={role?.label}
+          roleIcon={role?.icon}
           avatarUrl={userAvatarUrl}
           href={profileHref}
           followingCount={followingCount}

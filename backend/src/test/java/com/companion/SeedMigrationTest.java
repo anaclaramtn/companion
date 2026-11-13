@@ -11,7 +11,9 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -31,14 +33,34 @@ class SeedMigrationTest {
 
     @Test
     void createsExampleUsersPostsAndInteractions() {
-        assertEquals(6, count("users"));
-        assertEquals(12, count("posts"));
-        assertEquals(14, count("post_subjects"));
-        assertEquals(12, count("post_comments"));
-        assertEquals(23, count("post_likes"));
-        assertEquals(12, count("follows"));
+        // V1 (6 usuários, 12 dúvidas) + V2 (8 usuários, 20 dúvidas e as fotos).
+        assertEquals(14, count("users"));
+        assertEquals(32, count("posts"));
+        assertEquals(39, count("post_subjects"));
+        assertEquals(49, count("post_comments"));
+        assertEquals(96, count("post_likes"));
+        assertEquals(51, count("follows"));
+        assertEquals(14, count("user_avatars"));
         // O Flyway registrou o que aplicou (baseline + V1).
-        assertTrue(count("\"flyway_schema_history\"") >= 1);
+        assertTrue(count("\"flyway_schema_history\"") >= 2);
+    }
+
+    @Test
+    void exampleUsersHaveProfilePhotosServedByTheApi() throws Exception {
+        long anaId = jdbc.queryForObject(
+                "SELECT id FROM users WHERE email = 'ana.exemplo@edu.unifor.br'", Long.class);
+        String avatarUrl = jdbc.queryForObject("SELECT avatar_url FROM users WHERE id = ?", String.class, anaId);
+        assertTrue(avatarUrl.endsWith("/api/users/" + anaId + "/avatar?v=2"));
+
+        // O endereço é público e devolve o JPEG gravado pela migração.
+        byte[] photo = mockMvc.perform(get("/api/users/" + anaId + "/avatar"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("image/jpeg"))
+                .andReturn().getResponse().getContentAsByteArray();
+        assertTrue(photo.length > 1000);
+        // Começa com a assinatura de um JPEG (FF D8 FF).
+        assertEquals((byte) 0xFF, photo[0]);
+        assertEquals((byte) 0xD8, photo[1]);
     }
 
     @Test
