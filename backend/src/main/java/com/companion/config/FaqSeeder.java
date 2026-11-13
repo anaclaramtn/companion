@@ -39,8 +39,9 @@ public class FaqSeeder implements ApplicationRunner {
                             + "escolha as matérias relacionadas. Quanto mais clara a descrição, mais fácil para "
                             + "os colegas ajudarem."),
             new SeedFaq("Posso editar uma dúvida ou resposta depois de publicar?",
-                    "Não. Dúvidas e respostas não podem ser editadas nem excluídas depois de publicadas, "
-                            + "então revise o texto com atenção antes de enviar."),
+                    "Dúvidas e respostas não podem ser editadas depois de publicadas, então revise o texto "
+                            + "antes de enviar. Quem publicou pode excluir a própria dúvida ou resposta a "
+                            + "qualquer momento, e a moderação pode excluir conteúdos que violem as regras."),
             new SeedFaq("Existe limite de tamanho para dúvidas e respostas?",
                     "Sim. O conteúdo de cada dúvida e de cada resposta pode ter até 256 caracteres. Seja "
                             + "direto e foque no ponto principal da sua pergunta."),

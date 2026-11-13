@@ -376,6 +376,66 @@ class CompanionApiIntegrationTest {
     }
 
     @Test
+    void enforcesWhoCanDeletePostsRepliesAndProfiles() throws Exception {
+        String authorToken = register("edu@unifor.br", "Senha123");
+        String otherToken = register("fabi@unifor.br", "Senha123");
+        String adminToken = register("gabi@unifor.br", "Senha123");
+        for (Object[] profile : new Object[][]{{authorToken, "Edu", "edu"}, {otherToken, "Fabi", "fabi"},
+                {adminToken, "Gabi", "gabi"}}) {
+            mockMvc.perform(put("/api/users/me/profile").header("Authorization", bearer((String) profile[0]))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(profileJson((String) profile[1], (String) profile[2])))
+                    .andExpect(status().isOk());
+        }
+        User admin = userRepository.findByEmailIgnoreCase("gabi@unifor.br").orElseThrow();
+        admin.changeRole(UserRole.ADMIN);
+        userRepository.saveAndFlush(admin);
+        adminToken = login("gabi", "Senha123");
+        long authorId = userRepository.findByEmailIgnoreCase("edu@unifor.br").orElseThrow().getId();
+        long subjectId = subjectRepository.findAll().getFirst().getId();
+
+        // Quem não é o autor nem administrador não exclui dúvida nem resposta dos outros.
+        long postId = extractId(mockMvc.perform(post("/api/posts").header("Authorization", bearer(authorToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"subjectIds\":[" + subjectId + "],\"title\":\"Dúvida\",\"content\":\"Como?\"}"))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString());
+        long replyId = extractId(mockMvc.perform(post("/api/posts/{id}/comments", postId)
+                        .header("Authorization", bearer(authorToken)).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"content\":\"Resposta do autor\"}"))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString());
+        mockMvc.perform(delete("/api/posts/{id}", postId).header("Authorization", bearer(otherToken)))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(delete("/api/comments/{id}", replyId).header("Authorization", bearer(otherToken)))
+                .andExpect(status().isForbidden());
+
+        // O administrador exclui a resposta e a dúvida de qualquer pessoa.
+        mockMvc.perform(delete("/api/comments/{id}", replyId).header("Authorization", bearer(adminToken)))
+                .andExpect(status().isNoContent());
+        mockMvc.perform(get("/api/posts/{id}/comments", postId).header("Authorization", bearer(otherToken)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$", hasSize(0)));
+        mockMvc.perform(delete("/api/posts/{id}", postId).header("Authorization", bearer(adminToken)))
+                .andExpect(status().isNoContent());
+        mockMvc.perform(get("/api/posts/{id}", postId).header("Authorization", bearer(otherToken)))
+                .andExpect(status().isNotFound());
+
+        // Excluir o perfil de alguém é só do administrador, apaga a foto e não vale para si mesmo.
+        mockMvc.perform(multipart(HttpMethod.PUT, "/api/users/me/avatar").file(avatarFile())
+                        .header("Authorization", bearer(authorToken)))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/api/users/" + authorId + "/avatar")).andExpect(status().isOk());
+        mockMvc.perform(delete("/api/admin/users/{id}", authorId).header("Authorization", bearer(otherToken)))
+                .andExpect(status().isForbidden());
+        long adminId = admin.getId();
+        mockMvc.perform(delete("/api/admin/users/{id}", adminId).header("Authorization", bearer(adminToken)))
+                .andExpect(status().isBadRequest());
+        mockMvc.perform(delete("/api/admin/users/{id}", authorId).header("Authorization", bearer(adminToken)))
+                .andExpect(status().isNoContent());
+        mockMvc.perform(get("/api/users/" + authorId + "/avatar")).andExpect(status().isNotFound());
+        mockMvc.perform(get("/api/users/{id}", authorId).header("Authorization", bearer(otherToken)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     void replacesProfileSubjectsAtOnce() throws Exception {
         String token = register("dani@unifor.br", "Senha123");
         mockMvc.perform(put("/api/users/me/profile").header("Authorization", bearer(token))

@@ -36,7 +36,8 @@ class FaqSeederTest {
         Faq editFaq = faqs.stream()
                 .filter(faq -> faq.getQuestion().startsWith("Posso editar"))
                 .findFirst().orElseThrow();
-        assertTrue(editFaq.getAnswer().contains("nem excluídas"));
+        assertTrue(editFaq.getAnswer().contains("não podem ser editadas"));
+        assertTrue(editFaq.getAnswer().contains("pode excluir a própria dúvida"));
     }
 
     @Test

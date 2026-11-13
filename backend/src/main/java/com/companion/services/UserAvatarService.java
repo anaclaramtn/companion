@@ -40,6 +40,11 @@ public class UserAvatarService {
         avatarImageService.delete(userId);
     }
 
+    /** Usado quando a administração exclui a conta de outra pessoa. */
+    public void deleteAvatarOf(Long userId) {
+        avatarImageService.delete(userId);
+    }
+
     public UserAccountResponseDTO removeOwnAvatar() {
         Long userId = authenticatedUserService.getCurrentUser().getId();
         UserAccountResponseDTO account = userService.changeOwnAvatarUrl(null);

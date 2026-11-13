@@ -4,6 +4,7 @@ import com.companion.dtos.common.PageResponse;
 import com.companion.dtos.user.UserAdminResponseDTO;
 import com.companion.dtos.user.UserRoleUpdateRequestDTO;
 import com.companion.dtos.user.UserStatusUpdateRequestDTO;
+import com.companion.services.UserAvatarService;
 import com.companion.services.UserService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -18,9 +19,11 @@ import org.springframework.web.bind.annotation.*;
 public class AdminUserController {
 
     private final UserService userService;
+    private final UserAvatarService userAvatarService;
 
-    public AdminUserController(UserService userService) {
+    public AdminUserController(UserService userService, UserAvatarService userAvatarService) {
         this.userService = userService;
+        this.userAvatarService = userAvatarService;
     }
 
     @GetMapping
@@ -47,6 +50,7 @@ public class AdminUserController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         userService.deleteByAdministration(id);
+        userAvatarService.deleteAvatarOf(id);
         return ResponseEntity.noContent().build();
     }
 }

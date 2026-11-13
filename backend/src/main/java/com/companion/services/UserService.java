@@ -189,7 +189,10 @@ public class UserService {
 
     @Transactional
     public void deleteByAdministration(Long id) {
-        authenticatedUserService.requireAnyRole(UserRole.ADMIN);
+        User actor = authenticatedUserService.requireAnyRole(UserRole.ADMIN);
+        if (actor.getId().equals(id)) {
+            throw new BadRequestException("Para excluir a sua própria conta, use as Configurações");
+        }
         User user = findAnyUser(id);
         if (user.getStatus() == UserStatus.DELETED) {
             throw new ConflictException("A conta já foi excluída");
