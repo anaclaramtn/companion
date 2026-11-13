@@ -21,13 +21,13 @@ export const mockSupportTopics = [
     id: 1,
     question: 'Não consigo entrar na minha conta',
     answer:
-      'Confira se o e-mail ou username e a senha estão corretos. Se esqueceu a senha, use "Recuperar senha". Contas suspensas não conseguem entrar até a análise da administração.',
+      'Confira se o e-mail ou username e a senha estão corretos. A recuperação de senha ainda está em desenvolvimento. Contas suspensas não conseguem entrar até a análise da administração.',
   },
   {
     id: 2,
-    question: 'O link de recuperação de senha não funciona',
+    question: 'Posso recuperar ou alterar minha senha?',
     answer:
-      'O link expira em 15 minutos e só pode ser usado uma vez. Se ele já venceu ou foi usado, faça um novo pedido de recuperação e use o link mais recente.',
+      'Ainda não. A recuperação e a alteração de senha estão sendo desenvolvidas e ficarão disponíveis em breve.',
   },
   {
     id: 3,

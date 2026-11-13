@@ -107,7 +107,7 @@ function AccountInfoPage() {
                 label: 'E-mail',
                 value: account.email,
                 icon: 'bi-envelope',
-                hint: 'Usado para entrar e recuperar a senha.',
+                hint: 'Usado para entrar na conta.',
               },
               {
                 id: 'username',

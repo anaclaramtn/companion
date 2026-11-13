@@ -3,6 +3,7 @@ import {Link, useNavigate} from 'react-router'
 import 'bootstrap-icons/font/bootstrap-icons.css'
 import AuthForm from '../../features/auth/components/AuthForm.jsx'
 import AuthLayout from '../../layouts/auth/AuthLayout.jsx'
+import { validatePassword, validatePasswordConfirmation } from '../../features/auth/passwordValidation.js'
 import { useAuth } from '../../hooks/useAuth.js'
 import { getApiErrorMessage } from '../../services/apiError.js'
 
@@ -20,33 +21,6 @@ function validateEmail(value) {
     }
 
     return ''   
-}
-
-function validatePassword(value) {
-    if (!value) {
-        return 'Informe uma senha.'
-    }
-
-    if (value.length < 8) return 'A senha deve ter pelo menos 8 caracteres.'
-    if (value.length > 72) return 'A senha deve ter no máximo 72 caracteres.'
-    if (!/[A-Z]/.test(value)) return 'A senha deve conter pelo menos uma letra maiúscula.'
-    if (!/[a-z]/.test(value)) return 'A senha deve conter pelo menos uma letra minúscula.'
-    if (!/[0-9]/.test(value)) return 'A senha deve conter pelo menos um número.'
-    //if (!/[!@#$%^&*(),.?":{}|<>]/.test(value)) return 'A senha deve conter pelo menos um caractere especial.'
-    //nao sei se vai ter caractere especial
-    return ''
-}
-
-function validatePasswordConfirmation(password, confirmation) {
-  if (!confirmation) {
-    return 'Confirme sua senha.'
-  }
-
-  if (password !== confirmation) {
-    return 'As senhas não coincidem.'
-  }
-
-  return ''
 }
 
 function RegisterPage() {

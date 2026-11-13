@@ -17,14 +17,6 @@ export async function getMyAccount() {
   }
 }
 
-// Envia ao e-mail da conta um link para criar uma nova senha.
-// Retorna o e-mail usado, para a tela informar ao usuário. PROVISÓRIO: o
-// envio ainda é simulado, porque o backend precisa de um servidor de e-mail
-// configurado (MAIL_* no .env) para POST /api/auth/password/forgot.
-export function sendPasswordResetEmail(email) {
-  return mockResponse({ email })
-}
-
 // Exclui a conta: o backend anonimiza os dados pessoais e apaga a foto.
 export async function deleteMyAccount() {
   await api.delete('/users/me')

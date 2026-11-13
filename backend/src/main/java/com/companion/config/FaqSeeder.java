@@ -31,9 +31,8 @@ public class FaqSeeder implements ApplicationRunner {
                             + "do cadastro, confirme seu e-mail pelo link que enviamos e defina seu nome e "
                             + "username para acessar o feed."),
             new SeedFaq("Esqueci minha senha. Como recupero o acesso?",
-                    "Na tela de login, clique em \"Esqueceu a senha?\" e informe seu e-mail. Você receberá "
-                            + "um link para criar uma nova senha. O link vale por 15 minutos e só pode ser usado "
-                            + "uma vez."),
+                    "A recuperação de senha ainda está em desenvolvimento e ficará disponível em breve. "
+                            + "Por enquanto, guarde bem a senha que você criou no cadastro."),
             new SeedFaq("Como publico uma dúvida?",
                     "Clique em \"Postar dúvida\" no topo da tela, escreva um título, descreva sua dúvida e "
                             + "escolha as matérias relacionadas. Quanto mais clara a descrição, mais fácil para "

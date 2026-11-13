@@ -25,10 +25,10 @@ JDK 21, Node.js 20.19+ e MySQL Server 8.4. O MySQL Workbench é opcional: é só
 
    ```powershell
    cd backend
-   .\gradlew.bat bootRun --args="--spring.profiles.active=dev"
+   .\gradlew.bat bootRun
    ```
 
-   O perfil `dev` mostra o link de recuperação de senha no console; fora dele, configure o SMTP no `.env`. A API fica em `http://localhost:8080/api`.
+   A API fica em `http://localhost:8080/api`. A recuperação de senha ainda está em desenvolvimento no app.
 4. **Frontend:** crie `frontend/.env.local` com `VITE_API_BASE_URL=http://localhost:8080/api` e rode:
 
    ```powershell
@@ -46,7 +46,7 @@ O passo a passo detalhado, com a instalação do MySQL e do Workbench, está no 
 Para ter usuários, dúvidas, respostas, curtidas e seguidores prontos, suba o backend com o perfil `seed` (migração Flyway em `backend/src/main/resources/db/seed`):
 
 ```powershell
-.\gradlew.bat bootRun --args="--spring.profiles.active=dev,seed"
+.\gradlew.bat bootRun --args="--spring.profiles.active=seed"
 ```
 
 Os usuários (como `ana.exemplo@edu.unifor.br` ou `anabeatriz`) usam a senha `Senha123`. Repetir o comando não duplica nada.
