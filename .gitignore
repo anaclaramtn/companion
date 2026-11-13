@@ -21,3 +21,6 @@ docs/*
 
 # Claude Code
 .claude/
+
+# Guia local com credenciais (nao versionar)
+GUIA_AMBIENTE_LOCAL.txt
