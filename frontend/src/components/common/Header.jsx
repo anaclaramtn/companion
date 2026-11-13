@@ -1,6 +1,7 @@
 import { useId, useState } from 'react'
-import { Link } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import AuthBrand from '../../features/auth/components/AuthBrand.jsx'
+import { useAuth } from '../../hooks/useAuth.js'
 
 function HeaderWaves() {
   return (
@@ -80,21 +81,35 @@ function HeaderWaves() {
   )
 }
 
+// Selo ao lado do nome do app e linha no cartão do perfil, só para quem modera.
+const ROLE_DISPLAY = {
+  ADMIN: { badge: 'ADMIN', label: 'Administrador' },
+  MODERATOR: { badge: 'MOD', label: 'Moderador' },
+}
+
 function ProfileMenu({
   name,
+  roleLabel,
   avatarUrl,
   href,
   followingCount,
   followersCount,
 }) {
   const summaryId = useId()
+  const navigate = useNavigate()
+  const { logout } = useAuth()
+
+  function handleLogout() {
+    // Encerra a sessão (memória e localStorage) e volta ao login.
+    logout()
+    navigate('/login', { replace: true })
+  }
 
   return (
     <div className="group relative shrink-0">
       <Link
         to={href}
         aria-label={`Ver meu perfil: ${name}`}
-        aria-describedby={summaryId}
         className="grid size-12 place-items-center overflow-hidden rounded-full bg-companion-panel/95 text-companion-muted ring-2 ring-white/70 transition hover:ring-companion-orange/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-companion-orange"
       >
         {avatarUrl ? (
@@ -111,11 +126,16 @@ function ProfileMenu({
           não sumir quando o mouse sai da bolinha em direção a ele. */}
       <div
         id={summaryId}
-        role="tooltip"
         className="invisible absolute right-0 top-full z-40 w-56 translate-y-1 pt-2 opacity-0 transition duration-150 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100"
       >
         <div className="rounded-2xl border border-companion-border/70 bg-companion-surface p-4 shadow-[0_12px_32px_rgba(69,42,18,0.18)]">
           <p className="truncate font-bold text-companion-text">{name}</p>
+          {roleLabel && (
+            <p className="mt-0.5 flex items-center gap-1.5 text-xs font-semibold text-companion-brand">
+              <i className="bi bi-shield-check" aria-hidden="true" />
+              {roleLabel}
+            </p>
+          )}
           <div className="mt-3 flex gap-6 text-xs text-companion-muted">
             <p>
               <strong className="block text-base text-companion-brand">
@@ -130,6 +150,15 @@ function ProfileMenu({
               seguidores
             </p>
           </div>
+
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg border border-companion-border px-3 py-2 text-sm font-bold text-companion-text transition hover:border-red-300 hover:bg-red-50 hover:text-red-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-companion-orange"
+          >
+            <i className="bi bi-box-arrow-right" aria-hidden="true" />
+            Sair
+          </button>
         </div>
       </div>
     </div>
@@ -140,12 +169,14 @@ function FeedHeader({
   onPostQuestion,
   userName = 'Meu perfil',
   userAvatarUrl,
+  userRole,
   followingCount = 0,
   followersCount = 0,
   profileHref = '/perfil',
   showSearch = true,
 }) {
   const [query, setQuery] = useState('')
+  const role = ROLE_DISPLAY[userRole]
 
   function handleSearch(event) {
     // Por enquanto, o campo é só visual: não navega nem envia a busca.
@@ -159,13 +190,20 @@ function FeedHeader({
 
       {/* Link do Router (e não <a href>) para trocar de tela sem recarregar
           a página e perder o estado da sessão. */}
-      <Link
-        to="/feed"
-        aria-label="Companion — Feed"
-        className="flex min-w-0 items-center gap-3"
-      >
-        <AuthBrand compact />
-      </Link>
+      <div className="flex min-w-0 items-center gap-2.5">
+        <Link
+          to="/feed"
+          aria-label="Companion — Feed"
+          className="flex min-w-0 items-center gap-3"
+        >
+          <AuthBrand compact />
+        </Link>
+        {role && (
+          <span className="shrink-0 rounded-md border border-companion-orange/40 bg-companion-orange/10 px-2 py-0.5 text-[0.65rem] font-extrabold tracking-wider text-companion-brand">
+            {role.badge}
+          </span>
+        )}
+      </div>
 
       {showSearch && (
         <span
@@ -219,6 +257,7 @@ function FeedHeader({
 
         <ProfileMenu
           name={userName}
+          roleLabel={role?.label}
           avatarUrl={userAvatarUrl}
           href={profileHref}
           followingCount={followingCount}
