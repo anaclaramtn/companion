@@ -54,8 +54,9 @@ cd backend
 |---|---|
 | `V1__usuarios_e_posts_de_exemplo` | 6 usuários, 12 dúvidas, respostas, curtidas e seguidores |
 | `V2__mais_dados_com_fotos` | 8 usuários novos, 20 dúvidas, 37 respostas, 73 curtidas, 39 relações de seguidores e **fotos de perfil** para os 14 usuários |
+| `V3__materias_dos_usuarios` | Matérias que cada um dos 14 usuários de exemplo domina (3 a 5) ou quer aprender, de acordo com a biografia; alimenta a busca **Social** |
 
-Todos os usuários (como `ana.exemplo@edu.unifor.br` ou o username `anabeatriz`) usam a senha `Senha123`. Quem já aplicou a V1 recebe só a V2, e repetir o comando não duplica nada. As fotos da V2 são avatares ilustrados gravados no próprio SQL, e o endereço delas usa `http://localhost:8080`.
+Todos os usuários (como `ana.exemplo@edu.unifor.br` ou o username `anabeatriz`) usam a senha `Senha123`. Quem já aplicou as anteriores recebe só as novas, e repetir o comando não duplica nada. As fotos da V2 são avatares ilustrados gravados no próprio SQL, e o endereço delas usa `http://localhost:8080`.
 
 ## Primeiro administrador
 

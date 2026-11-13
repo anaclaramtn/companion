@@ -41,8 +41,10 @@ class SeedMigrationTest {
         assertEquals(96, count("post_likes"));
         assertEquals(51, count("follows"));
         assertEquals(14, count("user_avatars"));
+        // V3: 14 usuários com 55 matérias dominadas e 14 que querem aprender.
+        assertEquals(69, count("user_subjects"));
         // O Flyway registrou o que aplicou (baseline + V1).
-        assertTrue(count("\"flyway_schema_history\"") >= 2);
+        assertTrue(count("\"flyway_schema_history\"") >= 3);
     }
 
     @Test
