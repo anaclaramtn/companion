@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from 'react-router'
+import { Navigate, Route, Routes, useParams } from 'react-router'
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage.jsx'
 import LoginPage from './pages/auth/LoginPage.jsx'
 import SignUpPage from './pages/auth/SignUpPage.jsx'
@@ -10,11 +10,9 @@ import OnboardingStep4 from './pages/auth/OnboardingStep4.jsx'
 import OnboardingStep5 from './pages/auth/OnboardingStep5.jsx'
 import SavedPage from './pages/auth/SavedPage.jsx'
 import FeedLayout from './layouts/user/FeedLayout.jsx'
-import PostDetailLayout from './layouts/user/PostDetailLayout.jsx'
 import FeedPage from './pages/feed/FeedPage.jsx'
 import ExplorePage from './pages/search/ExplorePage.jsx'
 import PublicProfilePage from './pages/profile/PublicProfilePage.jsx'
-import PostDetailPage from './pages/posts/PostDetailPage.jsx'
 import SettingsPage from './pages/settings/SettingsPage.jsx'
 import AccountInfoPage from './pages/settings/AccountInfoPage.jsx'
 import AccountSettingsPage from './pages/settings/AccountSettingsPage.jsx'
@@ -25,6 +23,12 @@ import TermsPage from './pages/terms/TermsPage.jsx'
 import MyProfilePage from './pages/profile/MyProfilePage.jsx'
 import EditProfilePage from './pages/profile/EditProfilePage.jsx'
 import RequireAuth from './components/common/RequireAuth.jsx'
+
+// Endereço antigo de uma dúvida: agora ela abre em janela sobre o feed.
+function LegacyPostRedirect() {
+  const { postId } = useParams()
+  return <Navigate to={`/feed?duvida=${postId}`} replace />
+}
 
 function App() {
   return (
@@ -44,9 +48,7 @@ function App() {
         <Route path="/feed" element={<FeedLayout />}>
           <Route index element={<FeedPage />} />
           <Route path="users/:userId" element={<PublicProfilePage />} />
-          <Route path="posts/:postId" element={<PostDetailLayout />}>
-            <Route index element={<PostDetailPage />} />
-          </Route>
+          <Route path="posts/:postId" element={<LegacyPostRedirect />} />
         </Route>
 
         <Route path="/explorar" element={<FeedLayout />}>

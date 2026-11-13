@@ -73,7 +73,7 @@ function SavedPage() {
               onLikeChange={onLikePost}
               onSaveChange={handleSaveChange}
               onReport={onReportItem}
-              detailsHref={`/feed/posts/${post.id}`}
+              detailsHref={`?duvida=${post.id}`}
             />
           ))}
         </div>

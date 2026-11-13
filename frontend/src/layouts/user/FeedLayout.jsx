@@ -1,16 +1,20 @@
-import { useCallback, useEffect, useState } from 'react'
-import { Outlet, useLocation, useNavigate } from 'react-router'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Outlet, useLocation, useNavigate, useSearchParams } from 'react-router'
 import 'bootstrap-icons/font/bootstrap-icons.css'
 import Background from '../../components/common/Background.jsx'
 import FeedHeader from '../../components/common/Header.jsx'
 import MainNavigation from '../../components/common/MainNavigation.jsx'
 import PostComposerModal from '../../components/post/PostComposerModal.jsx'
+import PostDetailModal from '../../components/post/PostDetailModal.jsx'
+import { PostActionsContext } from '../../contexts/postActionsContext.js'
 import { useAuth } from '../../hooks/useAuth.js'
 import { useToast } from '../../hooks/useToast.js'
 import { getAllSubjects, getCourseSubjects } from '../../services/academicService.js'
 import { getApiErrorMessage } from '../../services/apiError.js'
 import {
   createPost,
+  deletePost,
+  deleteReply,
   REPORT_REASONS,
   reportContent,
   setPostLiked,
@@ -74,6 +78,22 @@ function FeedLayout() {
   }, [])
   const navigate = useNavigate()
   const location = useLocation()
+  // A dúvida abre numa janela por cima da tela atual: o id fica em ?duvida=ID,
+  // então o link continua funcionando ao recarregar ou compartilhar.
+  const [searchParams, setSearchParams] = useSearchParams()
+  const postParam = searchParams.get('duvida')
+  const openPostId = /^\d+$/.test(postParam ?? '') ? postParam : null
+  const closePostModal = useCallback(() => {
+    // Aberta por um clique na lista, volta no histórico (o botão "voltar" do
+    // navegador também fecha a janela). Aberta por link direto, só tira o ?duvida.
+    if (location.state?.postModal) {
+      navigate(-1)
+      return
+    }
+    const next = new URLSearchParams(searchParams)
+    next.delete('duvida')
+    setSearchParams(next, { replace: true })
+  }, [location.state, navigate, searchParams, setSearchParams])
   const showToast = useToast()
   // Disciplinas da janela "Postar dúvida": a grade do curso (ou todas) e,
   // em destaque, as do perfil. null enquanto carregam.
@@ -144,6 +164,52 @@ function FeedLayout() {
     }
   }
 
+  // Exclusão de dúvidas e respostas. O autor apaga as próprias; administração e
+  // moderação apagam de qualquer pessoa (o backend confere a permissão de novo).
+  const canModerate = ['ADMIN', 'MODERATOR'].includes(user?.role)
+  const [removedPostIds, setRemovedPostIds] = useState(() => new Set())
+
+  const removePost = useCallback(
+    async (postId) => {
+      try {
+        await deletePost(postId)
+      } catch (error) {
+        // 404: já tinha sido apagada (ex.: por outra pessoa); só some da tela.
+        if (error.response?.status !== 404) {
+          showToast(getApiErrorMessage(error, 'Não foi possível excluir a dúvida.'), {
+            type: 'error',
+          })
+          throw error
+        }
+      }
+      setRemovedPostIds((current) => new Set(current).add(Number(postId)))
+      showToast('Dúvida excluída.')
+    },
+    [showToast],
+  )
+
+  const removeReply = useCallback(
+    async (replyId) => {
+      try {
+        await deleteReply(replyId)
+      } catch (error) {
+        if (error.response?.status !== 404) {
+          showToast(getApiErrorMessage(error, 'Não foi possível excluir a resposta.'), {
+            type: 'error',
+          })
+          throw error
+        }
+      }
+      showToast('Resposta excluída.')
+    },
+    [showToast],
+  )
+
+  const postActions = useMemo(
+    () => ({ canModerate, removedPostIds, deletePost: removePost, deleteReply: removeReply }),
+    [canModerate, removedPostIds, removePost, removeReply],
+  )
+
   async function reportItem({ targetType, targetId, reasonId, details }) {
     const { alreadyReported } = await reportContent({
       targetType,
@@ -159,6 +225,7 @@ function FeedLayout() {
   }
 
   return (
+    <PostActionsContext.Provider value={postActions}>
     <Background>
       <div className="mx-auto min-h-dvh w-full max-w-[1600px] px-4 py-4 sm:px-6 lg:px-8">
         <FeedHeader
@@ -193,6 +260,17 @@ function FeedLayout() {
           </main>
         </div>
       </div>
+      {openPostId && (
+        <PostDetailModal
+          postId={openPostId}
+          onClose={closePostModal}
+          reportReasons={REPORT_REASONS}
+          currentUserId={currentUser.id}
+          onLikePost={likePost}
+          onSavePost={savePost}
+          onReportItem={reportItem}
+        />
+      )}
       {isComposerOpen && (
         <PostComposerModal
           subjects={composerSubjects?.list ?? null}
@@ -203,6 +281,7 @@ function FeedLayout() {
         />
       )}
     </Background>
+    </PostActionsContext.Provider>
   )
 }
 

@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link, useOutletContext } from 'react-router'
+import { Link, useNavigate, useOutletContext } from 'react-router'
 import BackLink from '../common/BackLink.jsx'
+import ConfirmDialog from '../common/ConfirmDialog.jsx'
 import ProfileActivityTabs from './ProfileActivityTabs.jsx'
 import ProfileHeader from './ProfileHeader.jsx'
 import ProfileSubjects from './ProfileSubjects.jsx'
 import UserListPopup from './UserListPopup.jsx'
+import { useToast } from '../../hooks/useToast.js'
+import { deleteUserAsAdmin } from '../../services/accountService.js'
 import { getApiErrorMessage } from '../../services/apiError.js'
 import {
   followUser,
@@ -22,6 +25,7 @@ import {
 // a aba "Curtidos" em vez do botão Seguir. Use com key={userId}.
 function ProfileView({ userId }) {
   const {
+    currentUser,
     currentUserId,
     reportReasons,
     onLikePost,
@@ -30,6 +34,12 @@ function ProfileView({ userId }) {
     onFollowingChange,
   } = useOutletContext()
   const isOwnProfile = Number(userId) === Number(currentUserId)
+  const navigate = useNavigate()
+  const showToast = useToast()
+  // Só administradores excluem o perfil de outra pessoa (o backend confere).
+  const canDeleteProfile = currentUser?.role === 'ADMIN' && !isOwnProfile
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [reloadKey, setReloadKey] = useState(0)
   const [profileRequest, setProfileRequest] = useState({
     key: null,
@@ -119,6 +129,19 @@ function ProfileView({ userId }) {
   const isLoading = profileRequest.key !== reloadKey
   const profile = isLoading ? null : profileRequest.data
 
+  async function handleDeleteProfile() {
+    setIsDeleting(true)
+    try {
+      await deleteUserAsAdmin(userId)
+      showToast('Perfil excluído.')
+      navigate('/feed', { replace: true })
+    } catch (error) {
+      setIsDeleting(false)
+      setIsDeleteOpen(false)
+      showToast(getApiErrorMessage(error, 'Não foi possível excluir o perfil.'), { type: 'error' })
+    }
+  }
+
   async function handleFollowToggle() {
     if (!profile || isUpdatingFollow) return
     const wasFollowing = profile.followStatus.followedByCurrentUser
@@ -149,7 +172,7 @@ function ProfileView({ userId }) {
     return (
       <div
         role="status"
-        className="mx-auto max-w-4xl rounded-2xl border border-companion-border/70 bg-companion-surface p-8 text-center text-sm font-semibold text-companion-muted"
+        className="rounded-2xl border border-companion-border/70 bg-companion-surface p-8 text-center text-sm font-semibold text-companion-muted"
       >
         Carregando perfil…
       </div>
@@ -158,7 +181,7 @@ function ProfileView({ userId }) {
 
   if (!profile) {
     return (
-      <section className="mx-auto max-w-4xl rounded-2xl border border-companion-border/70 bg-companion-surface p-8 text-center">
+      <section className="rounded-2xl border border-companion-border/70 bg-companion-surface p-8 text-center">
         <p role="alert" className="font-semibold text-companion-text">
           {profileRequest.error || 'Não foi possível carregar este perfil.'}
         </p>
@@ -177,10 +200,7 @@ function ProfileView({ userId }) {
   const isRelationLoaded = relationRequest.key === relationKey
 
   return (
-    <section
-      aria-labelledby="profile-name"
-      className="mx-auto max-w-4xl"
-    >
+    <section aria-labelledby="profile-name">
       <div className="mb-4">
         <BackLink to="/feed" label="Feed" />
       </div>
@@ -206,12 +226,24 @@ function ProfileView({ userId }) {
               Editar perfil
             </Link>
           ) : (
+            <div className="mb-1 flex flex-wrap items-center justify-end gap-2">
+              {canDeleteProfile && (
+                <button
+                  type="button"
+                  onClick={() => setIsDeleteOpen(true)}
+                  aria-label="Excluir perfil"
+                  title="Excluir perfil"
+                  className="inline-flex size-10 items-center justify-center rounded-xl border border-red-300 text-red-600 transition hover:bg-red-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
+                >
+                  <i className="bi bi-trash" aria-hidden="true" />
+                </button>
+              )}
             <button
               type="button"
               onClick={handleFollowToggle}
               disabled={isUpdatingFollow}
               aria-pressed={followStatus.followedByCurrentUser}
-              className={`mb-1 inline-flex min-h-10 items-center justify-center gap-2 rounded-xl px-5 text-sm font-bold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-companion-orange disabled:cursor-wait disabled:opacity-60 ${
+              className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-xl px-5 text-sm font-bold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-companion-orange disabled:cursor-wait disabled:opacity-60 ${
                 followStatus.followedByCurrentUser
                   ? 'border border-companion-border bg-companion-panel text-companion-text hover:bg-companion-orange/5'
                   : 'bg-companion-orange text-white hover:bg-companion-orange-hover'
@@ -227,6 +259,7 @@ function ProfileView({ userId }) {
                   ? 'Seguindo'
                   : 'Seguir'}
             </button>
+            </div>
           )
         }
       >
@@ -273,6 +306,18 @@ function ProfileView({ userId }) {
           error={isRelationLoaded ? relationRequest.error : ''}
           onClose={closeRelationPopup}
           onRetry={() => setRelationReloadKey((key) => key + 1)}
+        />
+      )}
+
+      {isDeleteOpen && (
+        <ConfirmDialog
+          title={`Excluir o perfil de ${user.name ?? 'esta pessoa'}?`}
+          description="A conta é encerrada e anonimizada, e a pessoa não consegue mais entrar. As dúvidas e respostas dela continuam, sem o nome. Essa ação não pode ser desfeita."
+          confirmLabel="Excluir perfil"
+          tone="danger"
+          isConfirming={isDeleting}
+          onConfirm={handleDeleteProfile}
+          onCancel={() => !isDeleting && setIsDeleteOpen(false)}
         />
       )}
     </section>

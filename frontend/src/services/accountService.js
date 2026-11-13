@@ -55,3 +55,8 @@ export function getRegistrationNumberError(value) {
 export function normalizeUsername(username) {
   return username.trim().replace(/^@+/, '').toLowerCase()
 }
+
+// Só administradores: exclui (anonimiza) a conta de outra pessoa.
+export async function deleteUserAsAdmin(userId) {
+  await api.delete(`/admin/users/${userId}`)
+}

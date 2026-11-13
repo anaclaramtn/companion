@@ -1,9 +1,11 @@
 import { useCallback, useState } from 'react'
 import { Link } from 'react-router'
 import LoadMoreTrigger from '../common/LoadMoreTrigger.jsx'
+import DeleteReplyButton from '../post/DeleteReplyButton.jsx'
 import PostCard from '../post/PostCard.jsx'
 import ProfileLink from './ProfileLink.jsx'
 import { usePaginatedPosts } from '../../hooks/usePaginatedPosts.js'
+import { usePostActions } from '../../hooks/usePostActions.js'
 import { getLikedPosts, getPosts } from '../../services/postService.js'
 import { getUserComments } from '../../services/publicProfileService.js'
 
@@ -93,7 +95,7 @@ function PostsPanel({ id, fetchPage, emptyText, postActions }) {
           <div key={post.id} className="p-4 sm:p-5">
             <PostCard
               post={post}
-              detailsHref={`/feed/posts/${post.id}`}
+              detailsHref={`?duvida=${post.id}`}
               {...postActions}
             />
           </div>
@@ -110,7 +112,8 @@ function PostsPanel({ id, fetchPage, emptyText, postActions }) {
 
 function CommentsPanel({ userId, emptyText, currentUserId }) {
   const fetchPage = useCallback((page) => getUserComments(userId, { page }), [userId])
-  const { posts: comments, ...list } = usePaginatedPosts(
+  const actions = usePostActions()
+  const { posts: comments, removePost: removeComment, ...list } = usePaginatedPosts(
     fetchPage,
     'Não foi possível carregar as respostas.',
   )
@@ -131,7 +134,8 @@ function CommentsPanel({ userId, emptyText, currentUserId }) {
               <p className="text-xs font-semibold text-companion-muted">
                 Respondeu a{' '}
                 <Link
-                  to={`/feed/posts/${comment.postId}`}
+                  to={`?duvida=${comment.postId}`}
+                  state={{ postModal: true }}
                   className="text-companion-brand hover:underline"
                 >
                   {comment.postTitle}
@@ -145,7 +149,7 @@ function CommentsPanel({ userId, emptyText, currentUserId }) {
                 >
                   <UserAvatar user={comment.author} />
                 </ProfileLink>
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold text-companion-text">
                     <ProfileLink
                       user={comment.author}
@@ -161,12 +165,22 @@ function CommentsPanel({ userId, emptyText, currentUserId }) {
                   <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-companion-text">
                     {comment.content}
                   </p>
-                  <time
-                    dateTime={comment.createdAt}
-                    className="mt-2 block text-xs text-companion-muted"
-                  >
-                    {new Date(comment.createdAt).toLocaleDateString('pt-BR')}
-                  </time>
+                  <div className="mt-2 flex items-center justify-between gap-4">
+                    <time
+                      dateTime={comment.createdAt}
+                      className="text-xs text-companion-muted"
+                    >
+                      {new Date(comment.createdAt).toLocaleDateString('pt-BR')}
+                    </time>
+                    <DeleteReplyButton
+                      reply={comment}
+                      className="text-sm"
+                      onDelete={async (replyId) => {
+                        await actions.deleteReply(replyId)
+                        removeComment(replyId)
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
             </li>

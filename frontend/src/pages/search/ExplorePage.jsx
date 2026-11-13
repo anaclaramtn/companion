@@ -252,7 +252,7 @@ function ExploreResults({ text, subjectId, searchLabel }) {
               onLikeChange={onLikePost}
               onSaveChange={onSavePost}
               onReport={onReportItem}
-              detailsHref={`/feed/posts/${post.id}`}
+              detailsHref={`?duvida=${post.id}`}
             />
           ))
         )}

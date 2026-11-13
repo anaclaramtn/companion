@@ -1,4 +1,6 @@
 import { useCallback, useState } from 'react'
+import DeleteReplyButton from './DeleteReplyButton.jsx'
+import { usePostActions } from '../../hooks/usePostActions.js'
 import ProfileLink from '../user/ProfileLink.jsx'
 import ReportPopup from './ReportPopup.jsx'
 
@@ -28,11 +30,15 @@ function formatRelativeTime(dateValue) {
 function PostReplyCard({
   reply,
   onReport,
+  onDelete,
   reportReasons = [],
   currentUserId = 0,
 }) {
   const [isReported, setIsReported] = useState(reply.reportedByCurrentUser)
   const [isReportOpen, setIsReportOpen] = useState(false)
+  const { canModerate } = usePostActions()
+  // O autor exclui a própria resposta; administração e moderação, qualquer uma.
+  const canDelete = Boolean(onDelete) && (reply.ownedByCurrentUser || canModerate)
   const closeReportPopup = useCallback(() => {
     setIsReportOpen(false)
   }, [])
@@ -101,8 +107,9 @@ function PostReplyCard({
           </p>
 
           {/* Ninguém denuncia a própria resposta (o backend também recusa). */}
-          {!reply.ownedByCurrentUser && (
-            <div className="mt-4 flex items-center justify-end text-sm">
+          {(!reply.ownedByCurrentUser || canDelete) && (
+            <div className="mt-4 flex items-center justify-end gap-5 text-sm">
+              {!reply.ownedByCurrentUser && (
               <button
                 type="button"
                 onClick={() => setIsReportOpen(true)}
@@ -121,6 +128,8 @@ function PostReplyCard({
                 />
                 <span>{isReported ? 'Denunciada' : 'Denunciar'}</span>
               </button>
+              )}
+              {canDelete && <DeleteReplyButton reply={reply} onDelete={onDelete} />}
             </div>
           )}
         </div>

@@ -1,6 +1,8 @@
 import { useCallback, useState } from 'react'
 import { Link } from 'react-router'
 import SubjectTag from '../common/SubjectTag.jsx'
+import ConfirmDialog from '../common/ConfirmDialog.jsx'
+import { usePostActions } from '../../hooks/usePostActions.js'
 import ProfileLink from '../user/ProfileLink.jsx'
 import ReportPopup from './ReportPopup.jsx'
 
@@ -40,6 +42,11 @@ function PostCard({
   const [isSaved, setIsSaved] = useState(post.savedByCurrentUser ?? false)
   const [isReportOpen, setIsReportOpen] = useState(false)
   const [isReported, setIsReported] = useState(false)
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const actions = usePostActions()
+  // O autor exclui a própria dúvida; administração e moderação, qualquer uma.
+  const canDelete = Boolean(actions.deletePost) && (post.ownedByCurrentUser || actions.canModerate)
   const [isLikePending, setIsLikePending] = useState(false)
   const [isSavePending, setIsSavePending] = useState(false)
   const subjects = post.subjects ?? (post.subject ? [post.subject] : [])
@@ -92,6 +99,21 @@ function PostCard({
     setIsReported(true)
     setIsReportOpen(false)
   }
+
+  async function confirmDelete() {
+    setIsDeleting(true)
+    try {
+      await actions.deletePost(post.id)
+      setIsDeleteOpen(false)
+    } catch {
+      // O aviso de erro já foi mostrado; a janela continua aberta para tentar de novo.
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  // Dúvida excluída (aqui ou na janela de detalhe): some das listas na hora.
+  if (actions.removedPostIds.has(Number(post.id))) return null
 
   return (
     <>
@@ -147,6 +169,7 @@ function PostCard({
             {detailsHref ? (
               <Link
                 to={detailsHref}
+                state={{ postModal: true }}
                 aria-label={`Ver ${post.commentCount} respostas`}
                 className="inline-flex items-center gap-2 transition-colors hover:text-companion-brand"
               >
@@ -198,11 +221,36 @@ function PostCard({
                   />
                 </button>
               )}
+              {canDelete && (
+                <button
+                  type="button"
+                  onClick={() => setIsDeleteOpen(true)}
+                  aria-label="Excluir dúvida"
+                  className="text-companion-muted transition-colors hover:text-red-600"
+                >
+                  <i className="bi bi-trash" aria-hidden="true" />
+                </button>
+              )}
             </div>
           </div>
         </div>
       </div>
       </article>
+      {isDeleteOpen && (
+        <ConfirmDialog
+          title="Excluir esta dúvida?"
+          description={
+            post.ownedByCurrentUser
+              ? 'A dúvida deixa de aparecer para todo mundo. Essa ação não pode ser desfeita.'
+              : 'Você está excluindo a dúvida de outra pessoa como moderação. Essa ação não pode ser desfeita.'
+          }
+          confirmLabel="Excluir dúvida"
+          tone="danger"
+          isConfirming={isDeleting}
+          onConfirm={confirmDelete}
+          onCancel={() => setIsDeleteOpen(false)}
+        />
+      )}
       {isReportOpen && (
         <ReportPopup
           reasons={reportReasons}
@@ -242,6 +290,7 @@ function PostContent({ post, subjects, detailsHref, currentUserId }) {
       {detailsHref ? (
         <Link
           to={detailsHref}
+          state={{ postModal: true }}
           aria-label={`Abrir dúvida: ${post.title}`}
           className="block rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-companion-orange"
         >

@@ -255,7 +255,7 @@ function EditProfilePage() {
 
   if (isLoading || loadError) {
     return (
-      <section className="mx-auto max-w-4xl rounded-2xl border border-companion-border/70 bg-companion-surface p-8 text-center">
+      <section className="rounded-2xl border border-companion-border/70 bg-companion-surface p-8 text-center">
         <p
           role={loadError ? 'alert' : 'status'}
           className={`text-sm font-semibold ${loadError ? 'text-red-700' : 'text-companion-muted'}`}
@@ -275,7 +275,7 @@ function EditProfilePage() {
   }
 
   return (
-    <section aria-labelledby="edit-profile-title" className="mx-auto max-w-4xl space-y-5">
+    <section aria-labelledby="edit-profile-title" className="space-y-5">
       <div>
         <BackLink to="/perfil" label="Meu perfil" />
         <h1

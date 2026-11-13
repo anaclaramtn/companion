@@ -134,3 +134,13 @@ export async function createReply(postId, content) {
   const response = await api.post(`/posts/${postId}/comments`, { content })
   return toReply(response.data)
 }
+
+// Exclusão (lógica): o autor apaga o que publicou; administração e moderação
+// apagam de qualquer pessoa. Devolve 204; 403 se não tiver permissão.
+export async function deletePost(postId) {
+  await api.delete(`/posts/${postId}`)
+}
+
+export async function deleteReply(replyId) {
+  await api.delete(`/comments/${replyId}`)
+}
