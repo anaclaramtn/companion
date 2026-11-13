@@ -37,7 +37,7 @@
   gap: 10px;
   margin-top: 3px;
   border: 1px solid var(--color-primary);
-  border-radius: 6px;
+  border-radius: 3px;
   color: var(--color-text-on-primary);
   background: var(--color-primary);
   box-shadow: var(--shadow-button);
@@ -161,7 +161,7 @@
   margin: 0;
   padding: 4px 14px 14px;
   border: 1px solid var(--color-border);
-  border-radius: 6px;
+  border-radius: 3px;
 }
 
 .chip-group legend {
