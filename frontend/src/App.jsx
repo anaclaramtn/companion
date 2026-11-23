@@ -24,6 +24,7 @@ import TermsPage from './pages/terms/TermsPage.jsx'
 import MyProfilePage from './pages/profile/MyProfilePage.jsx'
 import EditProfilePage from './pages/profile/EditProfilePage.jsx'
 import AdminPage from './pages/admin/AdminPage.jsx'
+import PublicTermsPage from './pages/terms/PublicTermsPage.jsx'
 import RequireAuth from './components/common/RequireAuth.jsx'
 
 // Endereço antigo de uma dúvida: agora ela abre em janela sobre o feed.
@@ -40,6 +41,7 @@ function App() {
       <Route path="/criar-conta" element={<SignUpPage />} />
       <Route path="/confirmar-email" element={<EmailConfirmationPage />} />
       <Route path="/recuperar-senha" element={<ForgotPasswordPage />} />
+      <Route path="/termos-e-privacidade" element={<PublicTermsPage />} />
       <Route element={<RequireAuth />}>
         <Route path="/onboarding/etapa-1" element={<OnboardingStep1 />} />
         <Route path="/onboarding/etapa-2" element={<OnboardingStep2 />} />
