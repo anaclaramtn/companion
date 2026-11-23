@@ -101,8 +101,8 @@ export function AuthProvider({ children }) {
     return acceptSession(await loginRequest(identifier, password))
   }
 
-  async function register(email, password) {
-    return acceptSession(await registerRequest(email, password))
+  async function register(email, password, acceptedTerms) {
+    return acceptSession(await registerRequest(email, password, acceptedTerms))
   }
 
   async function updateProfile(profile) {

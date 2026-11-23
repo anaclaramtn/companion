@@ -28,7 +28,8 @@ export async function login(identifier, password) {
   return response.data
 }
 
-export async function register(email, password) {
-  const response = await api.post('/auth/register', { email, password })
+// acceptedTerms: aceite dos Termos e da Política de Privacidade (obrigatório).
+export async function register(email, password, acceptedTerms) {
+  const response = await api.post('/auth/register', { email, password, acceptedTerms })
   return response.data
 }
