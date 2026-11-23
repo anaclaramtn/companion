@@ -71,6 +71,14 @@ public class User {
     @Column(nullable = false, length = 20)
     private UserStatus status;
 
+    /** Quando a pessoa aceitou os Termos e a Política de Privacidade (null em contas antigas). */
+    @Column(name = "terms_accepted_at")
+    private LocalDateTime termsAcceptedAt;
+
+    /** Versão dos termos aceita (data da versão, ex.: 2026-11-17). */
+    @Column(name = "terms_version", length = 20)
+    private String termsVersion;
+
     @Column(name = "onboarding_completed_at")
     private LocalDateTime onboardingCompletedAt;
 
@@ -122,6 +130,11 @@ public class User {
 
     public void updateAvatar(String avatarUrl) {
         this.avatarUrl = avatarUrl;
+    }
+
+    public void acceptTerms(String version) {
+        this.termsAcceptedAt = LocalDateTime.now();
+        this.termsVersion = version;
     }
 
     public void completeOnboarding() {
@@ -179,6 +192,8 @@ public class User {
     public Integer getSemester() { return semester; }
     public UserRole getRole() { return role; }
     public UserStatus getStatus() { return status; }
+    public LocalDateTime getTermsAcceptedAt() { return termsAcceptedAt; }
+    public String getTermsVersion() { return termsVersion; }
     public LocalDateTime getOnboardingCompletedAt() { return onboardingCompletedAt; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }

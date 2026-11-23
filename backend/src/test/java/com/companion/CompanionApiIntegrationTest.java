@@ -509,7 +509,7 @@ class CompanionApiIntegrationTest {
     }
 
     private String registrationJson(String email, String password) {
-        return "{\"email\":\"" + email + "\",\"password\":\"" + password + "\"}";
+        return "{\"email\":\"" + email + "\",\"password\":\"" + password + "\",\"acceptedTerms\":true}";
     }
 
     private String profileJson(String name, String username) {

@@ -38,6 +38,11 @@ import java.util.UUID;
 public class UserService {
 
     private static final String INSTITUTIONAL_EMAIL_DOMAIN = "@edu.unifor.br";
+    /**
+     * Versão atual dos Termos e da Política de Privacidade (a data da última atualização).
+     * Mantenha igual a TERMS_VERSION em frontend/src/data/terms.js e mude as duas juntas.
+     */
+    public static final String TERMS_VERSION = "2026-11-17";
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -74,7 +79,10 @@ public class UserService {
         if (userRepository.existsByEmailIgnoreCase(email)) {
             throw new DuplicateResourceException("Já existe uma conta com esse e-mail");
         }
-        return userRepository.save(new User(email, passwordEncoder.encode(request.password())));
+        User user = new User(email, passwordEncoder.encode(request.password()));
+        // Guarda quando e qual versão dos termos foi aceita (prova do consentimento).
+        user.acceptTerms(TERMS_VERSION);
+        return userRepository.save(user);
     }
 
     @Transactional(readOnly = true)

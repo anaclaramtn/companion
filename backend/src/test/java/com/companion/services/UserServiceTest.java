@@ -37,7 +37,7 @@ class UserServiceTest {
                 postRepository, commentRepository, followRepository, courseRepository, userSubjectRepository);
 
         assertThrows(DuplicateResourceException.class, () -> service.register(
-                new UserRegistrationRequestDTO("ANA@EDU.UNIFOR.BR", "Senha123")));
+                new UserRegistrationRequestDTO("ANA@EDU.UNIFOR.BR", "Senha123", true)));
         verifyNoInteractions(passwordEncoder);
     }
 
@@ -47,7 +47,7 @@ class UserServiceTest {
                 postRepository, commentRepository, followRepository, courseRepository, userSubjectRepository);
 
         assertThrows(BadRequestException.class, () -> service.register(
-                new UserRegistrationRequestDTO("ana@gmail.com", "Senha123")));
+                new UserRegistrationRequestDTO("ana@gmail.com", "Senha123", true)));
         verifyNoInteractions(passwordEncoder);
     }
 }
