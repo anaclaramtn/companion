@@ -1,17 +1,17 @@
 -- Dados de exemplo para desenvolvimento: 6 usuários, 12 dúvidas, respostas, curtidas e seguidores.
--- Senha de todos os usuários de exemplo: Senha123
--- Login por e-mail ou username (ex.: ana.exemplo@edu.unifor.br ou anabeatriz).
+-- O banco não guarda senha: no perfil "seed", o FirebaseSeedRunner cria as contas no
+-- Firebase com a senha de SEED_USER_PASSWORD. Login por e-mail (ex.: ana.exemplo@edu.unifor.br).
 --
 -- Roda uma única vez: o Flyway registra a versão na tabela flyway_schema_history.
 -- Pressupõe que as tabelas, o curso e as matérias já existam; o backend cria tudo isso ao subir.
 
-INSERT INTO users (email, password_hash, email_verified_at, name, username, bio, course_id, semester, role, status, onboarding_completed_at, created_at, updated_at) VALUES
-('ana.exemplo@edu.unifor.br', '$2a$10$FUZcc6s5rFpm6vpbKIZy8.n3ZnX0BdSYcfd4/4X6ObYu712svByv.', NOW(), 'Ana Beatriz', 'anabeatriz', 'Estudante de CC, gosto de estrutura de dados e de café.', (SELECT MIN(id) FROM courses), 5, 'USER', 'ACTIVE', NOW(), TIMESTAMPADD(DAY, -10, NOW()), TIMESTAMPADD(DAY, -10, NOW())),
-('bruno.exemplo@edu.unifor.br', '$2a$10$FUZcc6s5rFpm6vpbKIZy8.n3ZnX0BdSYcfd4/4X6ObYu712svByv.', NOW(), 'Bruno Lima', 'brunolima', 'Foco em POO e desenvolvimento mobile.', (SELECT MIN(id) FROM courses), 4, 'USER', 'ACTIVE', NOW(), TIMESTAMPADD(DAY, -10, NOW()), TIMESTAMPADD(DAY, -10, NOW())),
-('carla.exemplo@edu.unifor.br', '$2a$10$FUZcc6s5rFpm6vpbKIZy8.n3ZnX0BdSYcfd4/4X6ObYu712svByv.', NOW(), 'Carla Menezes', 'carlamenezes', 'Banco de dados e ciência de dados.', (SELECT MIN(id) FROM courses), 7, 'USER', 'ACTIVE', NOW(), TIMESTAMPADD(DAY, -10, NOW()), TIMESTAMPADD(DAY, -10, NOW())),
-('diego.exemplo@edu.unifor.br', '$2a$10$FUZcc6s5rFpm6vpbKIZy8.n3ZnX0BdSYcfd4/4X6ObYu712svByv.', NOW(), 'Diego Alves', 'diegoalves', 'Back-end, APIs e programação funcional.', (SELECT MIN(id) FROM courses), 6, 'USER', 'ACTIVE', NOW(), TIMESTAMPADD(DAY, -10, NOW()), TIMESTAMPADD(DAY, -10, NOW())),
-('elisa.exemplo@edu.unifor.br', '$2a$10$FUZcc6s5rFpm6vpbKIZy8.n3ZnX0BdSYcfd4/4X6ObYu712svByv.', NOW(), 'Elisa Rocha', 'elisarocha', 'Algoritmos, grafos e maratona de programação.', (SELECT MIN(id) FROM courses), 3, 'USER', 'ACTIVE', NOW(), TIMESTAMPADD(DAY, -10, NOW()), TIMESTAMPADD(DAY, -10, NOW())),
-('felipe.exemplo@edu.unifor.br', '$2a$10$FUZcc6s5rFpm6vpbKIZy8.n3ZnX0BdSYcfd4/4X6ObYu712svByv.', NOW(), 'Felipe Costa', 'felipecosta', 'Inteligência artificial e arquitetura de computadores.', (SELECT MIN(id) FROM courses), 8, 'USER', 'ACTIVE', NOW(), TIMESTAMPADD(DAY, -10, NOW()), TIMESTAMPADD(DAY, -10, NOW()));
+INSERT INTO users (email, email_verified_at, name, username, bio, course_id, semester, role, status, onboarding_completed_at, created_at, updated_at) VALUES
+('ana.exemplo@edu.unifor.br', NOW(), 'Ana Beatriz', 'anabeatriz', 'Estudante de CC, gosto de estrutura de dados e de café.', (SELECT MIN(id) FROM courses), 5, 'USER', 'ACTIVE', NOW(), TIMESTAMPADD(DAY, -10, NOW()), TIMESTAMPADD(DAY, -10, NOW())),
+('bruno.exemplo@edu.unifor.br', NOW(), 'Bruno Lima', 'brunolima', 'Foco em POO e desenvolvimento mobile.', (SELECT MIN(id) FROM courses), 4, 'USER', 'ACTIVE', NOW(), TIMESTAMPADD(DAY, -10, NOW()), TIMESTAMPADD(DAY, -10, NOW())),
+('carla.exemplo@edu.unifor.br', NOW(), 'Carla Menezes', 'carlamenezes', 'Banco de dados e ciência de dados.', (SELECT MIN(id) FROM courses), 7, 'USER', 'ACTIVE', NOW(), TIMESTAMPADD(DAY, -10, NOW()), TIMESTAMPADD(DAY, -10, NOW())),
+('diego.exemplo@edu.unifor.br', NOW(), 'Diego Alves', 'diegoalves', 'Back-end, APIs e programação funcional.', (SELECT MIN(id) FROM courses), 6, 'USER', 'ACTIVE', NOW(), TIMESTAMPADD(DAY, -10, NOW()), TIMESTAMPADD(DAY, -10, NOW())),
+('elisa.exemplo@edu.unifor.br', NOW(), 'Elisa Rocha', 'elisarocha', 'Algoritmos, grafos e maratona de programação.', (SELECT MIN(id) FROM courses), 3, 'USER', 'ACTIVE', NOW(), TIMESTAMPADD(DAY, -10, NOW()), TIMESTAMPADD(DAY, -10, NOW())),
+('felipe.exemplo@edu.unifor.br', NOW(), 'Felipe Costa', 'felipecosta', 'Inteligência artificial e arquitetura de computadores.', (SELECT MIN(id) FROM courses), 8, 'USER', 'ACTIVE', NOW(), TIMESTAMPADD(DAY, -10, NOW()), TIMESTAMPADD(DAY, -10, NOW()));
 
 INSERT INTO posts (author_id, title, content, created_at) VALUES
 ((SELECT id FROM users WHERE email = 'ana.exemplo@edu.unifor.br'), 'Diferença entre pilha e fila na prática?', 'Entendi a teoria de pilha (LIFO) e fila (FIFO), mas em que situações reais eu escolheria uma em vez da outra? Alguém tem um exemplo simples?', TIMESTAMPADD(HOUR, -70, NOW())),

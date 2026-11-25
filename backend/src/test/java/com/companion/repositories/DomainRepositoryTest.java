@@ -34,7 +34,7 @@ class DomainRepositoryTest {
 
     @Test
     void databaseRejectsDuplicateAcademicRelation() {
-        User user = userRepository.saveAndFlush(new User("repo@edu.unifor.br", "hash"));
+        User user = userRepository.saveAndFlush(new User("repo@edu.unifor.br"));
         Subject subject = subject("T390", "Estrutura de dados");
         userSubjectRepository.saveAndFlush(new UserSubject(user, subject, SubjectInterestType.DOMINA));
 
@@ -70,7 +70,7 @@ class DomainRepositoryTest {
 
     @Test
     void postKeepsOneRowPerSubject() {
-        User user = userRepository.saveAndFlush(new User("multi@edu.unifor.br", "hash"));
+        User user = userRepository.saveAndFlush(new User("multi@edu.unifor.br"));
         University university = university();
         Subject first = subjectRepository.saveAndFlush(new Subject(university, "T290", "Grafos"));
         Subject second = subjectRepository.saveAndFlush(new Subject(university, "T390", "Estrutura de dados"));
@@ -82,7 +82,7 @@ class DomainRepositoryTest {
 
     @Test
     void databaseRejectsDuplicatePostLike() {
-        User user = userRepository.saveAndFlush(new User("like@edu.unifor.br", "hash"));
+        User user = userRepository.saveAndFlush(new User("like@edu.unifor.br"));
         Post post = post(user);
         postLikeRepository.saveAndFlush(new PostLike(user, post));
         assertThrows(DataIntegrityViolationException.class,
@@ -91,7 +91,7 @@ class DomainRepositoryTest {
 
     @Test
     void databaseRejectsDuplicatePostSave() {
-        User user = userRepository.saveAndFlush(new User("save@edu.unifor.br", "hash"));
+        User user = userRepository.saveAndFlush(new User("save@edu.unifor.br"));
         Post post = post(user);
         postSaveRepository.saveAndFlush(new PostSave(user, post));
         assertThrows(DataIntegrityViolationException.class,

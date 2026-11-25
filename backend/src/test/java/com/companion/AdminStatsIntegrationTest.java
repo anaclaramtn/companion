@@ -45,8 +45,8 @@ class AdminStatsIntegrationTest {
         long resolvedBefore = reports("resolved");
         long pendingBefore = reports("pending");
 
-        User author = userRepository.saveAndFlush(new User("stats-autor@edu.unifor.br", "hash"));
-        User helper = userRepository.saveAndFlush(new User("stats-ajuda@edu.unifor.br", "hash"));
+        User author = userRepository.saveAndFlush(new User("stats-autor@edu.unifor.br"));
+        User helper = userRepository.saveAndFlush(new User("stats-ajuda@edu.unifor.br"));
         Post post = postRepository.saveAndFlush(new Post(author, Set.of(), "Duvida", "Conteudo"));
         // Responder a própria dúvida não conta como "solucionou".
         commentRepository.saveAndFlush(new PostComment(post, author, "eu mesmo"));

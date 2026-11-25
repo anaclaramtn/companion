@@ -1,14 +1,10 @@
 package com.companion.controllers;
 
 import com.companion.dtos.auth.AuthResponseDTO;
-import com.companion.dtos.auth.LoginRequestDTO;
-import com.companion.dtos.user.UserRegistrationRequestDTO;
+import com.companion.dtos.auth.FirebaseLoginRequestDTO;
 import com.companion.services.AuthService;
 import jakarta.validation.Valid;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.net.URI;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -17,14 +13,9 @@ public class AuthController {
 
     public AuthController(AuthService authService) { this.authService = authService; }
 
-    @PostMapping("/register")
-    public ResponseEntity<AuthResponseDTO> register(@Valid @RequestBody UserRegistrationRequestDTO request) {
-        AuthResponseDTO response = authService.register(request);
-        return ResponseEntity.created(URI.create("/api/users/" + response.user().id())).body(response);
-    }
-
-    @PostMapping("/login")
-    public AuthResponseDTO login(@Valid @RequestBody LoginRequestDTO request) {
-        return authService.login(request);
+    /** Login e primeiro acesso de quem se autenticou no Firebase. */
+    @PostMapping("/firebase")
+    public AuthResponseDTO loginWithFirebase(@Valid @RequestBody FirebaseLoginRequestDTO request) {
+        return authService.loginWithFirebase(request);
     }
 }

@@ -50,8 +50,7 @@ public class FlywaySeedRunner implements ApplicationRunner {
         if (result.migrationsExecuted == 0) {
             log.info("Flyway: nada a aplicar, os dados de exemplo já estão no banco.");
         } else {
-            log.info("Flyway: {} migração(ões) aplicada(s). Senha dos usuários de exemplo: Senha123",
-                    result.migrationsExecuted);
+            log.info("Flyway: {} migração(ões) aplicada(s).", result.migrationsExecuted);
         }
     }
 }

@@ -99,7 +99,7 @@ class TicketIntegrationTest {
     }
 
     private User profileUser(String email, String username, UserRole role) {
-        User user = new User(email, "hash");
+        User user = new User(email);
         user.updateProfile("Pessoa " + username, username, null, null, null, null);
         user.changeRole(role);
         return userRepository.saveAndFlush(user);

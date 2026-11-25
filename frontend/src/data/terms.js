@@ -3,8 +3,10 @@
 // updatedAt é a versão do documento e precisa ser igual a TERMS_VERSION em
 // backend/.../services/UserService.java: o backend guarda essa versão quando a
 // pessoa aceita os termos no cadastro. Ao mudar o texto, mude as duas datas.
+import { SUPPORT_EMAIL } from './support.js'
+
 export const terms = {
-  updatedAt: '2026-11-17',
+  updatedAt: '2026-11-25',
   sections: [
     {
       id: 'sobre',
@@ -19,7 +21,7 @@ export const terms = {
       title: 'Aceitação e cadastro',
       paragraphs: [
         'Para criar uma conta é obrigatório aceitar estes Termos e a Política de Privacidade. Se não concordar com alguma parte, não crie a conta nem utilize a plataforma.',
-        'O cadastro exige um e-mail institucional (@edu.unifor.br). Registramos a data e a versão do documento que você aceitou, como comprovação do seu consentimento.',
+        'O cadastro exige um e-mail institucional (@edu.unifor.br), confirmado por um link enviado a ele. Registramos a data e a versão do documento que você aceitou, como comprovação do seu consentimento.',
         'Você é responsável por manter sua senha em sigilo e por tudo o que for feito na sua conta.',
       ],
     },
@@ -51,8 +53,9 @@ export const terms = {
       id: 'dados-coletados',
       title: 'Dados pessoais que coletamos',
       paragraphs: [
-        'Dados da conta e do perfil: e-mail institucional, senha (guardada apenas em forma de hash), nome, username, biografia, foto, matrícula, curso, semestre e as matérias que você domina ou quer aprender.',
+        'Dados da conta e do perfil: e-mail institucional, nome, username, biografia, foto, matrícula, curso, semestre e as matérias que você domina ou quer aprender.',
         'Dados de uso: dúvidas, respostas e comentários que você publica, curtidas, itens salvos, quem você segue, denúncias que você envia e tickets de suporte.',
+        'Dados de login: a senha é tratada pelo Firebase Authentication, serviço do Google, e não é guardada no banco do Companion. Guardamos apenas o identificador da sua conta no Firebase.',
         'Dados de controle: datas de criação e atualização da conta, data e versão do aceite destes termos.',
       ],
     },
@@ -69,14 +72,14 @@ export const terms = {
       title: 'Quem pode ver seus dados',
       paragraphs: [
         'Nome, username, foto, biografia, curso, matérias e publicações ficam visíveis para outros usuários logados. E-mail, matrícula e senha nunca são exibidos publicamente.',
-        'A equipe de administração e moderação acessa os dados necessários para gerenciar contas, denúncias e tickets. Não compartilhamos seus dados com terceiros, exceto o envio de e-mails da plataforma (como a recuperação de senha), quando necessário.',
+        'A equipe de administração e moderação acessa os dados necessários para gerenciar contas, denúncias e tickets. Para o login, a verificação de e-mail e a recuperação de senha, usamos o Firebase Authentication, do Google, que trata seu e-mail, sua senha e dados técnicos do acesso, e pode processá-los fora do Brasil. Fora esse serviço, não compartilhamos seus dados com terceiros.',
       ],
     },
     {
       id: 'seguranca',
       title: 'Segurança',
       paragraphs: [
-        'Protegemos seus dados contra acesso não autorizado: as senhas são armazenadas com hash e nunca em texto puro, o acesso usa tokens de autenticação (JWT) com validade limitada, e cada função (estudante, moderação e administração) só acessa o que lhe cabe.',
+        'Protegemos seus dados contra acesso não autorizado: as senhas ficam no Firebase Authentication, e não no banco do Companion, o acesso usa tokens de autenticação (JWT) com validade limitada, e cada função (estudante, moderação e administração) só acessa o que lhe cabe.',
         'Nenhum sistema é totalmente imune a falhas. Se identificar qualquer problema de segurança, avise a equipe pelo ticket de suporte.',
       ],
     },
@@ -92,7 +95,7 @@ export const terms = {
       id: 'exclusao',
       title: 'Exclusão da conta e retenção',
       paragraphs: [
-        'Mantemos seus dados enquanto sua conta existir. Ao excluir a conta, seus dados pessoais (e-mail, nome, username, foto, biografia e matrícula) são apagados ou anonimizados e a conta não pode mais ser usada.',
+        'Mantemos seus dados enquanto sua conta existir. Ao excluir a conta, seus dados pessoais (e-mail, nome, username, foto, biografia e matrícula) são apagados ou anonimizados, o cadastro de login no Firebase é excluído e a conta não pode mais ser usada.',
         'Suas dúvidas, respostas e comentários podem ser mantidos, sem identificação sua, para preservar o contexto das discussões.',
       ],
     },
@@ -100,7 +103,7 @@ export const terms = {
       id: 'contato',
       title: 'Contato',
       paragraphs: [
-        'Dúvidas sobre estes termos ou sobre o tratamento dos seus dados podem ser enviadas à equipe do Companion por ticket, na página de Dúvidas frequentes.',
+        'Dúvidas sobre estes termos ou sobre o tratamento dos seus dados podem ser enviadas à equipe do Companion por ticket, na página de Dúvidas frequentes, ou pelo e-mail ' + SUPPORT_EMAIL + '.',
       ],
     },
     {

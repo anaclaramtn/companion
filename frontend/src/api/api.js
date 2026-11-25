@@ -26,7 +26,7 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    const isAuthRequest = /\/auth\/(login|register)$/.test(error.config?.url ?? '')
+    const isAuthRequest = /\/auth\/firebase$/.test(error.config?.url ?? '')
     if (error.response?.status === 401 && !isAuthRequest) handleUnauthorized()
     return Promise.reject(error)
   },
