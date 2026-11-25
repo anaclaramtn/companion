@@ -188,7 +188,8 @@ function FeedHeader({
   }
 
   return (
-    <header className="relative isolate z-30 flex min-h-24 flex-wrap items-center gap-x-4 gap-y-3 rounded-3xl border border-companion-border px-4 py-3 shadow-[0_12px_32px_rgba(69,42,18,0.12)] sm:px-6 md:flex-nowrap md:gap-6 md:px-7">
+    // Fixo a 1rem do topo da tela (a folga é coberta no FeedLayout).
+    <header className="sticky top-4 isolate z-30 flex min-h-24 flex-wrap items-center gap-x-4 gap-y-3 rounded-3xl border border-companion-border px-4 py-3 shadow-[0_12px_32px_rgba(69,42,18,0.12)] sm:px-6 md:flex-nowrap md:gap-6 md:px-7">
       <HeaderWaves />
 
       {/* Link do Router (e não <a href>) para trocar de tela sem recarregar

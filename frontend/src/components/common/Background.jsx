@@ -1,10 +1,10 @@
-function Background({ children }) {
+// Camadas decorativas do fundo, do tamanho da tela. Com className dá para
+// desenhar uma cópia recortada por cima do conteúdo, igual ao fundo.
+export function BackgroundLayers({ className }) {
   return (
-    <div className="relative isolate min-h-dvh bg-companion-cream">
-      {/* Camadas decorativas do fundo */}
       <div
         aria-hidden="true"
-        className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
+        className={`pointer-events-none fixed inset-0 overflow-hidden ${className}`}
       >
         {/* Base em degradê, na mesma família visual do login */}
         <div className="absolute inset-0 app-bg-base" />
@@ -21,6 +21,13 @@ function Background({ children }) {
         <div className="app-bg-arc absolute -bottom-60 -left-52 size-[35rem] rounded-full border border-companion-orange/30" />
         <div className="app-bg-arc absolute -bottom-48 -left-40 size-[28rem] rounded-full border border-companion-orange/20" />
       </div>
+  )
+}
+
+function Background({ children }) {
+  return (
+    <div className="relative isolate min-h-dvh bg-companion-cream">
+      <BackgroundLayers className="z-0" />
 
       {/* O conteúdo fica acima das decorações */}
       <div className="relative z-10">{children}</div>

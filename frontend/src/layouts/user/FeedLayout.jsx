@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Outlet, useLocation, useNavigate, useSearchParams } from 'react-router'
 import 'bootstrap-icons/font/bootstrap-icons.css'
-import Background from '../../components/common/Background.jsx'
+import Background, { BackgroundLayers } from '../../components/common/Background.jsx'
 import FeedHeader from '../../components/common/Header.jsx'
 import MainNavigation from '../../components/common/MainNavigation.jsx'
 import FirstAccessTutorial from '../../components/common/FirstAccessTutorial.jsx'
@@ -245,6 +245,9 @@ function FeedLayout() {
     <PostActionsContext.Provider value={postActions}>
     <Background>
       <div className="mx-auto min-h-dvh w-full max-w-[1600px] px-4 py-4 sm:px-6 lg:px-8">
+        {/* Esconde o conteúdo que rola pela folga acima do cabeçalho fixo (e atrás
+            dos cantos arredondados): uma cópia do fundo, só nos 2.5rem do topo. */}
+        <BackgroundLayers className="z-20 bg-companion-cream [clip-path:inset(0_0_calc(100%_-_2.5rem)_0)]" />
         <FeedHeader
           onPostQuestion={openComposer}
           userName={currentUser.name || 'Meu perfil'}
@@ -257,7 +260,8 @@ function FeedLayout() {
         />
 
         <div className="mt-6 grid gap-6 lg:grid-cols-[248px_minmax(0,1fr)]">
-          <aside className="lg:sticky lg:top-6 lg:self-start">
+          {/* top-34: abaixo do cabeçalho fixo (1rem do topo + 6rem de altura + 1.5rem de folga) */}
+          <aside className="lg:sticky lg:top-34 lg:self-start">
             <MainNavigation items={navItems} />
           </aside>
 
