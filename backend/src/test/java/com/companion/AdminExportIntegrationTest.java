@@ -26,7 +26,7 @@ class AdminExportIntegrationTest {
 
     @Test
     void adminDownloadsUsersCsvWithoutPasswordData() throws Exception {
-        userRepository.saveAndFlush(new User("exporta@edu.unifor.br", "hash-secreto-123"));
+        userRepository.saveAndFlush(new User("exporta@edu.unifor.br"));
 
         mockMvc.perform(get("/api/admin/export/users.csv")
                         .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))))

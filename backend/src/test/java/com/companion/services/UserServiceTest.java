@@ -1,8 +1,8 @@
 package com.companion.services;
 
-import com.companion.dtos.user.UserRegistrationRequestDTO;
-import com.companion.exceptions.BadRequestException;
-import com.companion.exceptions.DuplicateResourceException;
+import com.companion.exceptions.ForbiddenOperationException;
+import com.companion.exceptions.TermsAcceptanceRequiredException;
+import com.companion.firebase.FirebaseIdentity;
 import com.companion.repositories.CourseRepository;
 import com.companion.repositories.FollowRepository;
 import com.companion.repositories.PostCommentRepository;
@@ -11,43 +11,40 @@ import com.companion.repositories.UserRepository;
 import com.companion.repositories.UserSubjectRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.context.ApplicationEventPublisher;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
     @Mock UserRepository userRepository;
-    @Mock PasswordEncoder passwordEncoder;
+    @Mock ApplicationEventPublisher eventPublisher;
     @Mock AuthenticatedUserService authenticatedUserService;
     @Mock PostRepository postRepository;
     @Mock PostCommentRepository commentRepository;
     @Mock FollowRepository followRepository;
     @Mock CourseRepository courseRepository;
     @Mock UserSubjectRepository userSubjectRepository;
+    @InjectMocks UserService service;
 
     @Test
-    void rejectsCaseInsensitiveDuplicateEmailBeforeEncodingPassword() {
-        when(userRepository.existsByEmailIgnoreCase("ana@edu.unifor.br")).thenReturn(true);
-        UserService service = new UserService(userRepository, passwordEncoder, authenticatedUserService,
-                postRepository, commentRepository, followRepository, courseRepository, userSubjectRepository);
-
-        assertThrows(DuplicateResourceException.class, () -> service.register(
-                new UserRegistrationRequestDTO("ANA@EDU.UNIFOR.BR", "Senha123", true)));
-        verifyNoInteractions(passwordEncoder);
+    void doesNotCreateAnAccountWithoutAcceptingTheTerms() {
+        assertThrows(TermsAcceptanceRequiredException.class, () -> service.signInWithFirebase(
+                new FirebaseIdentity("uid", "ana@edu.unifor.br", true), false));
+        verify(userRepository, never()).save(any());
     }
 
     @Test
-    void rejectsNonInstitutionalEmail() {
-        UserService service = new UserService(userRepository, passwordEncoder, authenticatedUserService,
-                postRepository, commentRepository, followRepository, courseRepository, userSubjectRepository);
-
-        assertThrows(BadRequestException.class, () -> service.register(
-                new UserRegistrationRequestDTO("ana@gmail.com", "Senha123", true)));
-        verifyNoInteractions(passwordEncoder);
+    void rejectsNonInstitutionalEmailBeforeReadingTheDatabase() {
+        assertThrows(ForbiddenOperationException.class, () -> service.signInWithFirebase(
+                new FirebaseIdentity("uid", "ana@gmail.com", true), true));
+        verifyNoInteractions(userRepository);
     }
 }

@@ -1,13 +1,13 @@
 package com.companion;
 
-import com.companion.entities.PasswordResetToken;
 import com.companion.entities.User;
 import com.companion.enums.UserRole;
+import com.companion.firebase.FirebaseGateway;
 import com.companion.repositories.CourseRepository;
-import com.companion.repositories.PasswordResetTokenRepository;
 import com.companion.repositories.SubjectRepository;
 import com.companion.repositories.UniversityRepository;
 import com.companion.repositories.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -15,14 +15,11 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.time.LocalDateTime;
-import java.util.HexFormat;
-
 import static org.hamcrest.Matchers.containsString;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.matchesPattern;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -34,25 +31,30 @@ class CompanionApiIntegrationTest {
 
     @Autowired MockMvc mockMvc;
     @Autowired UserRepository userRepository;
-    @Autowired PasswordResetTokenRepository tokenRepository;
     @Autowired UniversityRepository universityRepository;
     @Autowired CourseRepository courseRepository;
     @Autowired SubjectRepository subjectRepository;
+    @MockitoBean FirebaseGateway firebase;
+
+    @BeforeEach
+    void fakeFirebase() {
+        FakeFirebase.acceptVerifiedTokens(firebase);
+    }
 
     @Test
     void executesCriticalCrudAndSecurityFlows() throws Exception {
-        String firstToken = register("ana@edu.unifor.br", "Senha123");
+        String firstToken = signIn("ana@edu.unifor.br");
 
-        mockMvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON)
-                        .content(registrationJson("ANA@edu.unifor.br", "Senha123")))
-                .andExpect(status().isConflict());
+        long usersAfterFirstSignIn = userRepository.count();
+        signIn("ANA@edu.unifor.br");
+        assertEquals(usersAfterFirstSignIn, userRepository.count());
 
         mockMvc.perform(put("/api/users/me/profile").header("Authorization", bearer(firstToken))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(profileJson("Ana Clara", "anaclara")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.profileComplete").value(true))
-                .andExpect(jsonPath("$.passwordHash").doesNotExist());
+                .andExpect(jsonPath("$.firebaseUid").doesNotExist());
         mockMvc.perform(get("/api/users/{id}", userRepository.findByEmailIgnoreCase("ana@edu.unifor.br").orElseThrow().getId())
                         .header("Authorization", bearer(firstToken)))
                 .andExpect(status().isOk())
@@ -62,7 +64,7 @@ class CompanionApiIntegrationTest {
         User admin = userRepository.findByEmailIgnoreCase("ana@edu.unifor.br").orElseThrow();
         admin.changeRole(UserRole.ADMIN);
         userRepository.saveAndFlush(admin);
-        String adminToken = login("anaclara", "Senha123");
+        String adminToken = signIn("ana@edu.unifor.br");
 
         // Catálogo acadêmico carregado na inicialização.
         long universityId = universityRepository.findByAcronymIgnoreCase("UNIFOR").orElseThrow().getId();
@@ -174,7 +176,7 @@ class CompanionApiIntegrationTest {
                 // A matéria virou "quer aprender": a busca social só acha quem domina.
                 .andExpect(status().isOk()).andExpect(jsonPath("$.content", hasSize(0)));
 
-        String secondToken = register("bruno@edu.unifor.br", "Senha123");
+        String secondToken = signIn("bruno@edu.unifor.br");
         mockMvc.perform(put("/api/users/me/profile").header("Authorization", bearer(secondToken))
                         .contentType(MediaType.APPLICATION_JSON).content(profileJson("Bruno", "bruno")))
                 .andExpect(status().isOk());
@@ -270,16 +272,6 @@ class CompanionApiIntegrationTest {
         mockMvc.perform(delete("/api/subjects/{id}", subjectId).header("Authorization", bearer(adminToken)))
                 .andExpect(status().isConflict());
 
-        String rawResetToken = "8c3aa61a-5523-47e6-9423-621bf2ace243";
-        tokenRepository.saveAndFlush(new PasswordResetToken(second, sha256(rawResetToken), LocalDateTime.now().plusMinutes(15)));
-        mockMvc.perform(post("/api/auth/password/reset").contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"token\":\"" + rawResetToken + "\",\"password\":\"NovaSenha123\",\"passwordConfirmation\":\"NovaSenha123\"}"))
-                .andExpect(status().isOk());
-        login("bruno", "NovaSenha123");
-        mockMvc.perform(post("/api/auth/password/reset").contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"token\":\"" + rawResetToken + "\",\"password\":\"OutraSenha123\",\"passwordConfirmation\":\"OutraSenha123\"}"))
-                .andExpect(status().isConflict());
-
         mockMvc.perform(patch("/api/admin/users/{id}/role", second.getId())
                         .header("Authorization", bearer(adminToken)).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"role\":\"MODERATOR\"}"))
@@ -302,7 +294,7 @@ class CompanionApiIntegrationTest {
 
     @Test
     void keepsUnsentProfileFieldsAndManagesAvatar() throws Exception {
-        String token = register("carla@edu.unifor.br", "Senha123");
+        String token = signIn("carla@edu.unifor.br");
         long userId = userRepository.findByEmailIgnoreCase("carla@edu.unifor.br").orElseThrow().getId();
         long universityId = universityRepository.findByAcronymIgnoreCase("UNIFOR").orElseThrow().getId();
         long courseId = courseRepository.findByUniversityIdOrderByNameAsc(universityId).getFirst().getId();
@@ -378,9 +370,9 @@ class CompanionApiIntegrationTest {
 
     @Test
     void enforcesWhoCanDeletePostsRepliesAndProfiles() throws Exception {
-        String authorToken = register("edu@edu.unifor.br", "Senha123");
-        String otherToken = register("fabi@edu.unifor.br", "Senha123");
-        String adminToken = register("gabi@edu.unifor.br", "Senha123");
+        String authorToken = signIn("edu@edu.unifor.br");
+        String otherToken = signIn("fabi@edu.unifor.br");
+        String adminToken = signIn("gabi@edu.unifor.br");
         for (Object[] profile : new Object[][]{{authorToken, "Edu", "edu"}, {otherToken, "Fabi", "fabi"},
                 {adminToken, "Gabi", "gabi"}}) {
             mockMvc.perform(put("/api/users/me/profile").header("Authorization", bearer((String) profile[0]))
@@ -391,7 +383,7 @@ class CompanionApiIntegrationTest {
         User admin = userRepository.findByEmailIgnoreCase("gabi@edu.unifor.br").orElseThrow();
         admin.changeRole(UserRole.ADMIN);
         userRepository.saveAndFlush(admin);
-        adminToken = login("gabi", "Senha123");
+        adminToken = signIn("gabi@edu.unifor.br");
         long authorId = userRepository.findByEmailIgnoreCase("edu@edu.unifor.br").orElseThrow().getId();
         long subjectId = subjectRepository.findAll().getFirst().getId();
 
@@ -438,7 +430,7 @@ class CompanionApiIntegrationTest {
 
     @Test
     void replacesProfileSubjectsAtOnce() throws Exception {
-        String token = register("dani@edu.unifor.br", "Senha123");
+        String token = signIn("dani@edu.unifor.br");
         mockMvc.perform(put("/api/users/me/profile").header("Authorization", bearer(token))
                         .contentType(MediaType.APPLICATION_JSON).content(profileJson("Dani", "dani")))
                 .andExpect(status().isOk());
@@ -494,22 +486,8 @@ class CompanionApiIntegrationTest {
         return new MockMultipartFile("file", "foto.jpg", "image/jpeg", new byte[]{(byte) 0xFF, (byte) 0xD8, (byte) 0xFF});
     }
 
-    private String register(String email, String password) throws Exception {
-        return mockMvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON)
-                        .content(registrationJson(email, password)))
-                .andExpect(status().isCreated()).andExpect(jsonPath("$.accessToken").isString())
-                .andReturn().getResponse().getContentAsString().replaceAll(".*\"accessToken\":\"([^\"]+)\".*", "$1");
-    }
-
-    private String login(String identifier, String password) throws Exception {
-        return mockMvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"identifier\":\"" + identifier + "\",\"password\":\"" + password + "\"}"))
-                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString()
-                .replaceAll(".*\"accessToken\":\"([^\"]+)\".*", "$1");
-    }
-
-    private String registrationJson(String email, String password) {
-        return "{\"email\":\"" + email + "\",\"password\":\"" + password + "\",\"acceptedTerms\":true}";
+    private String signIn(String email) throws Exception {
+        return FakeFirebase.accessToken(mockMvc, email);
     }
 
     private String profileJson(String name, String username) {
@@ -518,9 +496,4 @@ class CompanionApiIntegrationTest {
 
     private String bearer(String token) { return "Bearer " + token; }
     private long extractId(String json) { return Long.parseLong(json.replaceAll("^\\{\"id\":(\\d+),.*", "$1")); }
-
-    private String sha256(String value) throws Exception {
-        return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256")
-                .digest(value.getBytes(StandardCharsets.UTF_8)));
-    }
 }

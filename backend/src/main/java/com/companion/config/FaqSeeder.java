@@ -27,12 +27,12 @@ public class FaqSeeder implements ApplicationRunner {
                             + "Unifor. Nele você publica dúvidas sobre as matérias do curso, responde colegas e "
                             + "acompanha quem estuda os mesmos assuntos que você."),
             new SeedFaq("Quem pode criar uma conta?",
-                    "Qualquer estudante pode se cadastrar com e-mail e senha, sem aprovação prévia. Depois "
-                            + "do cadastro, confirme seu e-mail pelo link que enviamos e defina seu nome e "
-                            + "username para acessar o feed."),
+                    "Estudantes com e-mail institucional (@edu.unifor.br) podem se cadastrar com e-mail e "
+                            + "senha, sem aprovação prévia. Confirme seu e-mail pelo link que enviamos e depois "
+                            + "defina seu nome e username para acessar o feed."),
             new SeedFaq("Esqueci minha senha. Como recupero o acesso?",
-                    "A recuperação de senha ainda está em desenvolvimento e ficará disponível em breve. "
-                            + "Por enquanto, guarde bem a senha que você criou no cadastro."),
+                    "Na tela de login, clique em \"Esqueceu a senha?\" e informe seu e-mail. Você receberá "
+                            + "um link para criar uma nova senha. Se não encontrar a mensagem, confira o spam."),
             new SeedFaq("Como publico uma dúvida?",
                     "Clique em \"Postar dúvida\" no topo da tela, escreva um título, descreva sua dúvida e "
                             + "escolha as matérias relacionadas. Quanto mais clara a descrição, mais fácil para "

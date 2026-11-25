@@ -1,18 +1,19 @@
 package com.companion;
 
+import com.companion.firebase.FirebaseGateway;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -26,6 +27,12 @@ class SeedMigrationTest {
 
     @Autowired JdbcTemplate jdbc;
     @Autowired MockMvc mockMvc;
+    @MockitoBean FirebaseGateway firebase;
+
+    @BeforeEach
+    void fakeFirebase() {
+        FakeFirebase.acceptVerifiedTokens(firebase);
+    }
 
     private int count(String table) {
         return jdbc.queryForObject("SELECT COUNT(*) FROM " + table, Integer.class);
@@ -54,10 +61,7 @@ class SeedMigrationTest {
         String avatarUrl = jdbc.queryForObject("SELECT avatar_url FROM users WHERE id = ?", String.class, anaId);
         // A V4 deixa só o caminho no banco; a API completa com o próprio endereço.
         assertEquals("/api/users/" + anaId + "/avatar?v=2", avatarUrl);
-        String token = mockMvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"identifier\":\"ana.exemplo@edu.unifor.br\",\"password\":\"Senha123\"}"))
-                .andReturn().getResponse().getContentAsString()
-                .replaceAll(".*\"accessToken\":\"([^\"]+)\".*", "$1");
+        String token = FakeFirebase.accessToken(mockMvc, "ana.exemplo@edu.unifor.br");
         mockMvc.perform(get("/api/users/" + anaId).header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.avatarUrl").value("http://localhost/api/users/" + anaId + "/avatar?v=2"));
@@ -74,13 +78,11 @@ class SeedMigrationTest {
     }
 
     @Test
-    void exampleUsersCanLogInWithTheDocumentedPassword() throws Exception {
-        mockMvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"identifier\":\"ana.exemplo@edu.unifor.br\",\"password\":\"Senha123\"}"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.accessToken").isString());
-        mockMvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"identifier\":\"brunolima\",\"password\":\"Senha123\"}"))
-                .andExpect(status().isOk());
+    void exampleUsersCanSignInAndAreLinkedByEmail() throws Exception {
+        long usersBefore = count("users");
+        FakeFirebase.accessToken(mockMvc, "bruno.exemplo@edu.unifor.br");
+        assertEquals(usersBefore, count("users"));
+        assertEquals("uid-bruno.exemplo@edu.unifor.br", jdbc.queryForObject(
+                "SELECT firebase_uid FROM users WHERE email = 'bruno.exemplo@edu.unifor.br'", String.class));
     }
 }

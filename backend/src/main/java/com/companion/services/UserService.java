@@ -8,6 +8,11 @@ import com.companion.enums.UserStatus;
 import com.companion.exceptions.BadRequestException;
 import com.companion.exceptions.ConflictException;
 import com.companion.exceptions.DuplicateResourceException;
+import com.companion.exceptions.ForbiddenOperationException;
+import com.companion.exceptions.TermsAcceptanceRequiredException;
+import com.companion.firebase.FirebaseAccountDeletedEvent;
+import com.companion.firebase.FirebaseIdentity;
+import org.springframework.context.ApplicationEventPublisher;
 import com.companion.exceptions.ResourceNotFoundException;
 import com.companion.entities.Course;
 import com.companion.repositories.CourseRepository;
@@ -21,7 +26,6 @@ import com.companion.repositories.UserCountProjection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,14 +42,17 @@ import java.util.UUID;
 public class UserService {
 
     private static final String INSTITUTIONAL_EMAIL_DOMAIN = "@edu.unifor.br";
+    private static final int MAX_EMAIL_LENGTH = 150;
+    /** Mesmo endereço de SUPPORT_EMAIL em frontend/src/data/support.js. */
+    private static final String SUPPORT_EMAIL = "companion.app@proton.me";
     /**
      * Versão atual dos Termos e da Política de Privacidade (a data da última atualização).
      * Mantenha igual a TERMS_VERSION em frontend/src/data/terms.js e mude as duas juntas.
      */
-    public static final String TERMS_VERSION = "2026-11-17";
+    public static final String TERMS_VERSION = "2026-11-25";
 
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final ApplicationEventPublisher eventPublisher;
     private final AuthenticatedUserService authenticatedUserService;
     private final PostRepository postRepository;
     private final PostCommentRepository postCommentRepository;
@@ -53,7 +60,7 @@ public class UserService {
     private final CourseRepository courseRepository;
     private final UserSubjectRepository userSubjectRepository;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder,
+    public UserService(UserRepository userRepository, ApplicationEventPublisher eventPublisher,
                        AuthenticatedUserService authenticatedUserService,
                        PostRepository postRepository,
                        PostCommentRepository postCommentRepository,
@@ -61,7 +68,7 @@ public class UserService {
                        CourseRepository courseRepository,
                        UserSubjectRepository userSubjectRepository) {
         this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
+        this.eventPublisher = eventPublisher;
         this.authenticatedUserService = authenticatedUserService;
         this.postRepository = postRepository;
         this.postCommentRepository = postCommentRepository;
@@ -70,19 +77,59 @@ public class UserService {
         this.userSubjectRepository = userSubjectRepository;
     }
 
+    /**
+     * Acha o usuário de quem acabou de se autenticar no Firebase, ou cria a conta
+     * no primeiro acesso. Estas regras valem no servidor.
+     */
     @Transactional
-    public User register(UserRegistrationRequestDTO request) {
-        String email = normalizeEmail(request.email());
-        if (!email.toLowerCase().endsWith(INSTITUTIONAL_EMAIL_DOMAIN)) {
-            throw new BadRequestException("Use seu e-mail institucional (" + INSTITUTIONAL_EMAIL_DOMAIN + ")");
+    public User signInWithFirebase(FirebaseIdentity identity, boolean acceptedTerms) {
+        // Sem a verificação, qualquer um poderia usar o e-mail de outra pessoa.
+        if (identity.email() == null || !identity.emailVerified()) {
+            throw new ForbiddenOperationException("Confirme seu e-mail antes de entrar");
         }
-        if (userRepository.existsByEmailIgnoreCase(email)) {
-            throw new DuplicateResourceException("Já existe uma conta com esse e-mail");
+        String email = normalizeEmail(identity.email());
+        if (!email.endsWith(INSTITUTIONAL_EMAIL_DOMAIN)) {
+            throw new ForbiddenOperationException(
+                    "Use seu e-mail institucional (" + INSTITUTIONAL_EMAIL_DOMAIN + ")");
         }
-        User user = new User(email, passwordEncoder.encode(request.password()));
+
+        User user = userRepository.findByFirebaseUid(identity.uid())
+                .or(() -> userRepository.findByEmailIgnoreCase(email))
+                .orElse(null);
+        if (user == null) {
+            return createFromFirebase(identity, email, acceptedTerms);
+        }
+        if (user.getStatus() != UserStatus.ACTIVE) {
+            throw new ForbiddenOperationException("A conta não está ativa. Fale com o suporte: " + SUPPORT_EMAIL);
+        }
+        if (user.getFirebaseUid() == null) {
+            user.linkFirebase(identity.uid());
+        } else if (!user.getFirebaseUid().equals(identity.uid())) {
+            throw new ConflictException("Este e-mail já está ligado a outro login. Fale com o suporte: " + SUPPORT_EMAIL);
+        }
+        user.markEmailVerified();
+        return userRepository.save(user);
+    }
+
+    private User createFromFirebase(FirebaseIdentity identity, String email, boolean acceptedTerms) {
+        if (!acceptedTerms) {
+            throw new TermsAcceptanceRequiredException();
+        }
+        if (email.length() > MAX_EMAIL_LENGTH) {
+            throw new BadRequestException("O e-mail deve ter no máximo " + MAX_EMAIL_LENGTH + " caracteres");
+        }
+        User user = new User(email);
+        user.linkFirebase(identity.uid());
+        user.markEmailVerified();
         // Guarda quando e qual versão dos termos foi aceita (prova do consentimento).
         user.acceptTerms(TERMS_VERSION);
         return userRepository.save(user);
+    }
+
+    /** Dados da própria conta, lidos dentro de uma transação (o curso é uma relação). */
+    @Transactional(readOnly = true)
+    public UserAccountResponseDTO accountOf(Long id) {
+        return toAccount(findAnyUser(id));
     }
 
     @Transactional(readOnly = true)
@@ -252,13 +299,16 @@ public class UserService {
     }
 
     private void anonymize(User user) {
+        String firebaseUid = user.getFirebaseUid();
         String suffix = user.getId() + "-" + UUID.randomUUID();
         user.anonymize(
                 "deleted-" + suffix + "@companion.invalid",
-                "deleted" + user.getId() + UUID.randomUUID().toString().replace("-", "").substring(0, 8),
-                passwordEncoder.encode(UUID.randomUUID().toString())
+                "deleted" + user.getId() + UUID.randomUUID().toString().replace("-", "").substring(0, 8)
         );
         userRepository.save(user);
+        if (firebaseUid != null) {
+            eventPublisher.publishEvent(new FirebaseAccountDeletedEvent(firebaseUid));
+        }
     }
 
     private UserPublicResponseDTO toPublic(User user) {

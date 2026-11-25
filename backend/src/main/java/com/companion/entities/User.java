@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
         name = "users",
         uniqueConstraints = {
                 @UniqueConstraint(name = "uk_users_email", columnNames = "email"),
+                @UniqueConstraint(name = "uk_users_firebase_uid", columnNames = "firebase_uid"),
                 @UniqueConstraint(name = "uk_users_username", columnNames = "username"),
                 @UniqueConstraint(name = "uk_users_registration_number", columnNames = "registration_number")
         },
@@ -28,8 +29,12 @@ public class User {
     @Column(nullable = false, length = 150)
     private String email;
 
-    @Column(name = "password_hash", nullable = false, length = 100)
-    private String passwordHash;
+    /**
+     * Identificador da conta no Firebase, que guarda a senha.
+     * Null nos usuários de exemplo que ainda não entraram e em contas excluídas.
+     */
+    @Column(name = "firebase_uid", length = 128)
+    private String firebaseUid;
 
     @Column(name = "email_verified_at")
     private LocalDateTime emailVerifiedAt;
@@ -94,9 +99,8 @@ public class User {
     protected User() {
     }
 
-    public User(String email, String passwordHash) {
+    public User(String email) {
         this.email = email;
-        this.passwordHash = passwordHash;
         this.role = UserRole.USER;
         this.status = UserStatus.ACTIVE;
     }
@@ -111,6 +115,16 @@ public class User {
     @PreUpdate
     private void preUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+
+    public void linkFirebase(String firebaseUid) {
+        this.firebaseUid = firebaseUid;
+    }
+
+    public void markEmailVerified() {
+        if (emailVerifiedAt == null) {
+            emailVerifiedAt = LocalDateTime.now();
+        }
     }
 
     public void updateProfile(String name, String username, String bio,
@@ -151,15 +165,12 @@ public class User {
         this.status = status;
     }
 
-    public void updatePassword(String passwordHash) {
-        this.passwordHash = passwordHash;
-    }
-
-    public void anonymize(String anonymousEmail, String anonymousUsername, String unusablePasswordHash) {
+    public void anonymize(String anonymousEmail, String anonymousUsername) {
         name = "Usuário excluído";
         email = anonymousEmail;
         username = anonymousUsername;
-        passwordHash = unusablePasswordHash;
+        firebaseUid = null;
+        emailVerifiedAt = null;
         avatarUrl = null;
         bio = null;
         bannerStyle = null;
@@ -179,7 +190,7 @@ public class User {
 
     public Long getId() { return id; }
     public String getEmail() { return email; }
-    public String getPasswordHash() { return passwordHash; }
+    public String getFirebaseUid() { return firebaseUid; }
     public String getName() { return name; }
     public String getUsername() { return username; }
     public String getAvatarUrl() { return avatarUrl; }

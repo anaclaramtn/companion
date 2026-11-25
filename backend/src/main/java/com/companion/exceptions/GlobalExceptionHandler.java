@@ -76,7 +76,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ApiErrorDTO> handleAuthentication(AuthenticationException exception,
                                                              HttpServletRequest request) {
-        return buildError(HttpStatus.UNAUTHORIZED, "E-mail/username ou senha incorretos",
+        return buildError(HttpStatus.UNAUTHORIZED, exception.getMessage(), request.getRequestURI(), Map.of());
+    }
+
+    @ExceptionHandler(TermsAcceptanceRequiredException.class)
+    public ResponseEntity<ApiErrorDTO> handleTermsRequired(TermsAcceptanceRequiredException exception,
+                                                           HttpServletRequest request) {
+        return buildError(HttpStatus.PRECONDITION_REQUIRED, exception.getMessage(),
                 request.getRequestURI(), Map.of());
     }
 

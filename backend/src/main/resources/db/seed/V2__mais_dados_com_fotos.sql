@@ -1,20 +1,20 @@
 -- Mais dados de exemplo para desenvolvimento, agora com fotos de perfil:
---   * 8 usuários novos (senha de todos: Senha123), mais as fotos dos 6 da V1
+--   * 8 usuários novos, mais as fotos dos 6 da V1
 --   * 20 dúvidas, 37 respostas, 73 curtidas e 39 relações de seguidores
 --   * 14 avatares ilustrados (JPEG 160x160), guardados na tabela user_avatars
 -- Pressupõe a V1 já aplicada (o Flyway garante a ordem).
 -- O avatar_url usa http://localhost:8080; em outro endereço, ajuste a URL (o upload
 -- feito pelo app grava o endereço certo automaticamente).
 
-INSERT INTO users (email, password_hash, email_verified_at, name, username, bio, course_id, semester, role, status, onboarding_completed_at, created_at, updated_at) VALUES
-('gustavo.exemplo@edu.unifor.br', '$2a$10$FUZcc6s5rFpm6vpbKIZy8.n3ZnX0BdSYcfd4/4X6ObYu712svByv.', NOW(), 'Gustavo Pereira', 'gustavopereira', 'Redes, Linux e segurança da informação.', (SELECT MIN(id) FROM courses), 6, 'USER', 'ACTIVE', NOW(), TIMESTAMPADD(DAY, -8, NOW()), TIMESTAMPADD(DAY, -8, NOW())),
-('helena.exemplo@edu.unifor.br', '$2a$10$FUZcc6s5rFpm6vpbKIZy8.n3ZnX0BdSYcfd4/4X6ObYu712svByv.', NOW(), 'Helena Duarte', 'helenaduarte', 'Design de interfaces e experiência do usuário.', (SELECT MIN(id) FROM courses), 4, 'USER', 'ACTIVE', NOW(), TIMESTAMPADD(DAY, -8, NOW()), TIMESTAMPADD(DAY, -8, NOW())),
-('igor.exemplo@edu.unifor.br', '$2a$10$FUZcc6s5rFpm6vpbKIZy8.n3ZnX0BdSYcfd4/4X6ObYu712svByv.', NOW(), 'Igor Martins', 'igormartins', 'Computação paralela e sistemas distribuídos.', (SELECT MIN(id) FROM courses), 8, 'USER', 'ACTIVE', NOW(), TIMESTAMPADD(DAY, -8, NOW()), TIMESTAMPADD(DAY, -8, NOW())),
-('julia.exemplo@edu.unifor.br', '$2a$10$FUZcc6s5rFpm6vpbKIZy8.n3ZnX0BdSYcfd4/4X6ObYu712svByv.', NOW(), 'Júlia Fontenele', 'juliafontenele', 'Ciência de dados e visualização.', (SELECT MIN(id) FROM courses), 7, 'USER', 'ACTIVE', NOW(), TIMESTAMPADD(DAY, -8, NOW()), TIMESTAMPADD(DAY, -8, NOW())),
-('kaue.exemplo@edu.unifor.br', '$2a$10$FUZcc6s5rFpm6vpbKIZy8.n3ZnX0BdSYcfd4/4X6ObYu712svByv.', NOW(), 'Kauê Nogueira', 'kauenogueira', 'Jogos, grafos e algoritmos.', (SELECT MIN(id) FROM courses), 2, 'USER', 'ACTIVE', NOW(), TIMESTAMPADD(DAY, -8, NOW()), TIMESTAMPADD(DAY, -8, NOW())),
-('larissa.exemplo@edu.unifor.br', '$2a$10$FUZcc6s5rFpm6vpbKIZy8.n3ZnX0BdSYcfd4/4X6ObYu712svByv.', NOW(), 'Larissa Cavalcante', 'larissacavalcante', 'Engenharia de requisitos e gestão de projetos.', (SELECT MIN(id) FROM courses), 5, 'USER', 'ACTIVE', NOW(), TIMESTAMPADD(DAY, -8, NOW()), TIMESTAMPADD(DAY, -8, NOW())),
-('mateus.exemplo@edu.unifor.br', '$2a$10$FUZcc6s5rFpm6vpbKIZy8.n3ZnX0BdSYcfd4/4X6ObYu712svByv.', NOW(), 'Mateus Barros', 'mateusbarros', 'Back-end com Java e bancos de dados.', (SELECT MIN(id) FROM courses), 3, 'USER', 'ACTIVE', NOW(), TIMESTAMPADD(DAY, -8, NOW()), TIMESTAMPADD(DAY, -8, NOW())),
-('natalia.exemplo@edu.unifor.br', '$2a$10$FUZcc6s5rFpm6vpbKIZy8.n3ZnX0BdSYcfd4/4X6ObYu712svByv.', NOW(), 'Natália Sousa', 'nataliasousa', 'Ética, pesquisa científica e inovação.', (SELECT MIN(id) FROM courses), 6, 'USER', 'ACTIVE', NOW(), TIMESTAMPADD(DAY, -8, NOW()), TIMESTAMPADD(DAY, -8, NOW()));
+INSERT INTO users (email, email_verified_at, name, username, bio, course_id, semester, role, status, onboarding_completed_at, created_at, updated_at) VALUES
+('gustavo.exemplo@edu.unifor.br', NOW(), 'Gustavo Pereira', 'gustavopereira', 'Redes, Linux e segurança da informação.', (SELECT MIN(id) FROM courses), 6, 'USER', 'ACTIVE', NOW(), TIMESTAMPADD(DAY, -8, NOW()), TIMESTAMPADD(DAY, -8, NOW())),
+('helena.exemplo@edu.unifor.br', NOW(), 'Helena Duarte', 'helenaduarte', 'Design de interfaces e experiência do usuário.', (SELECT MIN(id) FROM courses), 4, 'USER', 'ACTIVE', NOW(), TIMESTAMPADD(DAY, -8, NOW()), TIMESTAMPADD(DAY, -8, NOW())),
+('igor.exemplo@edu.unifor.br', NOW(), 'Igor Martins', 'igormartins', 'Computação paralela e sistemas distribuídos.', (SELECT MIN(id) FROM courses), 8, 'USER', 'ACTIVE', NOW(), TIMESTAMPADD(DAY, -8, NOW()), TIMESTAMPADD(DAY, -8, NOW())),
+('julia.exemplo@edu.unifor.br', NOW(), 'Júlia Fontenele', 'juliafontenele', 'Ciência de dados e visualização.', (SELECT MIN(id) FROM courses), 7, 'USER', 'ACTIVE', NOW(), TIMESTAMPADD(DAY, -8, NOW()), TIMESTAMPADD(DAY, -8, NOW())),
+('kaue.exemplo@edu.unifor.br', NOW(), 'Kauê Nogueira', 'kauenogueira', 'Jogos, grafos e algoritmos.', (SELECT MIN(id) FROM courses), 2, 'USER', 'ACTIVE', NOW(), TIMESTAMPADD(DAY, -8, NOW()), TIMESTAMPADD(DAY, -8, NOW())),
+('larissa.exemplo@edu.unifor.br', NOW(), 'Larissa Cavalcante', 'larissacavalcante', 'Engenharia de requisitos e gestão de projetos.', (SELECT MIN(id) FROM courses), 5, 'USER', 'ACTIVE', NOW(), TIMESTAMPADD(DAY, -8, NOW()), TIMESTAMPADD(DAY, -8, NOW())),
+('mateus.exemplo@edu.unifor.br', NOW(), 'Mateus Barros', 'mateusbarros', 'Back-end com Java e bancos de dados.', (SELECT MIN(id) FROM courses), 3, 'USER', 'ACTIVE', NOW(), TIMESTAMPADD(DAY, -8, NOW()), TIMESTAMPADD(DAY, -8, NOW())),
+('natalia.exemplo@edu.unifor.br', NOW(), 'Natália Sousa', 'nataliasousa', 'Ética, pesquisa científica e inovação.', (SELECT MIN(id) FROM courses), 6, 'USER', 'ACTIVE', NOW(), TIMESTAMPADD(DAY, -8, NOW()), TIMESTAMPADD(DAY, -8, NOW()));
 
 INSERT INTO posts (author_id, title, content, created_at) VALUES
 ((SELECT id FROM users WHERE email = 'gustavo.exemplo@edu.unifor.br'), 'Como configurar o SSH sem pedir senha toda hora?', 'Quero acessar o servidor da disciplina sem digitar a senha sempre. Chave pública resolve? Qual o passo a passo seguro no Linux?', TIMESTAMPADD(HOUR, -140, NOW())),
