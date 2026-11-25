@@ -51,7 +51,7 @@ class AdminExportIntegrationTest {
     @Test
     void nonAdminsAndAnonymousAreRejected() throws Exception {
         mockMvc.perform(get("/api/admin/export/users.csv")
-                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_MODERATOR"))))
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_USER"))))
                 .andExpect(status().isForbidden());
         mockMvc.perform(get("/api/admin/export/reports.csv")
                         .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_USER"))))

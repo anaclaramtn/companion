@@ -71,7 +71,7 @@ public class PostService {
     public void delete(Long id) {
         User actor = authenticatedUserService.getCurrentUserWithCompleteProfile();
         Post post = findActive(id);
-        boolean moderator = actor.getRole() == UserRole.MODERATOR || actor.getRole() == UserRole.ADMIN;
+        boolean moderator = actor.getRole() == UserRole.ADMIN;
         if (!post.getAuthor().getId().equals(actor.getId()) && !moderator) {
             throw new ForbiddenOperationException("Somente o autor ou a moderação pode excluir o post");
         }

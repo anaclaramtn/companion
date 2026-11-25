@@ -24,15 +24,15 @@ public class ReportController {
         ReportResponseDTO response = service.create(request);
         return ResponseEntity.created(URI.create("/api/reports/" + response.id())).body(response);
     }
-    @GetMapping @PreAuthorize("hasAnyRole('MODERATOR','ADMIN')")
+    @GetMapping @PreAuthorize("hasRole('ADMIN')")
     public PageResponse<ReportResponseDTO> list(@RequestParam(required = false) ReportStatus status,
                                                 @RequestParam(defaultValue = "0") @Min(0) int page,
                                                 @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
         return service.list(status, page, size);
     }
-    @GetMapping("/{id}") @PreAuthorize("hasAnyRole('MODERATOR','ADMIN')")
+    @GetMapping("/{id}") @PreAuthorize("hasRole('ADMIN')")
     public ReportResponseDTO get(@PathVariable Long id) { return service.get(id); }
-    @PatchMapping("/{id}") @PreAuthorize("hasAnyRole('MODERATOR','ADMIN')")
+    @PatchMapping("/{id}") @PreAuthorize("hasRole('ADMIN')")
     public ReportResponseDTO review(@PathVariable Long id, @Valid @RequestBody ReportReviewRequestDTO request) {
         return service.review(id, request);
     }

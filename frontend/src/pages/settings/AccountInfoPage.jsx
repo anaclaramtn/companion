@@ -6,7 +6,6 @@ import { getMyAccount } from '../../services/accountService.js'
 
 const roleLabels = {
   USER: 'Estudante',
-  MODERATOR: 'Moderador',
   ADMIN: 'Administrador',
 }
 
