@@ -1,21 +1,22 @@
 import { useState } from 'react'
 import 'bootstrap-icons/font/bootstrap-icons.css'
 import AuthForm from '../../features/auth/components/AuthForm.jsx'
+import { useFinishSignIn } from '../../features/auth/useFinishSignIn.js'
 import AuthLayout from '../../layouts/auth/AuthLayout.jsx'
 import { Link, useNavigate } from 'react-router'
 import { useAuth } from '../../hooks/useAuth.js'
-import { homePathFor } from '../../routes/homePath.js'
-import { getApiErrorMessage } from '../../services/apiError.js'
+import { getAuthErrorMessage } from '../../services/apiError.js'
 
 function LoginPage() {
   const navigate = useNavigate()
+  const finishSignIn = useFinishSignIn()
   const { login } = useAuth()
-  const [identifier, setIdentifier] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState('')
-  const canSubmit = identifier.trim().length > 0 && password.length > 0
+  const canSubmit = email.trim().length > 0 && password.length > 0
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -24,12 +25,13 @@ function LoginPage() {
     setMessage('')
     setIsSubmitting(true)
     try {
-      const session = await login(identifier.trim(), password)
-      navigate(session.user.profileComplete ? homePathFor(session.user.role) : '/onboarding/etapa-1', {
-        replace: true,
-      })
+      finishSignIn(await login(email.trim(), password))
     } catch (error) {
-      setMessage(getApiErrorMessage(error, 'Não foi possível entrar. Tente novamente.'))
+      if (error.code === 'companion/email-not-verified') {
+        navigate('/confirmar-email', { state: { email: email.trim() } })
+        return
+      }
+      setMessage(getAuthErrorMessage(error, 'Não foi possível entrar. Tente novamente.'))
     } finally {
       setIsSubmitting(false)
     }
@@ -43,17 +45,18 @@ function LoginPage() {
         description="Continue tirando suas dúvidas."
         fields={[
           {
-            id: 'login-identifier',
-            name: 'identifier',
-            label: 'E-mail ou username',
+            id: 'login-email',
+            name: 'email',
+            label: 'E-mail',
+            type: 'email',
             autoComplete: 'username',
-            placeholder: 'seu e-mail ou username',
-            value: identifier,
+            placeholder: 'usuario@edu.unifor.br',
+            value: email,
             onChange: (value) => {
-              setIdentifier(value)
+              setEmail(value)
               setMessage('')
             },
-            trailing: <i className="bi bi-person" aria-hidden="true" />,
+            trailing: <i className="bi bi-envelope" aria-hidden="true" />,
           },
           {
             id: 'login-password',

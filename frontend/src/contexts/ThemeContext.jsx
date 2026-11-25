@@ -17,7 +17,7 @@ const DEFAULT_PREFERENCES = { theme: 'light', colorVision: 'default' }
 function isAuthScreen(pathname) {
   return (
     pathname === '/' ||
-    ['/login', '/criar-conta', '/confirmar-email', '/recuperar-senha'].includes(pathname) ||
+    ['/login', '/criar-conta', '/confirmar-email', '/aceitar-termos', '/recuperar-senha'].includes(pathname) ||
     pathname.startsWith('/onboarding')
   )
 }

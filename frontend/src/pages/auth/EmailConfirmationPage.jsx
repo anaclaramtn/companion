@@ -1,27 +1,32 @@
 import { useEffect, useState } from 'react'
-import { Link, Navigate, useLocation } from 'react-router'
+import { Link, Navigate, useLocation, useNavigate } from 'react-router'
 import 'bootstrap-icons/font/bootstrap-icons.css'
 import AuthCard from '../../features/auth/components/AuthCard.jsx'
 import '../../features/auth/components/AuthForm.css'
+import { useFinishSignIn } from '../../features/auth/useFinishSignIn.js'
+import { useAuth } from '../../hooks/useAuth.js'
 import { useToast } from '../../hooks/useToast.js'
 import AuthLayout from '../../layouts/auth/AuthLayout.jsx'
-import {
-  confirmEmail,
-  resendConfirmationEmail,
-} from '../../services/authService.js'
+import { getAuthErrorMessage } from '../../services/apiError.js'
+import { resendConfirmationEmail } from '../../services/authService.js'
 
 const RESEND_COOLDOWN_SECONDS = 30
 
-// Exibida logo após o cadastro: a conta só segue para a criação do perfil
-// depois que o e-mail é confirmado pelo link enviado.
+// Exibida após o cadastro (ou no login de quem ainda não confirmou): a conta só
+// segue adiante depois que o e-mail é confirmado pelo link enviado.
 function EmailConfirmationPage() {
   const { state } = useLocation()
   const email = state?.email
+  const navigate = useNavigate()
+  const finishSignIn = useFinishSignIn()
+  const { loginAfterEmailConfirmation } = useAuth()
   const showToast = useToast()
-  const [secondsLeft, setSecondsLeft] = useState(RESEND_COOLDOWN_SECONDS)
+  // Se o primeiro envio falhou, libera o reenvio na hora.
+  const [secondsLeft, setSecondsLeft] = useState(
+    state?.emailSent === false ? 0 : RESEND_COOLDOWN_SECONDS,
+  )
   const [isResending, setIsResending] = useState(false)
   const [isConfirming, setIsConfirming] = useState(false)
-  const [confirmed, setConfirmed] = useState(false)
 
   useEffect(() => {
     if (secondsLeft <= 0) return undefined
@@ -29,16 +34,20 @@ function EmailConfirmationPage() {
     return () => window.clearTimeout(timer)
   }, [secondsLeft])
 
+  // Sem o login pendente no Firebase (ex.: página recarregada), volta ao login.
+  function handleError(error, fallback) {
+    showToast(getAuthErrorMessage(error, fallback), { type: 'error' })
+    if (error.code === 'companion/no-pending-user') navigate('/login', { replace: true })
+  }
+
   async function handleResend() {
     setIsResending(true)
     try {
-      await resendConfirmationEmail(email)
+      await resendConfirmationEmail()
       showToast(`Enviamos um novo link para ${email}.`)
       setSecondsLeft(RESEND_COOLDOWN_SECONDS)
-    } catch {
-      showToast('Não foi possível reenviar o e-mail. Tente novamente.', {
-        type: 'error',
-      })
+    } catch (error) {
+      handleError(error, 'Não foi possível reenviar o e-mail. Tente novamente.')
     } finally {
       setIsResending(false)
     }
@@ -46,13 +55,16 @@ function EmailConfirmationPage() {
 
   async function handleConfirm() {
     setIsConfirming(true)
-    await confirmEmail()
-    setConfirmed(true)
+    try {
+      finishSignIn(await loginAfterEmailConfirmation())
+    } catch (error) {
+      handleError(error, 'Não foi possível entrar. Tente novamente.')
+      setIsConfirming(false)
+    }
   }
 
   // Sem e-mail do cadastro (ex.: endereço aberto direto), volta ao cadastro.
   if (!email) return <Navigate to="/criar-conta" replace />
-  if (confirmed) return <Navigate to="/onboarding/etapa-1" replace />
 
   return (
     <AuthLayout>
@@ -81,8 +93,9 @@ function EmailConfirmationPage() {
           </div>
 
           <p className="text-sm text-companion-muted">
-            O link vale por 24 horas. Se não encontrar a mensagem, confira a
-            caixa de spam ou de lixo eletrônico.
+            Depois de abrir o link, volte aqui. Se não encontrar a mensagem,
+            confira a caixa de spam ou de lixo eletrônico. Se você não criou
+            esta conta, não abra o link.
           </p>
 
           <button
@@ -93,9 +106,6 @@ function EmailConfirmationPage() {
           >
             {isConfirming ? 'Confirmando…' : 'Já confirmei meu e-mail'}
           </button>
-          <p className="-mt-2 text-center text-xs text-companion-muted">
-            Protótipo: este botão simula o clique no link do e-mail.
-          </p>
 
           <p className="text-center text-sm text-companion-muted">
             Não recebeu?{' '}

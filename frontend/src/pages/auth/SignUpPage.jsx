@@ -4,9 +4,8 @@ import 'bootstrap-icons/font/bootstrap-icons.css'
 import AuthForm from '../../features/auth/components/AuthForm.jsx'
 import AuthLayout from '../../layouts/auth/AuthLayout.jsx'
 import { validatePassword, validatePasswordConfirmation } from '../../features/auth/passwordValidation.js'
-import { useAuth } from '../../hooks/useAuth.js'
-import { homePathFor } from '../../routes/homePath.js'
-import { getApiErrorMessage } from '../../services/apiError.js'
+import { getAuthErrorMessage } from '../../services/apiError.js'
+import { createEmailAccount } from '../../services/authService.js'
 
 function validateEmail(value) {
     const email = value.trim()
@@ -30,7 +29,6 @@ function validateEmail(value) {
 
 function RegisterPage() {
   const navigate = useNavigate()
-  const { register } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [passwordConfirmation, setPasswordConfirmation] = useState('')
@@ -40,7 +38,6 @@ function RegisterPage() {
   const [emailTouched, setEmailTouched] = useState(false)
   const [passwordTouched, setPasswordTouched] = useState(false)
   const [confirmationTouched, setConfirmationTouched] = useState(false)
-  const [acceptedTerms, setAcceptedTerms] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [message, setMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -65,19 +62,16 @@ function RegisterPage() {
     const hasErrors =
       validateEmail(email) ||
       validatePassword(password) ||
-      validatePasswordConfirmation(password, passwordConfirmation) ||
-      !acceptedTerms
+      validatePasswordConfirmation(password, passwordConfirmation)
 
     if (hasErrors) return
 
     setIsSubmitting(true)
     try {
-      const session = await register(email.trim(), password, acceptedTerms)
-      navigate(session.user.profileComplete ? homePathFor(session.user.role) : '/onboarding/etapa-1', {
-        replace: true,
-      })
+      const { emailSent } = await createEmailAccount(email.trim(), password)
+      navigate('/confirmar-email', { state: { email: email.trim(), emailSent } })
     } catch (error) {
-      setMessage(getApiErrorMessage(error, 'Não foi possível criar a conta. Tente novamente.'))
+      setMessage(getAuthErrorMessage(error, 'Não foi possível criar a conta. Tente novamente.'))
     } finally {
       setIsSubmitting(false)
     }
@@ -181,40 +175,7 @@ function RegisterPage() {
             Já tem uma conta? Entrar
           </Link>
         }
-      >
-        <div className="field-group">
-          <label
-            htmlFor="register-terms"
-            style={{ display: 'flex', alignItems: 'flex-start', gap: '0.6rem', fontWeight: 500 }}
-          >
-            <input
-              id="register-terms"
-              name="acceptedTerms"
-              type="checkbox"
-              checked={acceptedTerms}
-              onChange={(event) => {
-                setAcceptedTerms(event.target.checked)
-                setMessage('')
-              }}
-              aria-invalid={submitted && !acceptedTerms}
-              aria-describedby={submitted && !acceptedTerms ? 'register-terms-error' : undefined}
-              style={{ width: '1.1rem', height: '1.1rem', marginTop: '0.15rem', flexShrink: 0 }}
-            />
-            <span>
-              Li e aceito os{' '}
-              <Link className="text-button" to="/termos-e-privacidade" target="_blank" rel="noopener">
-                Termos de Uso e a Política de Privacidade
-              </Link>
-              .
-            </span>
-          </label>
-          {submitted && !acceptedTerms && (
-            <p id="register-terms-error" className="auth-field-error" role="alert">
-              É preciso aceitar os Termos e a Política de Privacidade para criar a conta.
-            </p>
-          )}
-        </div>
-      </AuthForm>
+      />
     </AuthLayout>
   )
 }

@@ -7,6 +7,7 @@ import {
   mockSupportShortcuts,
   mockSupportTopics,
 } from '../../data/mockSupport.js'
+import { SUPPORT_EMAIL } from '../../data/support.js'
 
 function SupportPage() {
   return (
@@ -80,6 +81,13 @@ function SupportPage() {
             <i className="bi bi-send" aria-hidden="true" />
             Enviar um ticket
           </Link>
+          <p className="mt-2 text-xs text-companion-muted">
+            Ou escreva para{' '}
+            <a className="break-all font-bold text-companion-brand hover:underline" href={`mailto:${SUPPORT_EMAIL}`}>
+              {SUPPORT_EMAIL}
+            </a>
+            .
+          </p>
         </div>
       </section>
     </section>

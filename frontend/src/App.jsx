@@ -2,6 +2,7 @@ import { Navigate, Route, Routes, useParams } from 'react-router'
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage.jsx'
 import LoginPage from './pages/auth/LoginPage.jsx'
 import SignUpPage from './pages/auth/SignUpPage.jsx'
+import AcceptTermsPage from './pages/auth/AcceptTermsPage.jsx'
 import EmailConfirmationPage from './pages/auth/EmailConfirmationPage.jsx'
 import OnboardingStep1 from './pages/auth/OnboardingStep1.jsx'
 import OnboardingStep2 from './pages/auth/OnboardingStep2.jsx'
@@ -40,6 +41,7 @@ function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/criar-conta" element={<SignUpPage />} />
       <Route path="/confirmar-email" element={<EmailConfirmationPage />} />
+      <Route path="/aceitar-termos" element={<AcceptTermsPage />} />
       <Route path="/recuperar-senha" element={<ForgotPasswordPage />} />
       <Route path="/termos-e-privacidade" element={<PublicTermsPage />} />
       <Route element={<RequireAuth />}>

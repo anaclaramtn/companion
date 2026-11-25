@@ -1,6 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { setAccessToken, setUnauthorizedHandler } from '../api/api.js'
-import { login as loginRequest, register as registerRequest } from '../services/authService.js'
+import {
+  exchangeFirebaseToken,
+  getVerifiedIdToken,
+  signInWithEmail,
+  signOutFirebase,
+} from '../services/authService.js'
 import {
   completeOnboarding as completeOnboardingRequest,
   getCurrentUser,
@@ -47,6 +52,11 @@ export function AuthProvider({ children }) {
     setAccessToken(token)
     return token ? { accessToken: token, user: null } : null
   })
+
+  // Primeiro acesso: o ID token espera aqui até a pessoa aceitar os termos.
+  // Fica só em memória; ao recarregar a página, é preciso entrar de novo.
+  const pendingIdToken = useRef(null)
+  const [hasPendingTerms, setHasPendingTerms] = useState(false)
 
   // Há token mas ainda não há usuário: a sessão está sendo restaurada.
   const isRestoring = Boolean(session?.accessToken) && !session.user
@@ -97,12 +107,40 @@ export function AuthProvider({ children }) {
     return nextSession
   }
 
-  async function login(identifier, password) {
-    return acceptSession(await loginRequest(identifier, password))
+  function clearPendingTerms() {
+    pendingIdToken.current = null
+    setHasPendingTerms(false)
   }
 
-  async function register(email, password, acceptedTerms) {
-    return acceptSession(await registerRequest(email, password, acceptedTerms))
+  // Troca o ID token do Firebase pela sessão da nossa API. Devolve
+  // { session } ou, no primeiro acesso sem aceite, { needsTerms: true }.
+  async function startSession(idToken, acceptedTerms = false) {
+    let authResponse
+    try {
+      authResponse = await exchangeFirebaseToken(idToken, acceptedTerms)
+    } catch (error) {
+      if (error.response?.status !== 428) throw error
+      pendingIdToken.current = idToken
+      setHasPendingTerms(true)
+      return { needsTerms: true }
+    }
+    clearPendingTerms()
+    // Se a saída do Firebase falhar, a sessão da API já vale mesmo assim.
+    await signOutFirebase().catch(() => {})
+    return { session: acceptSession(authResponse) }
+  }
+
+  async function login(email, password) {
+    return startSession(await signInWithEmail(email, password))
+  }
+
+  // Usado na tela "verifique seu e-mail", depois do clique no link.
+  async function loginAfterEmailConfirmation() {
+    return startSession(await getVerifiedIdToken())
+  }
+
+  async function acceptTermsAndSignIn() {
+    return startSession(pendingIdToken.current, true)
   }
 
   async function updateProfile(profile) {
@@ -130,6 +168,7 @@ export function AuthProvider({ children }) {
   }
 
   function logout() {
+    clearPendingTerms()
     setAccessToken(null)
     storeToken(null)
     setSession(null)
@@ -140,8 +179,10 @@ export function AuthProvider({ children }) {
     user: session?.user ?? null,
     isAuthenticated: Boolean(session?.user),
     isRestoring,
+    hasPendingTerms,
     login,
-    register,
+    loginAfterEmailConfirmation,
+    acceptTermsAndSignIn,
     updateProfile,
     updateAvatar,
     removeAvatar,
