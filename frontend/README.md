@@ -38,7 +38,7 @@ src/
 └── main.jsx
 ```
 
-Os diretórios estão preparados para receber as funcionalidades. A primeira versão visual da página de login está em `src/pages/auth/LoginPage.jsx`, com estilos em `src/styles/app.css`. O login, cadastro e recuperação de senha usam o Firebase Authentication (configuração no README da raiz). Acesso com Google está fora da versão 1.0.
+Os diretórios estão preparados para receber as funcionalidades. A primeira versão visual da página de login está em `src/pages/auth/LoginPage.jsx`, com estilos em `src/styles/app.css`. O login, cadastro e recuperação de senha usam o Firebase Authentication (variáveis em `.env.example`). Acesso com Google está fora da versão 1.0.
 
 ## Execução
 
