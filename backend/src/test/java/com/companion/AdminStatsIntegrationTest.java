@@ -75,7 +75,7 @@ class AdminStatsIntegrationTest {
                 .andExpect(jsonPath("$.reports.pending").isNumber())
                 .andExpect(jsonPath("$.topSubjects").isArray());
         mockMvc.perform(get("/api/admin/stats")
-                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_MODERATOR"))))
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_USER"))))
                 .andExpect(status().isForbidden());
         mockMvc.perform(get("/api/admin/stats")).andExpect(status().isUnauthorized());
     }

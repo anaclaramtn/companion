@@ -168,7 +168,7 @@ function FeedLayout() {
 
   // Exclusão de dúvidas e respostas. O autor apaga as próprias; administração e
   // moderação apagam de qualquer pessoa (o backend confere a permissão de novo).
-  const canModerate = ['ADMIN', 'MODERATOR'].includes(user?.role)
+  const canModerate = user?.role === 'ADMIN'
   const [removedPostIds, setRemovedPostIds] = useState(() => new Set())
 
   const removePost = useCallback(

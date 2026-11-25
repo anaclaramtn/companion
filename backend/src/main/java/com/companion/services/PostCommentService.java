@@ -71,7 +71,7 @@ public class PostCommentService {
     public void delete(Long id) {
         User actor = authenticatedUserService.getCurrentUserWithCompleteProfile();
         PostComment comment = findActive(id);
-        boolean moderator = actor.getRole() == UserRole.MODERATOR || actor.getRole() == UserRole.ADMIN;
+        boolean moderator = actor.getRole() == UserRole.ADMIN;
         if (!comment.getAuthor().getId().equals(actor.getId()) && !moderator) {
             throw new ForbiddenOperationException("Somente o autor ou a moderação pode excluir a resposta");
         }

@@ -283,7 +283,7 @@ class CompanionApiIntegrationTest {
         mockMvc.perform(patch("/api/admin/users/{id}/role", second.getId())
                         .header("Authorization", bearer(adminToken)).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"role\":\"MODERATOR\"}"))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.role").value("MODERATOR"));
+                .andExpect(status().isBadRequest());
         mockMvc.perform(patch("/api/admin/users/{id}/status", second.getId())
                         .header("Authorization", bearer(adminToken)).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"status\":\"SUSPENDED\"}"))

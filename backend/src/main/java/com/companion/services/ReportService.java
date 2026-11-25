@@ -65,7 +65,7 @@ public class ReportService {
 
     @Transactional(readOnly = true)
     public PageResponse<ReportResponseDTO> list(ReportStatus status, int page, int size) {
-        authenticatedUserService.requireAnyRole(UserRole.MODERATOR, UserRole.ADMIN);
+        authenticatedUserService.requireAnyRole(UserRole.ADMIN);
         Page<Report> reports = status == null
                 ? repository.findAllByOrderByCreatedAtDesc(PageRequest.of(page, Math.min(size, 100)))
                 : repository.findByStatusOrderByCreatedAtAsc(status, PageRequest.of(page, Math.min(size, 100)));
@@ -74,13 +74,13 @@ public class ReportService {
 
     @Transactional(readOnly = true)
     public ReportResponseDTO get(Long id) {
-        authenticatedUserService.requireAnyRole(UserRole.MODERATOR, UserRole.ADMIN);
+        authenticatedUserService.requireAnyRole(UserRole.ADMIN);
         return toResponse(find(id));
     }
 
     @Transactional
     public ReportResponseDTO review(Long id, ReportReviewRequestDTO request) {
-        User reviewer = authenticatedUserService.requireAnyRole(UserRole.MODERATOR, UserRole.ADMIN);
+        User reviewer = authenticatedUserService.requireAnyRole(UserRole.ADMIN);
         if (request.status() == ReportStatus.PENDING) {
             throw new BadRequestException("A análise deve resultar em RESOLVED ou DISMISSED");
         }

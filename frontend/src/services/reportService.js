@@ -1,6 +1,6 @@
 import api from '../api/api.js'
 
-// Denúncias para quem modera (MODERATOR ou ADMIN). Cada item vem como
+// Denúncias para quem modera (ADMIN). Cada item vem como
 // { id, reporter, reviewedBy, targetType: 'POST' | 'POST_COMMENT', targetId,
 //   postId, targetPreview, reason, details, status, createdAt, reviewedAt }.
 export async function getReports({ status, page = 0, size = 10 } = {}) {

@@ -86,7 +86,6 @@ function HeaderWaves() {
 // Estudante só aparece no cartão, sem selo no cabeçalho (badge: null).
 const ROLE_DISPLAY = {
   ADMIN: { badge: 'ADMIN', label: 'Administrador', icon: 'bi-shield-check' },
-  MODERATOR: { badge: 'MOD', label: 'Moderador', icon: 'bi-shield-check' },
   USER: { badge: null, label: 'Estudante', icon: 'bi-mortarboard' },
 }
 

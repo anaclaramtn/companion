@@ -61,7 +61,7 @@ public class ReplyCommentService {
         User actor = authenticatedUserService.getCurrentUserWithCompleteProfile();
         ReplyComment comment = repository.findByIdAndDeletedAtIsNull(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Comentário não encontrado"));
-        boolean moderator = actor.getRole() == UserRole.MODERATOR || actor.getRole() == UserRole.ADMIN;
+        boolean moderator = actor.getRole() == UserRole.ADMIN;
         if (!comment.getAuthor().getId().equals(actor.getId()) && !moderator) {
             throw new ForbiddenOperationException("Somente o autor ou a moderação pode excluir o comentário");
         }

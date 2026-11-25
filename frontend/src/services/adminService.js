@@ -12,7 +12,6 @@ export async function getAdminStats() {
 
 export const USER_ROLES = [
   { id: 'USER', label: 'Aluno' },
-  { id: 'MODERATOR', label: 'Moderador' },
   { id: 'ADMIN', label: 'Administrador' },
 ]
 

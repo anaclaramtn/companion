@@ -39,7 +39,7 @@ class ReplyCommentIntegrationTest {
         User asker = profileUser("rc-autor@edu.unifor.br", "rcautor", UserRole.USER);
         User answerer = profileUser("rc-resposta@edu.unifor.br", "rcresposta", UserRole.USER);
         User other = profileUser("rc-outro@edu.unifor.br", "rcoutro", UserRole.USER);
-        User moderator = profileUser("rc-mod@edu.unifor.br", "rcmod", UserRole.MODERATOR);
+        User moderator = profileUser("rc-mod@edu.unifor.br", "rcmod", UserRole.ADMIN);
         Post question = postRepository.saveAndFlush(new Post(asker, Set.of(), "Duvida", "Conteudo"));
         PostComment reply = commentRepository.saveAndFlush(new PostComment(question, answerer, "Uma resposta"));
 

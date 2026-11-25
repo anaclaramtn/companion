@@ -8,7 +8,6 @@ skinparam linetype ortho
 
 enum UserRole {
   USER
-  MODERATOR
   ADMIN
 }
 
