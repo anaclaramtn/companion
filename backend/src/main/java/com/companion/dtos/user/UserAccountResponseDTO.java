@@ -14,6 +14,7 @@ public record UserAccountResponseDTO(
         String bio,
         String bannerStyle,
         String bannerColor,
+        String petName,
         String registrationNumber,
         Long courseId,
         String course,

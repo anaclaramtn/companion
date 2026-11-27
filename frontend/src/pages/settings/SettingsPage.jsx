@@ -2,6 +2,7 @@ import { Fragment } from 'react'
 import { useNavigate, useOutletContext } from 'react-router'
 import OptionList from '../../components/common/OptionList.jsx'
 import AccessibilitySettings from '../../components/settings/AccessibilitySettings.jsx'
+import PetNameCard from '../../components/pet/PetNameCard.jsx'
 import AccountSummaryCard from '../../components/user/AccountSummaryCard.jsx'
 import { mockSettingsSections } from '../../data/mockSettingsOptions.js'
 import { useAuth } from '../../hooks/useAuth.js'
@@ -39,7 +40,12 @@ function SettingsPage() {
             onSelect={handleSelect}
           />
           {/* Logo depois de "Conta" e antes das seções de ajuda e sessão. */}
-          {section.id === 'account' && <AccessibilitySettings />}
+          {section.id === 'account' && (
+            <>
+              <PetNameCard currentUser={currentUser} />
+              <AccessibilitySettings />
+            </>
+          )}
         </Fragment>
       ))}
     </section>

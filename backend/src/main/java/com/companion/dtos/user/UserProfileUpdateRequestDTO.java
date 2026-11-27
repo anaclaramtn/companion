@@ -4,7 +4,7 @@ import jakarta.validation.constraints.*;
 
 /**
  * Atualização parcial do perfil: campo ausente (null) mantém o valor atual.
- * Para limpar a biografia ou a matrícula, envie texto vazio. A foto de perfil
+ * Para limpar a biografia, a matrícula ou o nome do bichinho, envie texto vazio. A foto de perfil
  * não passa por aqui: use PUT e DELETE em /api/users/me/avatar.
  */
 public record UserProfileUpdateRequestDTO(
@@ -23,6 +23,8 @@ public record UserProfileUpdateRequestDTO(
         @Pattern(regexp = "GRADIENT|WAVES|WAVES_2|WAVES_3|SOLID", message = "Estilo de banner inválido")
         String bannerStyle,
         @Pattern(regexp = "^#[0-9A-Fa-f]{6}$", message = "A cor do banner deve estar no formato #rrggbb")
-        String bannerColor
+        String bannerColor,
+        @Size(max = 20, message = "O nome do companheiro deve ter no máximo 20 caracteres")
+        String petName
 ) {
 }

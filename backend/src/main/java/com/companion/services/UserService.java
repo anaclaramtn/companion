@@ -201,6 +201,9 @@ public class UserService {
         if (request.bannerStyle() != null) {
             user.updateBanner(request.bannerStyle(), request.bannerColor());
         }
+        if (request.petName() != null) {
+            user.renamePet(normalizeOptionalText(request.petName()));
+        }
         return toAccount(userRepository.save(user));
     }
 
@@ -282,7 +285,7 @@ public class UserService {
     public UserAccountResponseDTO toAccount(User user) {
         return new UserAccountResponseDTO(
                 user.getId(), user.getEmail(), user.getName(), user.getUsername(), AvatarImageService.publicUrl(user.getAvatarUrl()),
-                user.getBio(), user.getBannerStyle(), user.getBannerColor(), user.getRegistrationNumber(),
+                user.getBio(), user.getBannerStyle(), user.getBannerColor(), user.getPetName(), user.getRegistrationNumber(),
                 courseId(user), courseName(user), universityId(user), universityName(user), user.getSemester(),
                 user.getRole(), user.getStatus(), user.isProfileComplete(), user.getOnboardingCompletedAt(),
                 user.getCreatedAt(), user.getUpdatedAt()

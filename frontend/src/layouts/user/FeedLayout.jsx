@@ -5,6 +5,7 @@ import Background, { BackgroundLayers } from '../../components/common/Background
 import FeedHeader from '../../components/common/Header.jsx'
 import MainNavigation from '../../components/common/MainNavigation.jsx'
 import FirstAccessTutorial from '../../components/common/FirstAccessTutorial.jsx'
+import PetCard from '../../components/pet/PetCard.jsx'
 import PostComposerModal from '../../components/post/PostComposerModal.jsx'
 import PostDetailModal from '../../components/post/PostDetailModal.jsx'
 import { PostActionsContext } from '../../contexts/postActionsContext.js'
@@ -49,27 +50,6 @@ function FeedLayout() {
   const [myCounts, setMyCounts] = useState(null)
   const currentUser = { ...profileCountDefaults, ...user, ...myCounts }
 
-  const userId = user?.id
-  useEffect(() => {
-    if (userId == null) return undefined
-    let active = true
-    getUserById(userId)
-      .then((profile) => {
-        if (!active) return
-        setMyCounts({
-          postCount: profile.postCount,
-          commentCount: profile.commentCount,
-          followerCount: profile.followerCount,
-          followingCount: profile.followingCount,
-        })
-      })
-      // Sem os números, a lateral só continua mostrando zero.
-      .catch(() => {})
-    return () => {
-      active = false
-    }
-  }, [userId])
-
   // Seguir ou deixar de seguir alguém muda o "seguindo" da conta.
   const handleFollowingChange = useCallback((delta) => {
     setMyCounts((counts) =>
@@ -96,6 +76,30 @@ function FeedLayout() {
     next.delete('duvida')
     setSearchParams(next, { replace: true })
   }, [location.state, navigate, searchParams, setSearchParams])
+  // Os números são buscados de novo quando as respostas podem ter mudado: ao
+  // abrir ou fechar uma dúvida (onde se responde) e ao excluir uma resposta.
+  const [countsVersion, setCountsVersion] = useState(0)
+  const userId = user?.id
+  useEffect(() => {
+    if (userId == null) return undefined
+    let active = true
+    getUserById(userId)
+      .then((profile) => {
+        if (!active) return
+        setMyCounts({
+          postCount: profile.postCount,
+          commentCount: profile.commentCount,
+          followerCount: profile.followerCount,
+          followingCount: profile.followingCount,
+        })
+      })
+      // Sem os números, a lateral só continua mostrando zero.
+      .catch(() => {})
+    return () => {
+      active = false
+    }
+  }, [userId, openPostId, countsVersion])
+
   const showToast = useToast()
   // Disciplinas da janela "Postar dúvida": a grade do curso (ou todas) e,
   // em destaque, as do perfil. null enquanto carregam.
@@ -202,6 +206,7 @@ function FeedLayout() {
           throw error
         }
       }
+      setCountsVersion((version) => version + 1)
       showToast('Resposta excluída.')
     },
     [showToast],
@@ -244,7 +249,7 @@ function FeedLayout() {
   return (
     <PostActionsContext.Provider value={postActions}>
     <Background>
-      <div className="mx-auto min-h-dvh w-full max-w-[1600px] px-4 py-4 sm:px-6 lg:px-8">
+      <div className="mx-auto min-h-dvh w-full max-w-[1600px] px-4 py-4 sm:px-6 lg:px-8 lg:pb-2.5">
         {/* Esconde o conteúdo que rola pela folga acima do cabeçalho fixo (e atrás
             dos cantos arredondados): uma cópia do fundo, só nos 2.5rem do topo. */}
         <BackgroundLayers className="z-20 bg-companion-cream [clip-path:inset(0_0_calc(100%_-_2.5rem)_0)]" />
@@ -260,9 +265,17 @@ function FeedLayout() {
         />
 
         <div className="mt-6 grid gap-6 lg:grid-cols-[248px_minmax(0,1fr)]">
-          {/* top-34: abaixo do cabeçalho fixo (1rem do topo + 6rem de altura + 1.5rem de folga) */}
-          <aside className="lg:sticky lg:top-34 lg:self-start">
+          {/* top-34: abaixo do cabeçalho fixo (1rem do topo + 6rem de altura + 1.5rem de folga).
+              A altura mínima leva a coluna até 10px do fim da tela, onde fica o bichinho. */}
+          <aside className="lg:sticky lg:top-34 lg:flex lg:min-h-[calc(100dvh-8.5rem-10px)] lg:flex-col lg:self-start">
             <MainNavigation items={navItems} />
+            {/* Só aparece com os números já carregados, para não mostrar o ovo
+                por engano. Em telas estreitas fica oculto para não empurrar o feed. */}
+            {myCounts && (
+              <div className="mt-auto hidden pt-6 lg:block">
+                <PetCard name={currentUser.petName} answerCount={myCounts.commentCount} />
+              </div>
+            )}
           </aside>
 
           <main className="min-w-0">

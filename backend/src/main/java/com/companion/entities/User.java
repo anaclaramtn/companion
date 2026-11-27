@@ -59,6 +59,10 @@ public class User {
     @Column(name = "banner_color", length = 7)
     private String bannerColor;
 
+    /** Nome que a pessoa deu ao bichinho da lateral (null enquanto não escolher). */
+    @Column(name = "pet_name", length = 20)
+    private String petName;
+
     @Column(name = "registration_number", length = 30)
     private String registrationNumber;
 
@@ -142,6 +146,10 @@ public class User {
         this.bannerColor = bannerColor;
     }
 
+    public void renamePet(String petName) {
+        this.petName = petName;
+    }
+
     public void updateAvatar(String avatarUrl) {
         this.avatarUrl = avatarUrl;
     }
@@ -175,6 +183,7 @@ public class User {
         bio = null;
         bannerStyle = null;
         bannerColor = null;
+        petName = null;
         registrationNumber = null;
         course = null;
         semester = null;
@@ -197,6 +206,7 @@ public class User {
     public String getBio() { return bio; }
     public String getBannerStyle() { return bannerStyle; }
     public String getBannerColor() { return bannerColor; }
+    public String getPetName() { return petName; }
     public String getRegistrationNumber() { return registrationNumber; }
     public LocalDateTime getEmailVerifiedAt() { return emailVerifiedAt; }
     public Course getCourse() { return course; }

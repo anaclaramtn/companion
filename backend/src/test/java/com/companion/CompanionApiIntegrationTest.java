@@ -336,6 +336,23 @@ class CompanionApiIntegrationTest {
                 .andExpect(jsonPath("$.bio").doesNotExist())
                 .andExpect(jsonPath("$.avatarUrl").value(avatarUrl))
                 .andExpect(jsonPath("$.name").value("Carla Souza"));
+
+        // Nome do bichinho: salva, resiste a outras atualizações, limita o tamanho e pode ser apagado.
+        mockMvc.perform(put("/api/users/me/profile").header("Authorization", bearer(token))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"petName\":\"  Faísca \"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.petName").value("Faísca"));
+        mockMvc.perform(put("/api/users/me/profile").header("Authorization", bearer(token))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"bio\":\"\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.petName").value("Faísca"));
+        mockMvc.perform(put("/api/users/me/profile").header("Authorization", bearer(token))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"petName\":\"" + "x".repeat(21) + "\"}"))
+                .andExpect(status().isBadRequest());
+        mockMvc.perform(put("/api/users/me/profile").header("Authorization", bearer(token))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"petName\":\"\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.petName").doesNotExist());
         mockMvc.perform(put("/api/users/me/profile").header("Authorization", bearer(token))
                         .contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"   \"}"))
                 .andExpect(status().isBadRequest())
